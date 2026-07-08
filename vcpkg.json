@@ -1,0 +1,14 @@
+{
+  "name": "predeye",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "curl",
+    "nlohmann-json",
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": ["png", "webp"]
+    },
+    "doctest"
+  ]
+}

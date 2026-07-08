@@ -1,0 +1,16 @@
+# Build
+build/
+out/
+cmake-build-*/
+
+# Cache ikon (pobierane z API, nie wersjonujemy)
+assets/
+
+# vcpkg
+vcpkg_installed/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+compile_commands.json
