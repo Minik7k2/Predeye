@@ -16,7 +16,6 @@ namespace {
 
 constexpr const char* kUserAgent = "predeye/0.1.0 (osobisty trener; rozsadne uzycie)";
 constexpr long kTimeoutS = 30;
-constexpr auto kMinRequestGap = std::chrono::milliseconds(300);
 
 // FNV-1a 64-bit — stabilny hash sciezki na nazwe pliku cache (std::hash nie
 // gwarantuje stabilnosci miedzy uruchomieniami/platformami).
@@ -92,19 +91,21 @@ OmedaClient::OmedaClient(std::string cache_dir, long default_ttl_s)
     fs::create_directories(cache_dir_, ec); // brak katalogu to nie blad krytyczny
 }
 
-void OmedaClient::throttle() {
-    // Pauza >= 0,3 s miedzy ZYWYMI zapytaniami — API nieoficjalne (§3.3).
+void OmedaClient::throttle(long min_gap_ms) {
+    // Pauza miedzy ZYWYMI zapytaniami — API nieoficjalne (§3.3):
+    // >= 0,3 s dla JSON-ow, ~50 ms dla statycznych ikon (§6.6).
+    const auto gap = std::chrono::milliseconds(min_gap_ms);
     auto now = std::chrono::steady_clock::now();
     if (last_request_.time_since_epoch().count() != 0) {
         auto elapsed = now - last_request_;
-        if (elapsed < kMinRequestGap)
-            std::this_thread::sleep_for(kMinRequestGap - elapsed);
+        if (elapsed < gap)
+            std::this_thread::sleep_for(gap - elapsed);
     }
     last_request_ = std::chrono::steady_clock::now();
 }
 
-std::string OmedaClient::fetch(const std::string& url) {
-    throttle();
+std::string OmedaClient::fetch(const std::string& url, long min_gap_ms) {
+    throttle(min_gap_ms);
     return curl_get(url);
 }
 
@@ -160,7 +161,7 @@ nlohmann::json OmedaClient::builds(long long hero_id, const std::string& role,
 }
 
 std::vector<unsigned char> OmedaClient::get_binary(const std::string& path) {
-    const std::string body = fetch(std::string(kBaseUrl) + path);
+    const std::string body = fetch(std::string(kBaseUrl) + path, 50);
     return std::vector<unsigned char>(body.begin(), body.end());
 }
 

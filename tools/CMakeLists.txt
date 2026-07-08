@@ -1,0 +1,2 @@
+add_executable(icon_harness icon_harness.cpp)
+target_link_libraries(icon_harness PRIVATE predeye_vision opencv_imgproc opencv_imgcodecs)

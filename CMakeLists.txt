@@ -13,7 +13,9 @@ else()
 endif()
 
 add_subdirectory(core)
+add_subdirectory(vision)
 add_subdirectory(app)
+add_subdirectory(tools)
 
 include(CTest)
 if(BUILD_TESTING)

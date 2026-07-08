@@ -6,8 +6,11 @@ add_executable(predeye_tests
     test_hero_context.cpp
     test_build_engine.cpp
     test_enemy_build.cpp
+    test_icon_matcher.cpp
 )
-target_link_libraries(predeye_tests PRIVATE predeye_core doctest::doctest)
+target_link_libraries(predeye_tests
+    PRIVATE predeye_core predeye_vision doctest::doctest
+            opencv_imgproc opencv_imgcodecs)
 target_compile_definitions(predeye_tests
     PRIVATE PREDEYE_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
 

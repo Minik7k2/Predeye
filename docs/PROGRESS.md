@@ -1,5 +1,31 @@
 # Postęp prac
 
+## M2 — matcher offline (DONE)
+
+- `vision/icon_matcher`: sygnatura kolor-NCC 32×32 (WIĄŻĄCA metoda),
+  `ensure_icon_cache` + manifest `id → plik`, komenda `predeye fetch-icons`
+  (pobrano pełną bazę: 213 ikon), heurystyka `looks_empty` (progi wstępne,
+  strojenie w M4).
+- `tools/icon_harness`: augmentacje wg §9 (resize 32–54 px, kontrast
+  ×0.85–1.2, jasność ±25, szum σ 4–12, jitter ±2 px), dwa reżimy
+  (realistyczny = łagodna połowa zakresów, pesymistyczny = końcówki),
+  deterministyczny RNG. Waliduje realną ścieżkę `IconMatcher::match`.
+- **Wyniki na pełnej bazie 213 ikon (10 prób/ikonę/reżim):**
+  realistyczny top-1 100%, pesymistyczny top-1 99,9%, top-3 100% w obu —
+  progi WIĄŻĄCE (99/95/100) osiągnięte.
+- **Korekty wynikające z pomiarów** (czyste NCC wg §6.6 dawało na 213
+  ikonach 90,3% top-1 pesymistycznie — poniżej progu; winny jitter ±2 px):
+  1) łagodny low-pass (Gaussian σ1,2 po resize do 32×32) symetrycznie
+     w sygnaturze bazy i próbki;
+  2) dwustopniowe dopasowanie: czyste NCC wyłania top-8 kandydatów, potem
+     tylko dla nich szukane jest najlepsze wyrównanie próbki po
+     przesunięciach ±2 px (maksimum po całej bazie zamiast top-K psuło
+     ranking — zmierzone).
+  Metoda pozostaje kolor-NCC 32×32; do akceptacji właściciela.
+- Testy offline matchera (syntetyczne ikony) w `tests/` — zielone.
+- Następne: M3 — `DxgiCapture` + `predeye calibrate` (potrzebne odpowiedzi
+  na pytania §13: rozdzielczość, tryb okna, zrzuty scoreboardu).
+
 ## M1 — rdzeń (DONE)
 
 - Moduły `core/`: `models` (defensywny parser itemów), `omeda_client`

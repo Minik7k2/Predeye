@@ -34,11 +34,13 @@ class OmedaClient {
                           const std::string& order = "popular");
 
     // Surowe bajty (ikony webp) — bez cache w kliencie; cache'uje warstwa wyzej.
+    // Statyczne assety maja krotsza pauze (~50 ms) niz zapytania API (§6.6).
     std::vector<unsigned char> get_binary(const std::string& path);
 
   private:
-    std::string fetch(const std::string& url); // zywy GET z pauza >= 0,3 s
-    void throttle();
+    // Zywy GET; min_gap_ms = minimalna pauza od poprzedniego zywego zapytania.
+    std::string fetch(const std::string& url, long min_gap_ms = 300);
+    void throttle(long min_gap_ms);
 
     std::string cache_dir_;
     long default_ttl_s_;

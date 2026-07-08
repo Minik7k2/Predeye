@@ -1,9 +1,10 @@
 // predeye — asystent-trener do gry Predecessor (doradca obok gry, zero ingerencji).
-#include "../core/build_engine.hpp"
-#include "../core/enemy_build.hpp"
-#include "../core/hero_context.hpp"
-#include "../core/models.hpp"
-#include "../core/omeda_client.hpp"
+#include "core/build_engine.hpp"
+#include "core/enemy_build.hpp"
+#include "core/hero_context.hpp"
+#include "core/models.hpp"
+#include "core/omeda_client.hpp"
+#include "vision/icon_matcher.hpp"
 
 #include <cstdio>
 #include <exception>
@@ -106,6 +107,19 @@ int cmd_counter(const std::string& hero_name, const std::string& role_arg,
     return 0;
 }
 
+// Domyslny katalog bazy ikon: obok cache API, przezywa miedzy sesjami.
+std::string default_icon_dir() { return OmedaClient::default_dir() + "/icons"; }
+
+int cmd_fetch_icons() {
+    OmedaClient api;
+    const auto items = parse_items(api.items());
+    const std::string dir = default_icon_dir();
+    IconMatcher matcher(items, api, dir); // konstruktor pobiera brakujace ikony
+    std::printf("Baza ikon gotowa: %d sygnatur w %s\n", static_cast<int>(matcher.base_size()),
+                dir.c_str());
+    return 0;
+}
+
 } // namespace
 
 int main(int argc, char** argv) {
@@ -139,7 +153,9 @@ int main(int argc, char** argv) {
             std::vector<std::string> enemies(argv + 4, argv + argc);
             return cmd_counter(argv[2], argv[3], enemies);
         }
-        if (cmd == "fetch-icons" || cmd == "calibrate" || cmd == "live") {
+        if (cmd == "fetch-icons")
+            return cmd_fetch_icons();
+        if (cmd == "calibrate" || cmd == "live") {
             std::fprintf(stderr, "predeye: komenda \"%s\" bedzie dostepna w kolejnym milestone\n",
                          cmd.c_str());
             return 1;
