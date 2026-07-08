@@ -12,4 +12,10 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 
+add_subdirectory(core)
 add_subdirectory(app)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
