@@ -19,8 +19,14 @@
   po wpisaniu wartości siatki do JSON ramki trafiają w sloty co do piksela.
   Testy kalibracji (round-trip, geometria, podgląd) zielone.
 - Gra użytkownika: **1920×1080 borderless** (§13.1 — odpowiedziane).
-- DONE M3 = potwierdzenie użytkownika na realnym zrzucie (TAB) — czekam na
-  zrzuty; następnie strojenie `looks_empty`/progu cosine i M4.
+- Użytkownik dostarczył zrzuty w czacie (7 × scoreboard TAB, patch 5.4.4);
+  na ich podstawie oszacowano wzrokowo wartości startowe `default_for()`:
+  origin ~(1346, 256), slot ~46 px, dx ~59, dy ~145, rows 5, **cols 7**
+  (spec zakładał 6 — na realnym UI widać 7 kwadratów; do potwierdzenia).
+  Pliki PNG trafią do repo później (użytkownik na telefonie) — wtedy
+  dokładne strojenie `looks_empty`/progu cosine na realnych slotach (M4).
+- DONE M3 = potwierdzenie użytkownika na realnym zrzucie przez `calibrate`
+  → `preview.png` u siebie.
 
 ## M2 — matcher offline (DONE)
 

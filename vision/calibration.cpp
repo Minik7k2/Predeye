@@ -63,16 +63,21 @@ void Calibration::save(const std::string& path) const {
 }
 
 Calibration Calibration::default_for(const cv::Size& resolution) {
-    // Wartosci startowe skalowane z bazy 1080p — celowo przyblizone;
-    // dokladne polozenie siatki uzytkownik dostraja podgladem.
+    // Wartosci startowe skalowane z bazy 1080p, oszacowane wzrokowo z realnych
+    // zrzutow scoreboardu uzytkownika (borderless 1920x1080, patch 5.4.4):
+    // panel wroga po prawej, 5 wierszy, siatka itemow za slotem crestu.
+    // Nadal przyblizone — uzytkownik dostraja podgladem (preview.png).
     const double s = resolution.height / 1080.0;
     Calibration c;
     c.resolution = resolution;
-    c.enemy_item_grid.origin = {static_cast<int>(1210 * s), static_cast<int>(300 * s)};
-    c.enemy_item_grid.slot = {static_cast<int>(34 * s), static_cast<int>(34 * s)};
-    c.enemy_item_grid.dx = static_cast<int>(38 * s);
-    c.enemy_item_grid.dy = static_cast<int>(96 * s);
-    c.enemy_item_grid.cols = 6;
+    c.enemy_item_grid.origin = {static_cast<int>(1346 * s), static_cast<int>(256 * s)};
+    c.enemy_item_grid.slot = {static_cast<int>(46 * s), static_cast<int>(46 * s)};
+    c.enemy_item_grid.dx = static_cast<int>(59 * s);
+    c.enemy_item_grid.dy = static_cast<int>(145 * s);
+    // Na zrzutach widac 7 kwadratow na itemy (spec zakladal 6) — do
+    // potwierdzenia przy kalibracji; nadmiarowe puste sloty odfiltruje
+    // looks_empty.
+    c.enemy_item_grid.cols = 7;
     c.enemy_item_grid.rows = 5;
     return c;
 }
