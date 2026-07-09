@@ -4,7 +4,18 @@
 #include "core/hero_context.hpp"
 #include "core/models.hpp"
 #include "core/omeda_client.hpp"
+#include "vision/calibration.hpp"
+#include "vision/capture.hpp"
 #include "vision/icon_matcher.hpp"
+#ifdef _WIN32
+#include "vision/capture_dxgi.hpp"
+#endif
+
+#include <chrono>
+#include <filesystem>
+#include <memory>
+#include <opencv2/imgcodecs.hpp>
+#include <thread>
 
 #include <cstdio>
 #include <exception>
@@ -27,8 +38,8 @@ void print_help() {
                 "counter-build pod sklad wroga\n");
     std::printf("  predeye fetch-icons                                      "
                 "pobranie bazy ikon itemow (M2)\n");
-    std::printf("  predeye calibrate                                        "
-                "kalibracja siatki scoreboardu (M3)\n");
+    std::printf("  predeye calibrate [--image <png>] [--config <json>]      "
+                "kalibracja siatki scoreboardu\n");
     std::printf("  predeye live    \"<bohater>\" <rola>                       "
                 "tryb live z odczytem ekranu (M5)\n");
     std::printf("\nRole: offlane | jungle | midlane | carry | support\n");
@@ -107,6 +118,74 @@ int cmd_counter(const std::string& hero_name, const std::string& role_arg,
     return 0;
 }
 
+// Kalibracja (§6.8): zrzut (odliczanie, uzytkownik trzyma TAB) -> PNG;
+// nastepnie podglad: klatka + calibration.json -> preview.png z narysowana
+// siatka. Uzytkownik iteruje wartosci w JSON, az siatka trafi w sloty.
+int cmd_calibrate(const std::vector<std::string>& args) {
+    std::string image_path, config_path = "calibration.json";
+    std::string shot_path = "calibration_shot.png", preview_path = "preview.png";
+    for (size_t i = 0; i < args.size(); ++i) {
+        if (args[i] == "--image" && i + 1 < args.size())
+            image_path = args[++i];
+        else if (args[i] == "--config" && i + 1 < args.size())
+            config_path = args[++i];
+        else
+            throw std::runtime_error("nieznany argument: " + args[i] +
+                                     " (uzycie: calibrate [--image <png>] [--config <json>])");
+    }
+
+    // 1) Klatka: z pliku (--image lub wczesniejszy zrzut) albo swiezy zrzut.
+    cv::Mat frame;
+    if (image_path.empty() && std::filesystem::exists(shot_path)) {
+        image_path = shot_path;
+        std::printf("Uzywam istniejacego zrzutu %s (usun go, by zrobic nowy).\n",
+                    shot_path.c_str());
+    }
+    if (!image_path.empty()) {
+        frame = FileCapture(image_path).grab();
+    } else {
+#ifdef _WIN32
+        std::printf("Nacisnij Enter, przelacz sie do gry i PRZYTRZYMAJ TAB — "
+                    "zrzut za 5 sekund...\n");
+        std::getchar();
+        for (int s = 5; s >= 1; --s) {
+            std::printf("  %d...\n", s);
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        DxgiCapture cap;
+        frame = cap.grab();
+        cv::imwrite(shot_path, frame);
+        std::printf("Zapisano zrzut: %s (%dx%d)\n", shot_path.c_str(), frame.cols, frame.rows);
+#else
+        throw std::runtime_error("zrzut ekranu dziala tylko na Windows — podaj --image <png>");
+#endif
+    }
+
+    // 2) Kalibracja: wczytaj albo zaloz plik startowy dla tej rozdzielczosci.
+    Calibration calib;
+    if (std::filesystem::exists(config_path)) {
+        calib = Calibration::load(config_path);
+        if (calib.resolution != frame.size())
+            std::fprintf(stderr,
+                         "predeye: uwaga: %s jest dla %dx%d, a klatka ma %dx%d — "
+                         "dostosuj wartosci lub usun plik\n",
+                         config_path.c_str(), calib.resolution.width, calib.resolution.height,
+                         frame.cols, frame.rows);
+    } else {
+        calib = Calibration::default_for(frame.size());
+        calib.save(config_path);
+        std::printf("Utworzono startowy %s — wartosci orientacyjne, do iteracji.\n",
+                    config_path.c_str());
+    }
+
+    // 3) Podglad.
+    cv::imwrite(preview_path, draw_grid(frame, calib));
+    std::printf("Zapisano %s. Obejrzyj go, popraw wartosci w %s i uruchom "
+                "calibrate ponownie, az siatka trafi w sloty itemow wrogow.\n",
+                preview_path.c_str(), config_path.c_str());
+    return 0;
+}
+
 // Domyslny katalog bazy ikon: obok cache API, przezywa miedzy sesjami.
 std::string default_icon_dir() { return OmedaClient::default_dir() + "/icons"; }
 
@@ -155,7 +234,9 @@ int main(int argc, char** argv) {
         }
         if (cmd == "fetch-icons")
             return cmd_fetch_icons();
-        if (cmd == "calibrate" || cmd == "live") {
+        if (cmd == "calibrate")
+            return cmd_calibrate({argv + 2, argv + argc});
+        if (cmd == "live") {
             std::fprintf(stderr, "predeye: komenda \"%s\" bedzie dostepna w kolejnym milestone\n",
                          cmd.c_str());
             return 1;

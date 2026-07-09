@@ -7,6 +7,7 @@ add_executable(predeye_tests
     test_build_engine.cpp
     test_enemy_build.cpp
     test_icon_matcher.cpp
+    test_calibration.cpp
 )
 target_link_libraries(predeye_tests
     PRIVATE predeye_core predeye_vision doctest::doctest

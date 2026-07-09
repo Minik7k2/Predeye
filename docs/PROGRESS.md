@@ -1,5 +1,27 @@
 # Postęp prac
 
+## M3 — capture + kalibracja (kod gotowy; czeka na potwierdzenie użytkownika)
+
+- `vision/capture`: interfejs `ICapture` + `FileCapture` (testowalność bez gry).
+- `vision/capture_dxgi` (WIN32): DXGI Desktop Duplication → BGR `cv::Mat`;
+  retry na `WAIT_TIMEOUT`, odtworzenie duplikacji po `ACCESS_LOST`, czytelny
+  komunikat przy fullscreen exclusive. **Uwaga:** pisane na Linuksie pod
+  guardem `_WIN32` — pierwsza kompilacja MSVC może wymagać drobnych poprawek.
+- `vision/calibration`: `calibration.json` per rozdzielczość (schemat wg §6.8),
+  walidacja z czytelnymi błędami, `default_for()` skalowane z bazy 1080p,
+  `draw_grid()` (ramki slotów + numery wierszy + krzyżyk na origin).
+- `predeye calibrate [--image <png>] [--config <json>]`: na Windows robi zrzut
+  po odliczaniu (Enter → 5 s → grab, użytkownik trzyma TAB) i zapisuje
+  `calibration_shot.png`; z `--image` działa na dowolnym systemie. Tworzy
+  startowy `calibration.json`, rysuje siatkę do `preview.png`; iteracja aż
+  siatka trafi w sloty. Ostrzega przy niezgodności rozdzielczości.
+- Zweryfikowane e2e na syntetycznym scoreboardzie 1920×1080 (5×6 slotów):
+  po wpisaniu wartości siatki do JSON ramki trafiają w sloty co do piksela.
+  Testy kalibracji (round-trip, geometria, podgląd) zielone.
+- Gra użytkownika: **1920×1080 borderless** (§13.1 — odpowiedziane).
+- DONE M3 = potwierdzenie użytkownika na realnym zrzucie (TAB) — czekam na
+  zrzuty; następnie strojenie `looks_empty`/progu cosine i M4.
+
 ## M2 — matcher offline (DONE)
 
 - `vision/icon_matcher`: sygnatura kolor-NCC 32×32 (WIĄŻĄCA metoda),
