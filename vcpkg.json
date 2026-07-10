@@ -4,11 +4,20 @@
   "dependencies": [
     "curl",
     "nlohmann-json",
-    {
-      "name": "opencv4",
-      "default-features": false,
-      "features": ["png", "webp"]
-    },
+    "glfw3",
     "doctest"
-  ]
+  ],
+  "features": {
+    "vision": {
+      "description": "Tor wizyjny: OpenCV (core/imgproc/imgcodecs + PNG + WebP)",
+      "dependencies": [
+        {
+          "name": "opencv4",
+          "default-features": false,
+          "features": ["png", "webp"]
+        }
+      ]
+    }
+  },
+  "default-features": ["vision"]
 }

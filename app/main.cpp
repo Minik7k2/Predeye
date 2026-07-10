@@ -4,21 +4,22 @@
 #include "core/hero_context.hpp"
 #include "core/models.hpp"
 #include "core/omeda_client.hpp"
+#ifdef PREDEYE_HAS_VISION
 #include "vision/calibration.hpp"
 #include "vision/capture.hpp"
 #include "vision/icon_matcher.hpp"
 #ifdef _WIN32
 #include "vision/capture_dxgi.hpp"
 #endif
-
 #include <chrono>
 #include <filesystem>
-#include <memory>
 #include <opencv2/imgcodecs.hpp>
 #include <thread>
+#endif
 
 #include <cstdio>
 #include <exception>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -118,6 +119,7 @@ int cmd_counter(const std::string& hero_name, const std::string& role_arg,
     return 0;
 }
 
+#ifdef PREDEYE_HAS_VISION
 // Kalibracja (§6.8): zrzut (odliczanie, uzytkownik trzyma TAB) -> PNG;
 // nastepnie podglad: klatka + calibration.json -> preview.png z narysowana
 // siatka. Uzytkownik iteruje wartosci w JSON, az siatka trafi w sloty.
@@ -198,6 +200,7 @@ int cmd_fetch_icons() {
                 dir.c_str());
     return 0;
 }
+#endif // PREDEYE_HAS_VISION
 
 } // namespace
 
@@ -232,10 +235,19 @@ int main(int argc, char** argv) {
             std::vector<std::string> enemies(argv + 4, argv + argc);
             return cmd_counter(argv[2], argv[3], enemies);
         }
-        if (cmd == "fetch-icons")
-            return cmd_fetch_icons();
-        if (cmd == "calibrate")
+        if (cmd == "fetch-icons" || cmd == "calibrate") {
+#ifdef PREDEYE_HAS_VISION
+            if (cmd == "fetch-icons")
+                return cmd_fetch_icons();
             return cmd_calibrate({argv + 2, argv + argc});
+#else
+            std::fprintf(stderr,
+                         "predeye: komenda \"%s\" wymaga toru wizyjnego — zbuduj z "
+                         "-DPREDEYE_VISION=ON\n",
+                         cmd.c_str());
+            return 1;
+#endif
+        }
         if (cmd == "live") {
             std::fprintf(stderr, "predeye: komenda \"%s\" bedzie dostepna w kolejnym milestone\n",
                          cmd.c_str());

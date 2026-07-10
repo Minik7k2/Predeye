@@ -1,5 +1,6 @@
 # Build
 build/
+build-gui/
 out/
 cmake-build-*/
 
@@ -8,6 +9,7 @@ assets/
 
 # vcpkg
 vcpkg_installed/
+.vcpkg/
 
 # IDE
 .vs/

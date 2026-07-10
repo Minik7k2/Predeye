@@ -1,5 +1,31 @@
 # Postęp prac
 
+## GUI — graficzna powłoka + uruchomienie w CLion (DONE)
+
+- **`gui/` (`predeye-gui`)**: powłoka na Dear ImGui + GLFW + OpenGL3. Zakładki
+  **Build** (bohater + rola) i **Counter** (bohater + rola + do 5 wrogów),
+  tabela wyników (item / cena / ocena / slot / powód), profil składu wroga.
+- Wywołania API idą w wątku tła (`gui/async_task.hpp`) — pętla renderowania
+  nie zamarza podczas pobierania danych. Lista bohaterów ładowana na starcie
+  do filtrowalnych list wyboru; przy braku sieci błąd trafia do paska statusu,
+  a nazwę można wpisać ręcznie.
+- **Rdzeń współdzielony**: nowa fasada `core/advisor` (`Advisor::build` /
+  `Advisor::counter`) zwraca gotowe struktury — używa jej GUI; CLI zachowuje
+  dotychczasowe wyjście tekstowe. Rdzeń dalej bez OpenCV (przenośny).
+- **Dear ImGui wersjonowane w repo** (`third_party/imgui`, v1.91.6) — brak
+  dodatkowej zależności pobieranej przez menedżer pakietów; nowe zależności to
+  tylko `glfw3` (+ systemowy OpenGL).
+- **Uruchomienie „za pierwszym razem" w CLion**: `CMakePresets.json` (profile
+  *pełny* i *szybki bez OpenCV*) + `cmake/AutoVcpkg.cmake`, który sam
+  konfiguruje toolchain vcpkg (użyje `VCPKG_ROOT`/`CMAKE_TOOLCHAIN_FILE`, a gdy
+  ich brak — klonuje i bootstrapuje vcpkg do `./.vcpkg`). Kroki: `docs/BUILD.md`.
+- **Tor wizyjny opcjonalny**: opcja CMake `PREDEYE_VISION` (domyślnie ON);
+  przy OFF budują się tylko `core` + `gui` + CLI (build/counter) bez OpenCV —
+  szybki pierwszy build. CLI/testy strojone guardami `PREDEYE_HAS_VISION`.
+- Zweryfikowane: pełny build (core + CLI + GUI + testy) na GCC 13 z bibliotekami
+  systemowymi, `-Wall -Wextra` czysto; testy 18/18 (124 asercji) zielone; GUI
+  otwiera okno i renderuje interfejs (zrzut headless pod Xvfb).
+
 ## M3 — capture + kalibracja (kod gotowy; czeka na potwierdzenie użytkownika)
 
 - `vision/capture`: interfejs `ICapture` + `FileCapture` (testowalność bez gry).
