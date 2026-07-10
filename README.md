@@ -18,6 +18,12 @@ to zrzut ekranu przez publiczne API systemu.
 
 ## Użycie
 
+Dwa pliki wykonywalne:
+
+- **`predeye-gui`** — graficzna powłoka (zakładki *Build* i *Counter*).
+  W CLion: otwórz projekt, wybierz preset CMake, uruchom cel `predeye-gui`.
+- **`predeye`** — wiersz poleceń:
+
 ```
 predeye build   "<bohater>" <rola>                      # build pod cel
 predeye counter "<bohater>" <rola> <wróg1> ... <wróg5>  # counter z typowych buildów
@@ -26,8 +32,8 @@ predeye calibrate                                       # kalibracja siatki (M3)
 predeye live    "<bohater>" <rola>                      # tryb live (M5)
 ```
 
-Budowanie: `docs/BUILD.md`. Postęp prac: `docs/PROGRESS.md`.
-Pełna specyfikacja projektu: `CLAUDE.md`.
+Budowanie i uruchomienie w CLion „za pierwszym razem": `docs/BUILD.md`.
+Postęp prac: `docs/PROGRESS.md`. Pełna specyfikacja projektu: `CLAUDE.md`.
 
 Uwaga: tryb fullscreen exclusive może nie być duplikowalny przez DXGI —
 zalecany tryb okna to borderless/windowed.
