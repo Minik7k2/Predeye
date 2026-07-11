@@ -1,6 +1,7 @@
 # Build
 build/
 build-gui/
+build-vision/
 out/
 cmake-build-*/
 

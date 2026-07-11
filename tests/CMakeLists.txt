@@ -9,7 +9,8 @@ set(_test_sources
     test_enemy_build.cpp
 )
 if(PREDEYE_VISION)
-    list(APPEND _test_sources test_icon_matcher.cpp test_calibration.cpp)
+    list(APPEND _test_sources test_icon_matcher.cpp test_calibration.cpp
+                              test_scoreboard_reader.cpp)
 endif()
 
 add_executable(predeye_tests ${_test_sources})

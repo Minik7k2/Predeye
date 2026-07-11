@@ -1,5 +1,31 @@
 # Postęp prac
 
+## M4/M5 — scoreboard end-to-end + tryb live (kod gotowy; pętla F9 czeka na Windows)
+
+- **`vision/scoreboard_reader`**: `read_scoreboard(klatka, kalibracja, matcher,
+  index)` — tnie `rows × cols` ROI wg siatki, odrzuca puste (`looks_empty`),
+  dopasowuje ikony (`IconMatcher::match`) i zwraca `EnemyRead` per wróg
+  (itemy do klasyfikacji + `SlotRead` z pewnością per slot). ROI wychodzące
+  poza klatkę (zła kalibracja, nadmiarowa 7. kolumna) są traktowane jak puste —
+  funkcja nigdy nie rzuca z powodu geometrii. Moduł przenośny (bez WIN32).
+- **`predeye live "<bohater>" <rola>`** (`app/main.cpp`): spina odczyt →
+  `classify_items`/`refine_enemy_profile` → `counter_build` → wydruk z **diffem**
+  względem poprzedniego odczytu. Na Windows pętla z hotkeyem **F9**
+  (`GetAsyncKeyState`, użytkownik trzyma TAB; Ctrl+C kończy); `--image <png>`
+  robi pojedynczy odczyt (test na dowolnym systemie). Wymaga `calibration.json`
+  (inaczej podpowiada `predeye calibrate`) i bazy ikon (`fetch-icons`).
+- **Świadome uproszczenie:** tie-break niepewnych po `typical_build` bohatera
+  pominięty — wymaga tożsamości bohatera per wiersz (OCR = M7, poza zakresem);
+  zamiast tego pewność raportowana per slot („(niepewne)").
+- Zweryfikowane e2e na Linuksie (biblioteki systemowe, OpenCV 4.6): pełna baza
+  213 ikon; syntetyczny scoreboard z 5 realnych ikon → `live --image` rozpoznał
+  wszystkie (0 niepewnych), doostrzył profil i wypisał counter różny od zwykłego
+  buildu (waga pancerza od składu wroga). Testy `test_scoreboard_reader`
+  (rozpoznanie + puste sloty + ROI poza klatką) zielone.
+- **Do potwierdzenia u użytkownika (Windows):** pętla F9 na żywej grze,
+  strojenie progu `looks_empty`/cosine na realnych slotach oraz liczby kolumn
+  (spec 6, realne UI 7) — DONE M4/M5 = pełny cykl na działającej grze.
+
 ## GUI — graficzna powłoka + uruchomienie w CLion (DONE)
 
 - **`gui/` (`predeye-gui`)**: powłoka na Dear ImGui + GLFW + OpenGL3. Zakładki
