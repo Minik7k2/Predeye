@@ -5,6 +5,7 @@ add_library(predeye_vision STATIC
     icon_matcher.cpp
     calibration.cpp
     capture.cpp
+    scoreboard_reader.cpp
 )
 if(WIN32)
     target_sources(predeye_vision PRIVATE capture_dxgi.cpp)

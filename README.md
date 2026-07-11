@@ -32,6 +32,11 @@ predeye calibrate                                       # kalibracja siatki (M3)
 predeye live    "<bohater>" <rola>                      # tryb live (M5)
 ```
 
+Tryb `live` wymaga wcześniejszego `fetch-icons` i `calibrate` (plik
+`calibration.json`). Na Windows odczyt wyzwala hotkey **F9** (trzymaj TAB);
+`predeye live "<bohater>" <rola> --image <png>` robi pojedynczy odczyt z pliku
+(przydatne do testu na dowolnym systemie).
+
 Budowanie i uruchomienie w CLion „za pierwszym razem": `docs/BUILD.md`.
 Postęp prac: `docs/PROGRESS.md`. Pełna specyfikacja projektu: `CLAUDE.md`.
 
