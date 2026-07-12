@@ -11,6 +11,47 @@
 
 option(PREDEYE_AUTO_VCPKG "Sklonuj i zbootstrapuj vcpkg, gdy brak toolchaina" ON)
 
+# --- Auto-wybor tripletu vcpkg pod kompilator ---------------------------------
+# vcpkg na Windows domyslnie celuje w triplet MSVC (x64-windows), nawet gdy
+# kompilujemy MinGW-iem (np. domyslny toolchain CLion). Efekt: linker MinGW nie
+# dopasuje symboli C++ z bibliotek MSVC (lawina "undefined reference do cv::...").
+# Zamiast zmuszac uzytkownika do recznego dopisywania -DVCPKG_TARGET_TRIPLET,
+# wykrywamy MinGW-a JUZ TU (przed project(), zanim toolchain vcpkg ustali triplet)
+# i wybieramy dopasowany triplet "*-mingw-dynamic". MSVC (cl.exe) nie pasuje do
+# wykrywania → zostaje przy domyslnym x64-windows. Straznik w CMakeLists.txt
+# pozostaje siatka bezpieczenstwa na wypadek recznego wymuszenia zlej pary.
+#
+# Detekcja musi dzialac PRZED wszystkimi wczesnymi return niżej (m.in. gdy CLion
+# podaje wlasny CMAKE_TOOLCHAIN_FILE przez integracje vcpkg), dlatego jest na samej
+# gorze. Uzywamy CMAKE_HOST_WIN32 (dostepne przed project(); WIN32 celu jeszcze nie).
+if(CMAKE_HOST_WIN32 AND NOT DEFINED VCPKG_TARGET_TRIPLET)
+    # Przed project() nie ma jeszcze CMAKE_CXX_COMPILER_ID — wnioskujemy z tego,
+    # co poda IDE/uzytkownik: sciezki kompilatorow, ich ID (gdy juz znane) oraz
+    # nazwy generatora. Na Windows "gcc"/"g++"/"mingw"/"gnu" ⇒ toolchain MinGW.
+    # CMake trzyma sciezki kompilatorow z ukosnikami "/", wiec wystarczy zlapac
+    # nazwy: mingw / gnu / gcc / g++ (w g++ escape'ujemy regexowe "+").
+    set(_predeye_mingw FALSE)
+    foreach(_hint IN ITEMS
+            "${CMAKE_CXX_COMPILER}" "${CMAKE_C_COMPILER}"
+            "${CMAKE_CXX_COMPILER_ID}" "${CMAKE_C_COMPILER_ID}"
+            "${CMAKE_GENERATOR}")
+        if(_hint MATCHES "[Mm][Ii][Nn][Gg][Ww]|[Gg][Nn][Uu]|gcc|g\\+\\+")
+            set(_predeye_mingw TRUE)
+        endif()
+    endforeach()
+
+    if(_predeye_mingw)
+        # FORCE, bo na Windows toolchain vcpkg i tak nadpisze niewymuszona wartosc,
+        # a stary cache z nieudanej konfiguracji moze juz trzymac zly x64-windows.
+        set(VCPKG_TARGET_TRIPLET "x64-mingw-dynamic"
+            CACHE STRING "Triplet vcpkg (auto: wykryto MinGW)" FORCE)
+        set(VCPKG_HOST_TRIPLET "x64-mingw-dynamic"
+            CACHE STRING "Host triplet vcpkg (auto: wykryto MinGW)" FORCE)
+        message(STATUS "predeye: wykryto MinGW — ustawiam triplet vcpkg "
+                       "'x64-mingw-dynamic' (vcpkg zbuduje zaleznosci pod MinGW).")
+    endif()
+endif()
+
 if(DEFINED CMAKE_TOOLCHAIN_FILE)
     message(STATUS "predeye: uzywam podanego CMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}")
     return()
