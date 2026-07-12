@@ -23,6 +23,26 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 
+# Straznik niezgodnosci ABI: MinGW g++ nie zlinkuje bibliotek C++ zbudowanych
+# przez MSVC. vcpkg na Windows domyslnie uzywa tripletu x64-windows (MSVC), wiec
+# kompilacja MinGW-iem (np. domyslny toolchain CLion) konczy sie setkami
+# "undefined reference to cv::..." — symbole C++ maja inne dekoracje nazw.
+# Lapiemy to tu jednym czytelnym komunikatem zamiast lawiny bledow linkera.
+# (Triplety MSVC: x64-windows, x86-windows, ...; MinGW: *-mingw-*).
+if(WIN32 AND MINGW AND DEFINED VCPKG_TARGET_TRIPLET
+   AND NOT VCPKG_TARGET_TRIPLET MATCHES "mingw")
+    message(FATAL_ERROR
+        "Niezgodnosc toolchainu: kompilujesz MinGW-iem (${CMAKE_CXX_COMPILER_ID}), "
+        "ale vcpkg dostarcza biblioteki dla tripletu MSVC '${VCPKG_TARGET_TRIPLET}'. "
+        "Linker MinGW nie dopasuje symboli C++ z bibliotek MSVC (undefined reference "
+        "do cv::...). Wybierz jedno:\n"
+        "  A) Przelacz toolchain na Visual Studio (MSVC) i usun katalog build/ "
+        "(zalecane; projekt celuje w MSVC — patrz CLAUDE.md §7).\n"
+        "  B) Zostan przy MinGW: skonfiguruj z "
+        "-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic "
+        "i usun katalog build/ (vcpkg przebuduje zaleznosci pod MinGW).")
+endif()
+
 add_subdirectory(core)
 
 if(PREDEYE_VISION)
