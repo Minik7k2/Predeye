@@ -1,5 +1,37 @@
 # Postęp prac
 
+## GUI — kalibracja i tryb live wyciągnięte do interfejsu graficznego (DONE)
+
+- **Fasada `vision/vision_session` (`VisionSession`)**: wspólne źródło toru live
+  dla CLI i GUI — trzyma dane API, bazę ikon, cel gracza i stan poprzedniego
+  odczytu (do diffu). `read(klatka, kalibracja)` zwraca `LiveResult`
+  (rozpoznane itemy per wróg + pewność, zmiany względem poprzedniego odczytu,
+  doostrzony `EnemyProfile`, counter-build). CLI `predeye live` przepięte na tę
+  fasadę — logika odczytu/diffu/countera nie jest już zduplikowana między CLI
+  a GUI (jedno miejsce = jeden algorytm).
+- **Zakładka „Kalibracja"** (`gui/main_gui.cpp`): wczytanie zrzutu PNG (na
+  Windows też zrzut z gry przez DXGI z 3 s odliczaniem), podgląd klatki z
+  narysowaną siatką slotów na teksturze OpenGL, suwaki `origin/slot/dx/dy/
+  cols/rows` aktualizujące podgląd na żywo, **klik na obrazie ustawia origin**,
+  wczytanie/zapis `calibration.json`, „domyślne dla rozdzielczości". Zastępuje
+  ręczną iterację `calibrate` → `preview.png` z CLI (odblokowuje M3/M4 z GUI).
+- **Zakładka „Live"**: wybór bohatera + roli, plik kalibracji, odczyt z gry
+  (Windows, DXGI) lub z pliku PNG (dowolny system, do testów); pierwszy odczyt
+  pobiera bazę ikon. Wynik: rozpoznane itemy per wróg (z „(niepewne)"), diff,
+  profil wroga i świeży counter-build w tabeli. Odczyty i pobieranie idą w
+  wątku tła (`AsyncTask`) — pętla renderowania nie zamarza.
+- **Tor wizyjny w GUI opcjonalny**: pod `PREDEYE_VISION`. Przy OFF GUI ma tylko
+  Build/Counter (rdzeń bez OpenCV) — guardy `PREDEYE_HAS_VISION` w GUI i CMake.
+- Zweryfikowane na Linuksie (OpenCV 4.6, GCC 13): pełny build (core + CLI + GUI
+  + wizja + testy) `-Wall -Wextra` czysto; wariant `PREDEYE_VISION=OFF` też się
+  buduje; testy 27/27 (189 asercji) zielone; GUI startuje headless (Xvfb) bez
+  błędów; `predeye live --image` na syntetycznym scoreboardzie z 5 realnych ikon
+  rozpoznał wszystkie (0 niepewnych) i wypisał counter z AntiTank — ta sama
+  ścieżka `VisionSession`, której używa zakładka Live.
+- **Do potwierdzenia u użytkownika (Windows):** zrzut DXGI z GUI, klik-kalibracja
+  na realnym zrzucie i odczyt live na żywej grze (strojenie liczby kolumn 6/7 i
+  progów `looks_empty`/cosine — nadal w kodzie na sztywno).
+
 ## M4/M5 — scoreboard end-to-end + tryb live (kod gotowy; pętla F9 czeka na Windows)
 
 - **`vision/scoreboard_reader`**: `read_scoreboard(klatka, kalibracja, matcher,
