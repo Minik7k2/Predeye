@@ -6,6 +6,7 @@ add_library(predeye_vision STATIC
     calibration.cpp
     capture.cpp
     scoreboard_reader.cpp
+    vision_session.cpp
 )
 if(WIN32)
     target_sources(predeye_vision PRIVATE capture_dxgi.cpp)

@@ -8,7 +8,7 @@
 #include "vision/calibration.hpp"
 #include "vision/capture.hpp"
 #include "vision/icon_matcher.hpp"
-#include "vision/scoreboard_reader.hpp"
+#include "vision/vision_session.hpp"
 #ifdef _WIN32
 #include "vision/capture_dxgi.hpp"
 #include <windows.h>
@@ -16,7 +16,6 @@
 #include <chrono>
 #include <filesystem>
 #include <opencv2/imgcodecs.hpp>
-#include <set>
 #include <thread>
 #endif
 
@@ -111,9 +110,9 @@ int cmd_counter(const std::string& hero_name, const std::string& role_arg,
                     b.crit_heavy() ? "+kryt " : "", b.sustain_heavy() ? "+sustain " : "",
                     b.tanky() ? "+pancerz" : "");
     }
-    std::printf("Profil wroga: %.0f%% obrazen fizycznych%s%s%s\n\n",
-                100.0 * profile.physical_ratio, profile.has_healing ? ", leczenie" : "",
-                profile.has_crit ? ", kryt" : "", profile.has_tanks ? ", tanki" : "");
+    std::printf("Profil wroga: %.0f%% obrazen fizycznych%s%s%s\n\n", 100.0 * profile.physical_ratio,
+                profile.has_healing ? ", leczenie" : "", profile.has_crit ? ", kryt" : "",
+                profile.has_tanks ? ", tanki" : "");
 
     BuildEngine engine(items);
     const Objective obj = objective_for(me, role);
@@ -192,7 +191,9 @@ int cmd_calibrate(const std::vector<std::string>& args) {
 }
 
 // Domyslny katalog bazy ikon: obok cache API, przezywa miedzy sesjami.
-std::string default_icon_dir() { return OmedaClient::default_dir() + "/icons"; }
+std::string default_icon_dir() {
+    return OmedaClient::default_dir() + "/icons";
+}
 
 int cmd_fetch_icons() {
     OmedaClient api;
@@ -204,67 +205,37 @@ int cmd_fetch_icons() {
     return 0;
 }
 
-// Zestaw nazw itemow per wrog (indeks = wiersz) — stan do diffa miedzy odczytami.
-using LiveState = std::vector<std::set<std::string>>;
-
-// Jeden cykl trybu live: klatka -> rozpoznanie -> profil -> counter -> wydruk.
-// Drukuje rozpoznane itemy (z pewnoscia), diff wzgledem poprzedniego odczytu,
-// doostrzony profil i swiezy counter-build. Zwraca stan do kolejnego diffa.
-LiveState live_cycle(const cv::Mat& frame, const Calibration& calib, const IconMatcher& matcher,
-                     const ItemIndex& index, const BuildEngine& engine, const Objective& obj,
-                     const LiveState& prev) {
-    const ScoreboardRead read = read_scoreboard(frame, calib, matcher, index);
-
-    // Profil wroga wprost z rozpoznanych itemow (bez nazw bohaterow — §6.9).
-    EnemyProfile profile;
-    std::vector<EnemyBuildProfile> builds;
-    LiveState state;
-    state.reserve(read.enemies.size());
-
-    std::printf("--- odczyt: %d itemow (%d niepewnych) ---\n", read.total_items, read.uncertain);
-    for (const auto& e : read.enemies) {
-        std::set<std::string> names;
+// Wydruk jednego odczytu live: rozpoznane itemy (z pewnoscia), diff wzgledem
+// poprzedniego odczytu, doostrzony profil i swiezy counter-build. Format
+// identyczny jak dotad — logika w VisionSession (wspolna z GUI).
+void print_live(const LiveResult& r) {
+    std::printf("--- odczyt: %d itemow (%d niepewnych) ---\n", r.total_items, r.uncertain);
+    for (const auto& e : r.enemies) {
         std::printf("  Wrog %d: ", e.row + 1);
         bool any = false;
         for (const auto& s : e.slots) {
             if (s.empty)
                 continue;
-            const std::string label = s.name.empty() ? "?" : s.name;
-            std::printf("%s%s%s", any ? ", " : "", label.c_str(),
+            std::printf("%s%s%s", any ? ", " : "", s.name.c_str(),
                         s.confident ? "" : " (niepewne)");
-            if (!s.name.empty())
-                names.insert(s.name);
             any = true;
         }
         std::printf("%s\n", any ? "" : "(pusto)");
 
-        // Diff wzgledem poprzedniego odczytu tego wiersza.
-        if (e.row < static_cast<int>(prev.size())) {
-            const auto& before = prev[static_cast<size_t>(e.row)];
+        if (!e.changes.empty()) {
             std::string delta;
-            for (const auto& n : names)
-                if (!before.count(n))
-                    delta += (delta.empty() ? "" : ", ") + std::string("+") + n;
-            for (const auto& n : before)
-                if (!names.count(n))
-                    delta += (delta.empty() ? "" : ", ") + std::string("-") + n;
-            if (!delta.empty())
-                std::printf("    zmiana: %s\n", delta.c_str());
+            for (const auto& c : e.changes)
+                delta += (delta.empty() ? "" : ", ") + c;
+            std::printf("    zmiana: %s\n", delta.c_str());
         }
-
-        if (!e.items.empty())
-            builds.push_back(classify_items(e.items));
-        state.push_back(std::move(names));
     }
 
-    refine_enemy_profile(profile, builds);
-    std::printf("Profil wroga: %.0f%% obrazen fizycznych%s%s%s\n",
-                100.0 * profile.physical_ratio, profile.has_healing ? ", leczenie" : "",
-                profile.has_crit ? ", kryt" : "", profile.has_tanks ? ", tanki" : "");
-    std::printf("Counter-build: %s\n", obj.name.c_str());
-    print_build(engine.counter_build(obj, profile));
+    std::printf("Profil wroga: %.0f%% obrazen fizycznych%s%s%s\n", 100.0 * r.profile.physical_ratio,
+                r.profile.has_healing ? ", leczenie" : "", r.profile.has_crit ? ", kryt" : "",
+                r.profile.has_tanks ? ", tanki" : "");
+    std::printf("Counter-build: %s\n", r.objective_name.c_str());
+    print_build(r.counter);
     std::printf("\n");
-    return state;
 }
 
 // Tryb live (§6.10): petla F9 z odczytem scoreboardu i diffem na zywo.
@@ -283,33 +254,27 @@ int cmd_live(const std::string& hero_name, const std::string& role_arg,
                                      "[--config <json>])");
     }
 
-    OmedaClient api;
-    HeroDB db(api.heroes());
-    const auto me = db.by_names({hero_name}).front();
     const Role role = require_role(role_arg);
-    const auto items = parse_items(api.items());
-    const auto index = index_by_id(items);
-    const BuildEngine engine(items);
-    const Objective obj = objective_for(me, role);
+    VisionSession session;
+    const std::string hero = session.set_objective(hero_name, role); // rzuca gdy nieznany
 
     if (!std::filesystem::exists(config_path))
-        throw std::runtime_error("brak " + config_path +
-                                 " — uruchom najpierw: predeye calibrate");
+        throw std::runtime_error("brak " + config_path + " — uruchom najpierw: predeye calibrate");
     const Calibration calib = Calibration::load(config_path);
 
     // Konstruktor pobiera brakujace ikony; po pierwszym fetch-icons dziala offline.
-    const IconMatcher matcher(items, api, default_icon_dir());
-    if (matcher.base_size() == 0)
+    session.ensure_matcher();
+    if (session.icon_base_size() == 0)
         throw std::runtime_error("pusta baza ikon — uruchom: predeye fetch-icons");
 
-    std::printf("predeye live: %s (%s) — kalibracja %s, baza %d ikon\n", me.name.c_str(),
+    std::printf("predeye live: %s (%s) — kalibracja %s, baza %d ikon\n", hero.c_str(),
                 role_name(role).c_str(), config_path.c_str(),
-                static_cast<int>(matcher.base_size()));
+                static_cast<int>(session.icon_base_size()));
 
     // Tryb jednorazowy: odczyt z pliku (dziala wszedzie, tez do testow).
     if (!image_path.empty()) {
         const cv::Mat frame = FileCapture(image_path).grab();
-        live_cycle(frame, calib, matcher, index, engine, obj, {});
+        print_live(session.read(frame, calib));
         return 0;
     }
 
@@ -318,14 +283,13 @@ int cmd_live(const std::string& hero_name, const std::string& role_arg,
     std::printf("Przelacz sie do gry. Trzymajac TAB nacisnij F9, by odczytac "
                 "scoreboard. Ctrl+C konczy.\n");
     DxgiCapture cap;
-    LiveState prev;
     bool down = false;
     for (;;) {
         const bool pressed = (GetAsyncKeyState(VK_F9) & 0x8000) != 0;
         if (pressed && !down) {
             down = true;
             try {
-                prev = live_cycle(cap.grab(), calib, matcher, index, engine, obj, prev);
+                print_live(session.read(cap.grab(), calib));
             } catch (const std::exception& ex) {
                 std::fprintf(stderr, "predeye: odczyt nieudany: %s\n", ex.what());
             }
@@ -390,16 +354,14 @@ int main(int argc, char** argv) {
         if (cmd == "live") {
 #ifdef PREDEYE_HAS_VISION
             if (argc < 4) {
-                std::fprintf(stderr,
-                             "uzycie: predeye live \"<bohater>\" <rola> [--image <png>] "
-                             "[--config <json>]\n");
+                std::fprintf(stderr, "uzycie: predeye live \"<bohater>\" <rola> [--image <png>] "
+                                     "[--config <json>]\n");
                 return 1;
             }
             return cmd_live(argv[2], argv[3], {argv + 4, argv + argc});
 #else
-            std::fprintf(stderr,
-                         "predeye: komenda \"live\" wymaga toru wizyjnego — zbuduj z "
-                         "-DPREDEYE_VISION=ON\n");
+            std::fprintf(stderr, "predeye: komenda \"live\" wymaga toru wizyjnego — zbuduj z "
+                                 "-DPREDEYE_VISION=ON\n");
             return 1;
 #endif
         }

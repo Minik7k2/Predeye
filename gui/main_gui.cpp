@@ -1,15 +1,32 @@
 // gui/main_gui — graficzna powloka predeye (Dear ImGui + GLFW + OpenGL3).
 //
-// Prosty doradca "obok gry": zakladka Build (bohater + rola) i Counter
-// (bohater + rola + do 5 wrogow). Wszystkie wywolania API ida w tle
-// (AsyncTask), by petla renderowania nie zamarzala podczas pobierania danych.
+// Zakladki: Build (bohater + rola), Counter (bohater + rola + do 5 wrogow),
+// oraz — gdy zbudowane z torem wizyjnym (PREDEYE_HAS_VISION) — Kalibracja
+// (siatka slotow scoreboardu na podgladzie zrzutu) i Live (odczyt itemow
+// wroga z ekranu -> profil -> counter-build z diffem). Wszystkie wywolania
+// API/wizji ida w tle (AsyncTask), by petla renderowania nie zamarzala.
 //
-// Zero ingerencji w gre — tu tylko wejscie tekstowe i prezentacja wynikow
-// rdzenia (§3). Tor wizyjny (capture/scoreboard) pozostaje w CLI.
+// Zero ingerencji w gre (§3): jedyne wejscie wizualne to zrzut ekranu przez
+// publiczne API systemu, prezentacja to wynik rdzenia.
 
 #include "core/advisor.hpp"
 #include "core/hero_context.hpp"
 #include "gui/async_task.hpp"
+
+#ifdef PREDEYE_HAS_VISION
+#include "vision/calibration.hpp"
+#include "vision/capture.hpp"
+#include "vision/vision_session.hpp"
+#ifdef _WIN32
+#include "vision/capture_dxgi.hpp"
+#endif
+#include <chrono>
+#include <filesystem>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <optional>
+#include <thread>
+#endif
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -20,6 +37,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -93,8 +111,8 @@ void role_combo(const char* id, int& idx) {
 
 // Tabela itemow buildu (nazwa, cena, ocena, slot, powod).
 void draw_build_table(const char* id, const BuildResult& res) {
-    const ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg |
-                                  ImGuiTableFlags_SizingStretchProp;
+    const ImGuiTableFlags flags =
+        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp;
     if (ImGui::BeginTable(id, 5, flags)) {
         ImGui::TableSetupColumn("Item", ImGuiTableColumnFlags_WidthStretch, 2.0f);
         ImGui::TableSetupColumn("Cena", ImGuiTableColumnFlags_WidthStretch, 0.7f);
@@ -120,6 +138,36 @@ void draw_build_table(const char* id, const BuildResult& res) {
     ImGui::TextWrapped("%s", res.summary.c_str());
 }
 
+#ifdef PREDEYE_HAS_VISION
+// --- Tekstura GL z klatki OpenCV (BGR) — podglad w oknie ImGui ---------------
+// GL 1.1 (glGenTextures/glTexImage2D) dostepne przez naglowki GLFW; upload
+// tylko z watku UI (kontekst GL). Zwalnia teksture w destruktorze.
+struct GlTexture {
+    GLuint id = 0;
+    int w = 0, h = 0;
+
+    void upload(const cv::Mat& bgr) {
+        cv::Mat rgba;
+        cv::cvtColor(bgr, rgba, cv::COLOR_BGR2RGBA);
+        if (id == 0)
+            glGenTextures(1, &id);
+        glBindTexture(GL_TEXTURE_2D, id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rgba.cols, rgba.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     rgba.data);
+        w = rgba.cols;
+        h = rgba.rows;
+    }
+
+    ~GlTexture() {
+        if (id != 0)
+            glDeleteTextures(1, &id);
+    }
+};
+#endif // PREDEYE_HAS_VISION
+
 // --- Stan aplikacji ----------------------------------------------------------
 struct AppState {
     Advisor advisor;
@@ -138,6 +186,39 @@ struct AppState {
     int counter_role = 0;
     std::array<std::string, 5> enemies;
     gui::AsyncTask<AdvisorCounter> counter_task;
+
+#ifdef PREDEYE_HAS_VISION
+    // Wspolna sesja toru wizyjnego (dane API + baza ikon + stan diffa).
+    VisionSession vision;
+
+    // Zakladka Kalibracja.
+    struct CalibTab {
+        Calibration calib;
+        cv::Mat frame; // wczytany zrzut (BGR)
+        bool has_frame = false;
+        bool dirty = true; // przelicz overlay + upload tekstury
+        GlTexture tex;
+        char image_path[256] = "";
+        char config_path[256] = "calibration.json";
+        std::string status;
+        gui::AsyncTask<cv::Mat> shot_task; // zrzut z gry (DXGI, z odliczaniem)
+        bool shot_consumed = true;         // czy wynik zrzutu juz odebrano
+    } calib;
+
+    // Zakladka Live.
+    struct LiveTab {
+        std::string hero;
+        int role = 0;
+        char config_path[256] = "calibration.json";
+        char image_path[256] = "";
+        std::string applied_hero; // ostatnio ustawiony cel (do wykrycia zmiany)
+        int applied_role = -1;
+        gui::AsyncTask<LiveResult> read_task;
+        bool read_consumed = true; // czy wynik odczytu juz odebrano
+        std::optional<LiveResult> last;
+        std::string status;
+    } live;
+#endif
 };
 
 void draw_build_tab(AppState& s) {
@@ -220,8 +301,8 @@ void draw_counter_tab(AppState& s) {
                               items.c_str());
             ImGui::Indent();
             ImGui::TextDisabled("profil: %s%s%s%s", b.is_magical() ? "magiczny " : "fizyczny ",
-                                b.crit_heavy() ? "+kryt " : "", b.sustain_heavy() ? "+sustain " : "",
-                                b.tanky() ? "+pancerz" : "");
+                                b.crit_heavy() ? "+kryt " : "",
+                                b.sustain_heavy() ? "+sustain " : "", b.tanky() ? "+pancerz" : "");
             ImGui::Unindent();
         }
         for (const auto& name : r.skipped_enemies)
@@ -237,13 +318,250 @@ void draw_counter_tab(AppState& s) {
     }
 }
 
+#ifdef PREDEYE_HAS_VISION
+// Wczytaj klatke z pliku PNG do zakladki kalibracji (synchronicznie — lokalne).
+void calib_load_image(AppState::CalibTab& c, const std::string& path) {
+    try {
+        c.frame = FileCapture(path).grab();
+        c.has_frame = true;
+        c.dirty = true;
+        // Startowa siatka dla tej rozdzielczosci (chyba ze wczytano juz JSON).
+        if (c.calib.enemy_item_grid.cols == 0 || c.calib.resolution != c.frame.size())
+            c.calib = Calibration::default_for(c.frame.size());
+        c.status = "Wczytano zrzut " + std::to_string(c.frame.cols) + "x" +
+                   std::to_string(c.frame.rows) + ".";
+    } catch (const std::exception& ex) {
+        c.status = std::string("Blad wczytania: ") + ex.what();
+    }
+}
+
+void draw_calibrate_tab(AppState& s) {
+    auto& c = s.calib;
+    ImGui::TextDisabled("Dopasuj siatke slotow itemow wroga do zrzutu scoreboardu (TAB). "
+                        "Kliknij na obraz, aby ustawic origin (lewy-gorny slot [0][0]).");
+    ImGui::Spacing();
+
+    // --- Zrodlo klatki ---
+    ImGui::InputText("Zrzut PNG##calib", c.image_path, sizeof(c.image_path));
+    ImGui::SameLine();
+    if (ImGui::Button("Wczytaj##calibimg") && c.image_path[0] != '\0')
+        calib_load_image(c, c.image_path);
+
+#ifdef _WIN32
+    ImGui::SameLine();
+    const bool shooting = c.shot_task.running();
+    ImGui::BeginDisabled(shooting);
+    if (ImGui::Button("Zrzut z gry (3 s)##calibshot")) {
+        c.status = "Przelacz sie do gry i PRZYTRZYMAJ TAB — zrzut za 3 s...";
+        c.shot_consumed = false;
+        c.shot_task.start([] {
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+            return DxgiCapture().grab();
+        });
+    }
+    ImGui::EndDisabled();
+    if (shooting) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("odliczanie...");
+    }
+#endif
+
+    // --- Plik kalibracji ---
+    ImGui::InputText("Plik JSON##calib", c.config_path, sizeof(c.config_path));
+    ImGui::SameLine();
+    if (ImGui::Button("Wczytaj JSON##calibcfg")) {
+        try {
+            c.calib = Calibration::load(c.config_path);
+            c.dirty = true;
+            c.status = std::string("Wczytano ") + c.config_path + ".";
+        } catch (const std::exception& ex) {
+            c.status = std::string("Blad JSON: ") + ex.what();
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Zapisz JSON##calibcfg")) {
+        try {
+            c.calib.save(c.config_path);
+            c.status = std::string("Zapisano ") + c.config_path + ".";
+        } catch (const std::exception& ex) {
+            c.status = std::string("Blad zapisu: ") + ex.what();
+        }
+    }
+    if (c.has_frame) {
+        ImGui::SameLine();
+        if (ImGui::Button("Domyslne dla rozdzielczosci##calib")) {
+            c.calib = Calibration::default_for(c.frame.size());
+            c.dirty = true;
+        }
+    }
+
+    if (!c.status.empty())
+        ImGui::TextWrapped("%s", c.status.c_str());
+    ImGui::Separator();
+
+    // --- Suwaki siatki ---
+    auto& g = c.calib.enemy_item_grid;
+    const int max_x = c.has_frame ? c.frame.cols : 4096;
+    const int max_y = c.has_frame ? c.frame.rows : 4096;
+    bool changed = false;
+    changed |= ImGui::DragInt("origin X", &g.origin.x, 1.0f, 0, max_x);
+    changed |= ImGui::DragInt("origin Y", &g.origin.y, 1.0f, 0, max_y);
+    changed |= ImGui::DragInt("slot szer.", &g.slot.width, 1.0f, 4, 256);
+    changed |= ImGui::DragInt("slot wys.", &g.slot.height, 1.0f, 4, 256);
+    changed |= ImGui::DragInt("dx (krok w wierszu)", &g.dx, 1.0f, 0, max_x);
+    changed |= ImGui::DragInt("dy (krok wierszy)", &g.dy, 1.0f, 0, max_y);
+    changed |= ImGui::DragInt("kolumny", &g.cols, 0.1f, 1, 10);
+    changed |= ImGui::DragInt("wiersze", &g.rows, 0.1f, 1, 8);
+    if (changed)
+        c.dirty = true;
+
+    if (!c.has_frame) {
+        ImGui::Spacing();
+        ImGui::TextDisabled("Wczytaj zrzut PNG (lub zrob zrzut z gry), aby zobaczyc podglad.");
+        return;
+    }
+
+    // --- Podglad z siatka ---
+    if (c.dirty) {
+        c.tex.upload(draw_grid(c.frame, c.calib));
+        c.dirty = false;
+    }
+    const float avail = ImGui::GetContentRegionAvail().x;
+    const float scale = (c.tex.w > 0) ? std::min(1.0f, avail / static_cast<float>(c.tex.w)) : 1.0f;
+    const ImVec2 disp(c.tex.w * scale, c.tex.h * scale);
+    ImGui::Image((ImTextureID)(intptr_t)c.tex.id, disp);
+
+    // Klik na obrazie -> ustaw origin w pikselach pelnej rozdzielczosci.
+    if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && scale > 0.0f) {
+        const ImVec2 p0 = ImGui::GetItemRectMin();
+        const ImVec2 mouse = ImGui::GetIO().MousePos;
+        const int px = static_cast<int>((mouse.x - p0.x) / scale);
+        const int py = static_cast<int>((mouse.y - p0.y) / scale);
+        g.origin.x = std::clamp(px, 0, c.frame.cols);
+        g.origin.y = std::clamp(py, 0, c.frame.rows);
+        c.dirty = true;
+    }
+}
+
+void draw_live_tab(AppState& s) {
+    auto& lv = s.live;
+    ImGui::TextDisabled("Odczyt itemow wroga ze scoreboardu -> profil -> counter-build. "
+                        "Wymaga kalibracji i bazy ikon (pierwszy odczyt ja pobierze).");
+    ImGui::Spacing();
+
+    hero_combo("Bohater##live", lv.hero, s.hero_names);
+    role_combo("Rola##live", lv.role);
+    ImGui::InputText("Plik kalibracji##live", lv.config_path, sizeof(lv.config_path));
+#ifndef _WIN32
+    ImGui::InputText("Zrzut PNG##live", lv.image_path, sizeof(lv.image_path));
+#else
+    ImGui::InputText("Zrzut PNG (opcjonalnie)##live", lv.image_path, sizeof(lv.image_path));
+    ImGui::TextDisabled("Puste pole PNG = zrzut z gry (DXGI). Przytrzymaj TAB przed odczytem.");
+#endif
+    ImGui::Spacing();
+
+    const bool busy = lv.read_task.running();
+    const bool need_png = std::string(lv.image_path).empty();
+#ifndef _WIN32
+    const bool can_read = !lv.hero.empty() && !need_png;
+#else
+    const bool can_read = !lv.hero.empty();
+#endif
+    ImGui::BeginDisabled(busy || !can_read);
+    if (ImGui::Button("Odczytaj scoreboard", ImVec2(200, 0))) {
+        VisionSession* vs = &s.vision;
+        std::string hero = lv.hero;
+        Role role = kRoles[static_cast<size_t>(lv.role)].role;
+        std::string cfg = lv.config_path;
+        std::string img = lv.image_path;
+        // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
+        const bool set_obj = (hero != lv.applied_hero || lv.role != lv.applied_role);
+        lv.applied_hero = hero;
+        lv.applied_role = lv.role;
+        lv.read_consumed = false;
+        lv.read_task.start([vs, hero, role, cfg, img, set_obj]() -> LiveResult {
+            if (set_obj)
+                vs->set_objective(hero, role);
+            if (!std::filesystem::exists(cfg))
+                throw std::runtime_error("brak " + cfg +
+                                         " — najpierw skalibruj (zakladka Kalibracja)");
+            const Calibration calib = Calibration::load(cfg);
+            cv::Mat frame;
+            if (!img.empty()) {
+                frame = FileCapture(img).grab();
+            } else {
+#ifdef _WIN32
+                frame = DxgiCapture().grab();
+#else
+                throw std::runtime_error("podaj zrzut PNG — zrzut z gry dziala tylko na Windows");
+#endif
+            }
+            return vs->read(frame, calib);
+        });
+    }
+    ImGui::EndDisabled();
+    if (busy) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("odczyt / pobieranie bazy ikon...");
+    }
+    if (s.vision.matcher_ready()) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("baza: %d ikon", static_cast<int>(s.vision.icon_base_size()));
+    }
+
+    if (!lv.read_task.error().empty())
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Blad: %s",
+                           lv.read_task.error().c_str());
+    if (lv.read_task.has_result() && !lv.read_consumed) {
+        lv.last = lv.read_task.result();
+        lv.read_consumed = true;
+    }
+
+    if (!lv.last)
+        return;
+
+    const LiveResult& r = *lv.last;
+    ImGui::SeparatorText("Odczyt");
+    ImGui::Text("%d itemow (%d niepewnych)", r.total_items, r.uncertain);
+    for (const auto& e : r.enemies) {
+        std::string line;
+        for (const auto& slot : e.slots) {
+            if (slot.empty)
+                continue;
+            if (!line.empty())
+                line += ", ";
+            line += slot.name;
+            if (!slot.confident)
+                line += " (niepewne)";
+        }
+        ImGui::BulletText("Wrog %d: %s", e.row + 1, line.empty() ? "(pusto)" : line.c_str());
+        if (!e.changes.empty()) {
+            std::string delta;
+            for (const auto& ch : e.changes)
+                delta += (delta.empty() ? "" : ", ") + ch;
+            ImGui::Indent();
+            ImGui::TextColored(ImVec4(0.6f, 0.9f, 0.6f, 1.0f), "zmiana: %s", delta.c_str());
+            ImGui::Unindent();
+        }
+    }
+
+    ImGui::Text("Profil wroga: %.0f%% obrazen fizycznych%s%s%s", 100.0 * r.profile.physical_ratio,
+                r.profile.has_healing ? ", leczenie" : "", r.profile.has_crit ? ", kryt" : "",
+                r.profile.has_tanks ? ", tanki" : "");
+
+    ImGui::SeparatorText("Counter-build");
+    draw_build_table("live_counter", r.counter);
+}
+#endif // PREDEYE_HAS_VISION
+
 void draw_main_window(AppState& s) {
     // Jedno okno wypelniajace obszar aplikacji.
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(vp->WorkPos);
     ImGui::SetNextWindowSize(vp->WorkSize);
     const ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
-                                   ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBringToFrontOnFocus;
+                                   ImGuiWindowFlags_NoSavedSettings |
+                                   ImGuiWindowFlags_NoBringToFrontOnFocus;
     ImGui::Begin("predeye", nullptr, flags);
 
     ImGui::TextUnformatted("predeye - asystent-trener Predecessor");
@@ -267,6 +585,16 @@ void draw_main_window(AppState& s) {
             draw_counter_tab(s);
             ImGui::EndTabItem();
         }
+#ifdef PREDEYE_HAS_VISION
+        if (ImGui::BeginTabItem("Kalibracja")) {
+            draw_calibrate_tab(s);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Live")) {
+            draw_live_tab(s);
+            ImGui::EndTabItem();
+        }
+#endif
         ImGui::EndTabBar();
     }
     ImGui::End();
@@ -330,6 +658,20 @@ int main() {
             state.hero_names = state.hero_names_task.result();
         state.build_task.poll();
         state.counter_task.poll();
+#ifdef PREDEYE_HAS_VISION
+        state.live.read_task.poll();
+        state.calib.shot_task.poll();
+        if (state.calib.shot_task.has_result() && !state.calib.shot_consumed) {
+            // Odbior swiezego zrzutu z gry (upload tekstury nastapi w draw).
+            state.calib.shot_consumed = true;
+            state.calib.frame = state.calib.shot_task.result();
+            state.calib.has_frame = true;
+            state.calib.dirty = true;
+            if (state.calib.calib.resolution != state.calib.frame.size())
+                state.calib.calib = Calibration::default_for(state.calib.frame.size());
+            state.calib.status = "Zrzut z gry gotowy.";
+        }
+#endif
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
