@@ -86,6 +86,22 @@ cmake --build build -j && ctest --test-dir build --output-on-failure
 
 Testy nie dotykają sieci — chodzą na fixtures w `tests/fixtures/`.
 
+## Toolchain na Windows: MSVC vs MinGW (ważne dla CLion)
+
+Projekt celuje w **MSVC** (CLAUDE.md §7). Domyślny toolchain CLion to jednak
+**MinGW**, a vcpkg na Windows domyślnie instaluje biblioteki dla tripletu
+`x64-windows` (zbudowane MSVC). MinGW nie zlinkuje bibliotek C++ z MSVC — link
+`predeye-gui` kończy się setkami `undefined reference to cv::...` (inne
+dekoracje nazw symboli C++). CMake wykrywa tę sytuację i przerywa konfigurację
+czytelnym komunikatem. Wybierz jedno:
+
+- **Zalecane — MSVC:** w CLion *Settings → Build, Execution, Deployment →
+  Toolchains* dodaj/wybierz **Visual Studio** i ustaw go dla profilu CMake,
+  następnie usuń katalog `cmake-build-*` (vcpkg przekonfiguruje się od zera).
+- **MinGW:** wymuś triplet MinGW w opcjach CMake profilu i usuń katalog build:
+  `-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic`
+  (vcpkg przebuduje OpenCV/curl/glfw pod MinGW — długo, triplet „community").
+
 ## Uwagi
 
 - Gra w trybie fullscreen exclusive może nie być duplikowalna przez DXGI —
