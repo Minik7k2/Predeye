@@ -26,6 +26,13 @@ endif()
 add_subdirectory(core)
 
 if(PREDEYE_VISION)
+    # find_package w scope roota — cele importowane OpenCV (opencv_core/imgproc/
+    # imgcodecs) sa widoczne tylko w katalogu, ktory je stworzyl, oraz w jego
+    # podkatalogach. Wywolanie tutaj, PRZED add_subdirectory, udostepnia je
+    # wszystkim modulom (vision/tools/app/gui/tests). Bez tego CMake traktuje
+    # np. "opencv_imgproc" jak surowa nazwe biblioteki i przekazuje linkerowi
+    # -lopencv_imgproc → blad "cannot find -lopencv_imgproc".
+    find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
     add_subdirectory(vision)
     add_subdirectory(tools)
 endif()

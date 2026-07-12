@@ -461,8 +461,9 @@ void draw_live_tab(AppState& s) {
     ImGui::Spacing();
 
     const bool busy = lv.read_task.running();
-    const bool need_png = std::string(lv.image_path).empty();
 #ifndef _WIN32
+    // Poza Windows nie ma zrzutu z gry (DXGI) — sciezka PNG jest wymagana.
+    const bool need_png = std::string(lv.image_path).empty();
     const bool can_read = !lv.hero.empty() && !need_png;
 #else
     const bool can_read = !lv.hero.empty();

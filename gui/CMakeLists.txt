@@ -8,6 +8,7 @@ target_link_libraries(predeye-gui PRIVATE Threads::Threads)
 
 # Tor wizyjny opcjonalny: zakladki Kalibracja/Live wymagaja OpenCV (§4).
 # Bez PREDEYE_VISION GUI ma tylko Build/Counter (rdzen przenosny).
+# Cele opencv_* pochodza z find_package(OpenCV) w roocie (patrz CMakeLists.txt).
 if(PREDEYE_VISION)
     target_link_libraries(predeye-gui PRIVATE predeye_vision opencv_imgproc opencv_imgcodecs)
     target_compile_definitions(predeye-gui PRIVATE PREDEYE_HAS_VISION)
