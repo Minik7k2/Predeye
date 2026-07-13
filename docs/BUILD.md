@@ -84,19 +84,28 @@ Testy nie dotykają sieci — chodzą na fixtures w `tests/fixtures/`.
 
 ## Toolchain na Windows: MSVC vs MinGW (ważne dla CLion)
 
-Projekt celuje w **MSVC** (CLAUDE.md §7). Domyślny toolchain CLion to jednak
-**MinGW**, a vcpkg na Windows domyślnie instaluje biblioteki dla tripletu
-`x64-windows` (zbudowane MSVC). MinGW nie zlinkuje bibliotek C++ z MSVC — link
-`predeye-gui` kończy się setkami `undefined reference to cv::...` (inne
-dekoracje nazw symboli C++). CMake wykrywa tę sytuację i przerywa konfigurację
-czytelnym komunikatem. Wybierz jedno:
+Projekt celuje w **MSVC** (CLAUDE.md §7), ale działa też pod **MinGW** (domyślny
+toolchain CLion). Sedno problemu: vcpkg na Windows domyślnie instaluje biblioteki
+dla tripletu `x64-windows` (zbudowane MSVC), a MinGW nie zlinkuje bibliotek C++
+z MSVC — link `predeye-gui` kończyłby się setkami `undefined reference to
+cv::...` (inne dekoracje nazw symboli C++).
 
-- **Zalecane — MSVC:** w CLion *Settings → Build, Execution, Deployment →
-  Toolchains* dodaj/wybierz **Visual Studio** i ustaw go dla profilu CMake,
-  następnie usuń katalog `cmake-build-*` (vcpkg przekonfiguruje się od zera).
-- **MinGW:** wymuś triplet MinGW w opcjach CMake profilu i usuń katalog build:
-  `-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic`
-  (vcpkg przebuduje OpenCV/curl/glfw pod MinGW — długo, triplet „community").
+**To rozwiązuje się samo.** `cmake/AutoVcpkg.cmake` wykrywa kompilator **przed**
+`project()` i gdy widzi MinGW-a (ścieżka `gcc`/`g++`, ID `GNU`, generator
+„MinGW Makefiles"), automatycznie ustawia triplet vcpkg na `x64-mingw-dynamic`
+(oraz host triplet). MSVC (`cl.exe`) zostaje przy `x64-windows`. Nie trzeba nic
+dopisywać do opcji CMake — wystarczy wybrać toolchain w CLion i konfigurować.
+
+Przy pierwszej konfiguracji pod MinGW vcpkg przebuduje OpenCV/curl/glfw ze źródeł
+pod ten toolchain (triplet „community", długo). Jeśli wcześniej konfiguracja padła
+na starym toolchainie, **usuń katalog `cmake-build-*` / `build*`** przed ponowną
+próbą — inaczej stary cache może trzymać niedopasowane biblioteki.
+
+Chcesz jawnie wymusić wybór? Podaj własny triplet w opcjach CMake profilu, np.
+`-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic`
+(auto-detekcja szanuje ręcznie ustawiony `VCPKG_TARGET_TRIPLET`). Straznik w
+`CMakeLists.txt` nadal łapie ewentualne ręczne wymuszenie sprzecznej pary
+(MinGW + triplet MSVC) i przerywa z czytelnym komunikatem.
 
 ## Uwagi
 
