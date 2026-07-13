@@ -28,8 +28,13 @@
   ikony w różnych wierszach → identyczne itemy, „Codex, Codex" u gracza
   z dwoma kodeksami); mecz 2 late-game — 56 odczytów, 3 niepewne wyłącznie
   na wierszu rozłączonego gracza (przyciemniony overlay „DISCONNECTED").
-- **Odkrycie**: omeda.city robi 308 redirect na **pred.gg** (klient działa
-  dzięki follow-redirects); baza URL do aktualizacji.
+- **Odkrycie (zbadane)**: omeda.city przeniósł strony HTML i `/assets/*` na
+  **pred.gg** (308), ale stare JSON API działa TYLKO bezpośrednio na
+  omeda.city — na pred.gg te ścieżki to 404, a nowe API pred.gg ma inny,
+  niekompatybilny schemat. `kBaseUrl` ZOSTAJE na omeda.city (komentarz
+  ostrzegawczy w `omeda_client.hpp`); redirect assetów załatwia
+  follow-redirects. Zmiana bazy na pred.gg cicho psuła pobieranie buildów
+  (items/heroes maskował 24h cache) — cofnięta po pomiarze.
 - Do zrobienia w M4: strojenie `looks_empty` (pojedyncze ciemne itemy
   bywają zjadane), wybór monitora w `DxgiCapture` (u użytkownika gra na
   środkowym z 3 monitorów), `calibrate --auto` (detekcja siatki skanem

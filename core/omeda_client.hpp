@@ -18,6 +18,11 @@ class OmedaError : public std::runtime_error {
 class OmedaClient {
   public:
     static std::string default_dir(); // %LOCALAPPDATA%/predeye/cache lub ~/.cache/predeye
+    // NIE zmieniac na pred.gg: serwis przeniosl strony HTML i /assets/* na
+    // pred.gg (308), ale stare JSON API (heroes/items/builds...) dziala TYLKO
+    // bezposrednio na omeda.city — na pred.gg te sciezki to 404, a nowe API
+    // pred.gg ma inny, niekompatybilny schemat (zmierzone 2026-07-13).
+    // Redirect assetow zalatwia CURLOPT_FOLLOWLOCATION.
     static constexpr const char* kBaseUrl = "https://omeda.city";
 
     explicit OmedaClient(std::string cache_dir = default_dir(), long default_ttl_s = 21600);
