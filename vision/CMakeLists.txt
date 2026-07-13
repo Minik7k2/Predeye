@@ -4,6 +4,7 @@ find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
 add_library(predeye_vision STATIC
     icon_matcher.cpp
     calibration.cpp
+    auto_calibration.cpp
     capture.cpp
     scoreboard_reader.cpp
     vision_session.cpp

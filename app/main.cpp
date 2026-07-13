@@ -5,6 +5,7 @@
 #include "core/models.hpp"
 #include "core/omeda_client.hpp"
 #ifdef PREDEYE_HAS_VISION
+#include "vision/auto_calibration.hpp"
 #include "vision/calibration.hpp"
 #include "vision/capture.hpp"
 #include "vision/icon_matcher.hpp"
@@ -41,11 +42,13 @@ void print_help() {
                 "counter-build pod sklad wroga\n");
     std::printf("  predeye fetch-icons                                      "
                 "pobranie bazy ikon itemow (M2)\n");
-    std::printf("  predeye calibrate [--image <png>] [--config <json>]      "
+    std::printf("  predeye calibrate [--auto] [--image <png>] [--config <json>] [--monitor N]\n"
+                "                                                           "
                 "kalibracja siatki scoreboardu\n");
-    std::printf("  predeye live    \"<bohater>\" <rola>                       "
+    std::printf("  predeye live    \"<bohater>\" <rola> [--monitor N]         "
                 "tryb live z odczytem ekranu (M5)\n");
     std::printf("\nRole: offlane | jungle | midlane | carry | support\n");
+    std::printf("Monitor: domyslnie automatycznie ten z oknem gry; --monitor N wymusza.\n");
 }
 
 void print_build(const BuildResult& res) {
@@ -128,14 +131,21 @@ int cmd_counter(const std::string& hero_name, const std::string& role_arg,
 int cmd_calibrate(const std::vector<std::string>& args) {
     std::string image_path, config_path = "calibration.json";
     std::string shot_path = "calibration_shot.png", preview_path = "preview.png";
+    bool auto_grid = false;
+    int monitor = -1; // <0 = auto (monitor z oknem gry)
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i] == "--image" && i + 1 < args.size())
             image_path = args[++i];
         else if (args[i] == "--config" && i + 1 < args.size())
             config_path = args[++i];
+        else if (args[i] == "--auto")
+            auto_grid = true;
+        else if (args[i] == "--monitor" && i + 1 < args.size())
+            monitor = std::stoi(args[++i]);
         else
             throw std::runtime_error("nieznany argument: " + args[i] +
-                                     " (uzycie: calibrate [--image <png>] [--config <json>])");
+                                     " (uzycie: calibrate [--auto] [--image <png>] "
+                                     "[--config <json>] [--monitor N])");
     }
 
     // 1) Klatka: z pliku (--image lub wczesniejszy zrzut) albo swiezy zrzut.
@@ -156,13 +166,40 @@ int cmd_calibrate(const std::vector<std::string>& args) {
             std::printf("  %d...\n", s);
             std::this_thread::sleep_for(std::chrono::seconds(1));
         }
-        DxgiCapture cap;
+        DxgiCapture cap(monitor);
         frame = cap.grab();
         cv::imwrite(shot_path, frame);
         std::printf("Zapisano zrzut: %s (%dx%d)\n", shot_path.c_str(), frame.cols, frame.rows);
 #else
         throw std::runtime_error("zrzut ekranu dziala tylko na Windows — podaj --image <png>");
 #endif
+    }
+
+    // 2a) Tryb automatyczny: detekcja siatek wprost z klatki; podglad do
+    // potwierdzenia przez uzytkownika zostaje czescia przeplywu.
+    if (auto_grid) {
+        const auto det = auto_calibrate(frame);
+        if (!det)
+            throw std::runtime_error(
+                "auto-kalibracja nie znalazla spojnej siatki na klatce — uzyj trybu "
+                "recznego (bez --auto) albo ostrzejszego zrzutu ze scoreboardem");
+        det->calib.save(config_path);
+        cv::imwrite(preview_path, draw_grid(frame, det->calib));
+        std::printf("Auto-kalibracja: sojusznicy %d wierszy (%d linii wzoru), "
+                    "wrogowie %d wierszy (%d linii); origin=(%d,%d)/(%d,%d) "
+                    "slot=%dx%d dx=%d dy=%d cols=%d.\n",
+                    det->rows_ally, det->lines_ally, det->rows_enemy, det->lines_enemy,
+                    det->calib.ally_item_grid.origin.x, det->calib.ally_item_grid.origin.y,
+                    det->calib.enemy_item_grid.origin.x, det->calib.enemy_item_grid.origin.y,
+                    det->calib.enemy_item_grid.slot.width, det->calib.enemy_item_grid.slot.height,
+                    det->calib.enemy_item_grid.dx, det->calib.enemy_item_grid.dy,
+                    det->calib.enemy_item_grid.cols);
+        if (!det->note.empty())
+            std::printf("Uwaga: %s.\n", det->note.c_str());
+        std::printf("Zapisano %s i %s — obejrzyj podglad i potwierdz, ze ramki "
+                    "trafiaja w sloty.\n",
+                    config_path.c_str(), preview_path.c_str());
+        return 0;
     }
 
     // 2) Kalibracja: wczytaj albo zaloz plik startowy dla tej rozdzielczosci.
@@ -251,15 +288,18 @@ void print_live(const LiveResult& r) {
 int cmd_live(const std::string& hero_name, const std::string& role_arg,
              const std::vector<std::string>& args) {
     std::string image_path, config_path = "calibration.json";
+    int monitor = -1; // <0 = auto (monitor z oknem gry)
     for (size_t i = 0; i < args.size(); ++i) {
         if (args[i] == "--image" && i + 1 < args.size())
             image_path = args[++i];
         else if (args[i] == "--config" && i + 1 < args.size())
             config_path = args[++i];
+        else if (args[i] == "--monitor" && i + 1 < args.size())
+            monitor = std::stoi(args[++i]);
         else
             throw std::runtime_error("nieznany argument: " + args[i] +
                                      " (uzycie: live \"<bohater>\" <rola> [--image <png>] "
-                                     "[--config <json>])");
+                                     "[--config <json>] [--monitor N])");
     }
 
     const Role role = require_role(role_arg);
@@ -290,7 +330,7 @@ int cmd_live(const std::string& hero_name, const std::string& role_arg,
     // Petla: F9 = "odczytaj teraz" (uzytkownik trzyma TAB), Ctrl+C konczy.
     std::printf("Przelacz sie do gry. Trzymajac TAB nacisnij F9, by odczytac "
                 "scoreboard. Ctrl+C konczy.\n");
-    DxgiCapture cap;
+    DxgiCapture cap(monitor);
     bool down = false;
     for (;;) {
         const bool pressed = (GetAsyncKeyState(VK_F9) & 0x8000) != 0;

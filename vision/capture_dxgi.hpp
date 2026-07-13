@@ -11,8 +11,11 @@ namespace predeye {
 
 class DxgiCapture : public ICapture {
   public:
-    // Duplikuje glowny monitor (output 0 pierwszego adaptera).
-    DxgiCapture();
+    // output >= 0: duplikuj wskazane wyjscie pierwszego adaptera (0 = glowny
+    // monitor). output < 0 (domyslnie): znajdz okno gry (klasa UnrealWindow,
+    // tytul "Predecessor...") i duplikuj JEGO monitor — istotne przy kilku
+    // monitorach; gdy okna nie ma, wyjscie 0. Wylacznie publiczne API okien.
+    explicit DxgiCapture(int output = -1);
     ~DxgiCapture() override;
 
     // Klatka BGR calego pulpitu. Fullscreen exclusive moze nie byc

@@ -2,6 +2,7 @@
 
 #include "capture_dxgi.hpp"
 
+#include <cwchar>
 #include <d3d11.h>
 #include <dxgi1_2.h>
 #include <opencv2/imgproc.hpp>
@@ -20,6 +21,30 @@ namespace {
     throw std::runtime_error(buf);
 }
 
+// Monitor z widocznym oknem gry. Filtr po klasie okna UE ("UnrealWindow")
+// ORAZ prefiksie tytulu — sam tytul zlapalby np. karte przegladarki
+// "Predecessor Wiki". Publiczne API okien, zero ingerencji w gre.
+HMONITOR find_game_monitor() {
+    HMONITOR found = nullptr;
+    EnumWindows(
+        [](HWND hwnd, LPARAM lp) -> BOOL {
+            if (!IsWindowVisible(hwnd))
+                return TRUE;
+            wchar_t cls[64] = {};
+            GetClassNameW(hwnd, cls, 63);
+            if (std::wcscmp(cls, L"UnrealWindow") != 0)
+                return TRUE;
+            wchar_t title[128] = {};
+            GetWindowTextW(hwnd, title, 127);
+            if (std::wcsncmp(title, L"Predecessor", 11) != 0)
+                return TRUE;
+            *reinterpret_cast<HMONITOR*>(lp) = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+            return FALSE;
+        },
+        reinterpret_cast<LPARAM>(&found));
+    return found;
+}
+
 } // namespace
 
 struct DxgiCapture::Impl {
@@ -27,6 +52,7 @@ struct DxgiCapture::Impl {
     ComPtr<ID3D11DeviceContext> context;
     ComPtr<IDXGIOutputDuplication> duplication;
     DXGI_OUTPUT_DESC output_desc{};
+    int requested_output = -1;
 
     void init() {
         HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr,
@@ -43,9 +69,25 @@ struct DxgiCapture::Impl {
         if (FAILED(hr))
             fail("GetAdapter", hr);
         ComPtr<IDXGIOutput> output;
-        hr = adapter->EnumOutputs(0, &output); // glowny monitor
-        if (FAILED(hr))
-            fail("EnumOutputs(0)", hr);
+        if (requested_output >= 0) {
+            hr = adapter->EnumOutputs(static_cast<UINT>(requested_output), &output);
+            if (FAILED(hr))
+                fail("EnumOutputs(zadany monitor — sprawdz --monitor)", hr);
+        } else {
+            // Auto: wyjscie z oknem gry; bez okna zostaje glowny monitor (0).
+            const HMONITOR game = find_game_monitor();
+            ComPtr<IDXGIOutput> cand;
+            for (UINT i = 0; SUCCEEDED(adapter->EnumOutputs(i, &cand)); ++i, cand.Reset()) {
+                DXGI_OUTPUT_DESC d{};
+                cand->GetDesc(&d);
+                if (i == 0 || (game && d.Monitor == game))
+                    output = cand;
+                if (game && d.Monitor == game)
+                    break;
+            }
+            if (!output)
+                fail("EnumOutputs(0)", DXGI_ERROR_NOT_FOUND);
+        }
         output->GetDesc(&output_desc);
         ComPtr<IDXGIOutput1> output1;
         hr = output.As(&output1);
@@ -119,7 +161,10 @@ struct DxgiCapture::Impl {
     }
 };
 
-DxgiCapture::DxgiCapture() : impl_(std::make_unique<Impl>()) { impl_->init(); }
+DxgiCapture::DxgiCapture(int output) : impl_(std::make_unique<Impl>()) {
+    impl_->requested_output = output;
+    impl_->init();
+}
 
 DxgiCapture::~DxgiCapture() = default;
 

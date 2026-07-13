@@ -35,10 +35,25 @@
   ostrzegawczy w `omeda_client.hpp`); redirect assetów załatwia
   follow-redirects. Zmiana bazy na pred.gg cicho psuła pobieranie buildów
   (items/heroes maskował 24h cache) — cofnięta po pomiarze.
+- **`predeye calibrate --auto`** (`vision/auto_calibration`, przenośny):
+  detekcja siatek wprost z klatki TAB — RLE jasności per linia znajduje
+  okresowe łańcuchy „odcinek ramki ~52 px, przerwa 4–8 px, krok 60";
+  linie grupowane po x0 w panele, pasma y sklejane w wiersze (ramka górna
+  i dolna wiersza to osobne pasma odległe o ~wysokość slotu). Przerwa za
+  crestem (18 px) celowo wypada poza zakres — crest zostaje poza siatką.
+  Panel niewykryty wprost (jasne tło prześwituje przez półprzezroczysty
+  panel i zabija ramki) jest doliczany z przesunięcia +1010 px i uczciwie
+  raportowany. Na wszystkich 3 fixtures wynik zgodny ze zmierzoną
+  kalibracją ≤2 px; `live` na auto-kalibracji czyta identycznie jak na
+  ręcznej (28 itemów, 0 niepewnych). Testy: syntetyczny scoreboard +
+  realne zrzuty. Przepływ z podglądem do potwierdzenia zostaje.
+- **Wybór monitora**: `DxgiCapture(output)` — domyślnie automatycznie
+  znajduje okno gry (klasa `UnrealWindow` + tytuł „Predecessor", publiczne
+  API okien) i duplikuje JEGO monitor (u użytkownika gra na środkowym z 3);
+  `--monitor N` w `calibrate`/`live` wymusza wyjście.
 - Do zrobienia w M4: strojenie `looks_empty` (pojedyncze ciemne itemy
-  bywają zjadane), wybór monitora w `DxgiCapture` (u użytkownika gra na
-  środkowym z 3 monitorów), `calibrate --auto` (detekcja siatki skanem
-  ramek — algorytm zwalidowany ręcznie na pomiarach).
+  bywają zjadane), przycisk „Wykryj automatycznie" w GUI (zakładka
+  Kalibracja), potwierdzenie DXGI + pętli F9 na żywej grze u użytkownika.
 
 ## GUI — kalibracja i tryb live wyciągnięte do interfejsu graficznego (DONE)
 
