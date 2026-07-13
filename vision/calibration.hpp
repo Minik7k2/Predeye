@@ -28,18 +28,20 @@ struct Calibration {
 
     // Wczytaj calibration.json; wyjatek z czytelnym komunikatem przy bledzie.
     // Starszy plik bez ally_item_grid wczyta sie: siatka sojusznikow dostaje
-    // geometrie wroga z originem odbitym wzgledem srodka ekranu (orientacyjnie).
+    // geometrie wroga z originem przesunietym o odstep paneli (orientacyjnie).
     static Calibration load(const std::string& path);
     void save(const std::string& path) const;
 
-    // Punkt startowy do iteracji dla danej rozdzielczosci — wartosci
-    // ORIENTACYJNE, uzytkownik dostraja je podgladem (preview.png / GUI).
+    // Punkt startowy dla danej rozdzielczosci. Wartosci 1080p ZMIERZONE na
+    // realnych zrzutach (patch 5.4.4); inne rozdzielczosci skalowane
+    // wysokoscia — orientacyjne, do potwierdzenia podgladem (preview/GUI).
     static Calibration default_for(const cv::Size& resolution);
 };
 
-// Orientacyjna siatka sojusznikow z siatki wroga: ta sama geometria, origin.x
-// odbity wzgledem srodka ekranu (panele druzyn sa lustrzane na scoreboardzie).
-GridSpec mirror_grid(const GridSpec& enemy, const cv::Size& resolution);
+// Siatka sojusznikow z siatki wroga: uklad wiersza w obu panelach jest
+// IDENTYCZNY (nie lustrzany) — panel wroga jest przesuniety w prawo o staly
+// odstep, zmierzony na realnych zrzutach 1080p (+1010 px, skala z wysokoscia).
+GridSpec ally_grid_from_enemy(const GridSpec& enemy, const cv::Size& resolution);
 
 // Rysuje obie siatki na kopii klatki (wrogowie czerwono, sojusznicy zielono,
 // numery wierszy) — podglad do iteracji kalibracji (CLI preview.png i GUI).

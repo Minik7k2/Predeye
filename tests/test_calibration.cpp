@@ -36,22 +36,21 @@ TEST_CASE("Calibration: save/load round-trip (obie siatki)") {
     CHECK(l.ally_item_grid.dx == 38);
 }
 
-TEST_CASE("Calibration: starszy plik bez ally_item_grid dostaje siatke lustrzana") {
+TEST_CASE("Calibration: starszy plik bez ally_item_grid dostaje siatke przesunieta") {
     const std::string path = (fs::temp_directory_path() / "predeye_calib_old.json").string();
     {
         std::ofstream out(path, std::ios::trunc);
         out << R"({ "resolution": [1920, 1080],
-                    "enemy_item_grid": { "origin": [1346, 256], "slot": [46, 46],
-                                          "dx": 59, "dy": 145, "cols": 7, "rows": 5 } })";
+                    "enemy_item_grid": { "origin": [1343, 250], "slot": [52, 52],
+                                          "dx": 60, "dy": 145, "cols": 6, "rows": 5 } })";
     }
     const Calibration l = Calibration::load(path);
-    // Geometria przejeta z wroga, origin.x odbity wzgledem srodka ekranu.
+    // Geometria przejeta z wroga, origin.x przesuniety o zmierzony odstep paneli.
     CHECK(l.ally_item_grid.slot == l.enemy_item_grid.slot);
     CHECK(l.ally_item_grid.dx == l.enemy_item_grid.dx);
     CHECK(l.ally_item_grid.cols == l.enemy_item_grid.cols);
-    const int span = 6 * 59 + 46;
-    CHECK(l.ally_item_grid.origin.x == 1920 - 1346 - span);
-    CHECK(l.ally_item_grid.origin.y == 256);
+    CHECK(l.ally_item_grid.origin.x == 1343 - 1010);
+    CHECK(l.ally_item_grid.origin.y == 250);
 }
 
 TEST_CASE("Calibration: czytelne bledy dla zepsutego pliku") {
@@ -77,19 +76,35 @@ TEST_CASE("GridSpec: geometria slotow") {
     CHECK(g.slot_rect(2, 1) == cv::Rect(140, 380, 30, 32));
 }
 
-TEST_CASE("mirror_grid: odbicie originu wzgledem srodka, geometria bez zmian") {
+TEST_CASE("ally_grid_from_enemy: przesuniecie paneli, geometria bez zmian") {
     GridSpec e;
-    e.origin = {1346, 256};
-    e.slot = {46, 46};
-    e.dx = 59;
+    e.origin = {1343, 250};
+    e.slot = {52, 52};
+    e.dx = 60;
     e.dy = 145;
-    e.cols = 7;
+    e.cols = 6;
     e.rows = 5;
-    const GridSpec a = mirror_grid(e, {1920, 1080});
-    CHECK(a.origin.x == 1920 - 1346 - (6 * 59 + 46));
-    CHECK(a.origin.y == 256);
+    const GridSpec a = ally_grid_from_enemy(e, {1920, 1080});
+    CHECK(a.origin.x == 333);
+    CHECK(a.origin.y == 250);
     CHECK(a.slot == e.slot);
     CHECK(a.cols == e.cols);
+    // Odstep paneli skaluje sie z wysokoscia ekranu.
+    GridSpec e14 = e;
+    e14.origin = {1791, 333};
+    const GridSpec a14 = ally_grid_from_enemy(e14, {2560, 1440});
+    CHECK(a14.origin.x == 1791 - 1346);
+}
+
+TEST_CASE("default_for: wartosci zmierzone na realnych zrzutach 1080p") {
+    const Calibration c = Calibration::default_for({1920, 1080});
+    CHECK(c.enemy_item_grid.origin == cv::Point(1343, 250));
+    CHECK(c.enemy_item_grid.slot == cv::Size(52, 52));
+    CHECK(c.enemy_item_grid.dx == 60);
+    CHECK(c.enemy_item_grid.dy == 145);
+    CHECK(c.enemy_item_grid.cols == 6);
+    CHECK(c.enemy_item_grid.rows == 5);
+    CHECK(c.ally_item_grid.origin == cv::Point(333, 250));
 }
 
 TEST_CASE("draw_grid: nie modyfikuje oryginalu, rysuje obie siatki") {

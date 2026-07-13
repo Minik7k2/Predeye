@@ -60,11 +60,13 @@ void draw_one_grid(cv::Mat& out, const GridSpec& g, const cv::Scalar& color,
 
 } // namespace
 
-GridSpec mirror_grid(const GridSpec& enemy, const cv::Size& resolution) {
+GridSpec ally_grid_from_enemy(const GridSpec& enemy, const cv::Size& resolution) {
     GridSpec ally = enemy;
-    // Prawy kraniec siatki wroga odbity w lewy kraniec siatki sojusznikow.
-    const int span = (enemy.cols - 1) * enemy.dx + enemy.slot.width;
-    ally.origin.x = resolution.width - enemy.origin.x - span;
+    // Panele NIE sa lustrzane: wiersz gracza (portret, crest, itemy) ma ten
+    // sam uklad po obu stronach, panel wroga jest tylko przesuniety w prawo.
+    // Odstep zmierzony na realnych zrzutach 1080p: 1010 px (dwa mecze zgodne
+    // co do piksela); dla innych rozdzielczosci skala z wysokoscia.
+    ally.origin.x = enemy.origin.x - static_cast<int>(1010.0 * resolution.height / 1080.0);
     return ally;
 }
 
@@ -84,11 +86,11 @@ Calibration Calibration::load(const std::string& path) {
     c.enemy_item_grid = parse_grid(j["enemy_item_grid"], path + ": enemy_item_grid");
 
     // Kompatybilnosc ze starszymi plikami (tylko siatka wroga): sojusznicy
-    // dostaja lustrzana siatke orientacyjna — uzytkownik dostroi podgladem.
+    // dostaja przesunieta siatke orientacyjna — uzytkownik dostroi podgladem.
     if (j.contains("ally_item_grid") && j["ally_item_grid"].is_object())
         c.ally_item_grid = parse_grid(j["ally_item_grid"], path + ": ally_item_grid");
     else
-        c.ally_item_grid = mirror_grid(c.enemy_item_grid, c.resolution);
+        c.ally_item_grid = ally_grid_from_enemy(c.enemy_item_grid, c.resolution);
     return c;
 }
 
@@ -104,23 +106,22 @@ void Calibration::save(const std::string& path) const {
 }
 
 Calibration Calibration::default_for(const cv::Size& resolution) {
-    // Wartosci startowe skalowane z bazy 1080p, oszacowane wzrokowo z realnych
-    // zrzutow scoreboardu uzytkownika (borderless 1920x1080, patch 5.4.4):
-    // panel wroga po prawej, 5 wierszy, siatka itemow za slotem crestu.
-    // Nadal przyblizone — uzytkownik dostraja podgladem (preview.png).
+    // Wartosci 1080p ZMIERZONE numerycznie (skan jasnosci ramek slotow) na
+    // realnych zrzutach borderless 1920x1080, patch 5.4.4 — dwa mecze zgodne
+    // co do piksela. Origin wskazuje WNETRZE slotu (bez 2 px ramki); crest ma
+    // wlasny slot ~67 px przed item1 i NIE nalezy do siatki (stad cols=6,
+    // a nie 7 widocznych kwadratow). Inne rozdzielczosci: skala z wysokoscia,
+    // orientacyjnie — uzytkownik potwierdza podgladem (preview.png / GUI).
     const double s = resolution.height / 1080.0;
     Calibration c;
     c.resolution = resolution;
-    c.enemy_item_grid.origin = {static_cast<int>(1346 * s), static_cast<int>(256 * s)};
-    c.enemy_item_grid.slot = {static_cast<int>(46 * s), static_cast<int>(46 * s)};
-    c.enemy_item_grid.dx = static_cast<int>(59 * s);
+    c.enemy_item_grid.origin = {static_cast<int>(1343 * s), static_cast<int>(250 * s)};
+    c.enemy_item_grid.slot = {static_cast<int>(52 * s), static_cast<int>(52 * s)};
+    c.enemy_item_grid.dx = static_cast<int>(60 * s);
     c.enemy_item_grid.dy = static_cast<int>(145 * s);
-    // Na zrzutach widac 7 kwadratow na itemy (spec zakladal 6) — do
-    // potwierdzenia przy kalibracji; nadmiarowe puste sloty odfiltruje
-    // looks_empty.
-    c.enemy_item_grid.cols = 7;
+    c.enemy_item_grid.cols = 6;
     c.enemy_item_grid.rows = 5;
-    c.ally_item_grid = mirror_grid(c.enemy_item_grid, resolution);
+    c.ally_item_grid = ally_grid_from_enemy(c.enemy_item_grid, resolution);
     return c;
 }
 
