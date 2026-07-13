@@ -100,8 +100,9 @@ struct DxgiCapture::Impl {
 
     cv::Mat acquire_frame() {
         // Duplication oddaje klatke tylko przy zmianie ekranu — probujemy
-        // kilkukrotnie; pulpit z gra odswieza sie praktycznie zawsze.
-        for (int attempt = 0; attempt < 10; ++attempt) {
+        // wielokrotnie; pulpit z gra odswieza sie praktycznie zawsze, a
+        // statyczny pulpit odrysowuje sie co najwyzej po paru sekundach.
+        for (int attempt = 0; attempt < 20; ++attempt) {
             DXGI_OUTDUPL_FRAME_INFO info{};
             ComPtr<IDXGIResource> resource;
             HRESULT hr = duplication->AcquireNextFrame(500, &info, &resource);
@@ -117,6 +118,15 @@ struct DxgiCapture::Impl {
             }
             if (FAILED(hr))
                 fail("AcquireNextFrame", hr);
+
+            // AcquireNextFrame potrafi oddac klatke BEZ obrazu (sam ruch
+            // myszy albo pierwsza klatka po DuplicateOutput) — tekstura
+            // bylaby czarna. Realna tresc ma niezerowy czas prezentacji.
+            // Zmierzone na Windows 11: bez tego zrzut wychodzi czarny.
+            if (info.LastPresentTime.QuadPart == 0) {
+                duplication->ReleaseFrame();
+                continue;
+            }
 
             ComPtr<ID3D11Texture2D> gpu_tex;
             hr = resource.As(&gpu_tex);
