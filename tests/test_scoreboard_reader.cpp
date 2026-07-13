@@ -57,6 +57,8 @@ ItemIndex make_index() {
     return idx;
 }
 
+// Siatka wroga w klatce; siatka sojusznikow domyslnie DALEKO poza klatka
+// (jej sloty czytaja sie jako puste) — testy wybieraja, ktora wypelnic.
 Calibration make_calib(const cv::Size& res) {
     Calibration c;
     c.resolution = res;
@@ -66,6 +68,8 @@ Calibration make_calib(const cv::Size& res) {
     c.enemy_item_grid.dy = 58;
     c.enemy_item_grid.cols = 3;
     c.enemy_item_grid.rows = 2;
+    c.ally_item_grid = c.enemy_item_grid;
+    c.ally_item_grid.origin = {5000, 5000};
     return c;
 }
 
@@ -78,7 +82,7 @@ void paste_icon(cv::Mat& frame, const cv::Rect& r, uint32_t seed) {
 
 } // namespace
 
-TEST_CASE("read_scoreboard: rozpoznaje itemy, odrzuca puste sloty") {
+TEST_CASE("read_scoreboard: rozpoznaje itemy wroga, odrzuca puste sloty") {
     const IconMatcher matcher(make_icon_dir());
     REQUIRE(matcher.base_size() == 5);
     const ItemIndex index = make_index();
@@ -112,6 +116,34 @@ TEST_CASE("read_scoreboard: rozpoznaje itemy, odrzuca puste sloty") {
             if (s.empty)
                 ++empty_count;
     CHECK(empty_count == 3); // 6 slotow - 3 z ikonami
+
+    // Siatka sojusznikow poza klatka -> wiersze istnieja, ale puste.
+    REQUIRE(read.allies.size() == 2);
+    for (const auto& a : read.allies)
+        CHECK(a.items.empty());
+}
+
+TEST_CASE("read_scoreboard: czyta tez siatke sojusznikow") {
+    const IconMatcher matcher(make_icon_dir());
+    const ItemIndex index = make_index();
+    Calibration calib = make_calib({240, 160});
+    // Zamiana rol siatek: wrogowie poza klatka, sojusznicy w klatce.
+    calib.ally_item_grid.origin = calib.enemy_item_grid.origin;
+    calib.enemy_item_grid.origin = {5000, 5000};
+
+    cv::Mat frame(160, 240, CV_8UC3, cv::Scalar(10, 10, 12));
+    paste_icon(frame, calib.ally_item_grid.slot_rect(0, 0), 4);
+    paste_icon(frame, calib.ally_item_grid.slot_rect(1, 1), 5);
+
+    const ScoreboardRead read = read_scoreboard(frame, calib, matcher, index);
+    CHECK(read.total_items == 2);
+    REQUIRE(read.allies.size() == 2);
+    REQUIRE(read.allies[0].items.size() == 1);
+    CHECK(read.allies[0].items[0].id == 4);
+    REQUIRE(read.allies[1].items.size() == 1);
+    CHECK(read.allies[1].items[0].id == 5);
+    for (const auto& e : read.enemies)
+        CHECK(e.items.empty());
 }
 
 TEST_CASE("read_scoreboard: ROI poza klatka traktowane jak puste, nie rzuca") {
@@ -127,4 +159,15 @@ TEST_CASE("read_scoreboard: ROI poza klatka traktowane jak puste, nie rzuca") {
     CHECK(read.total_items == 0);
     for (const auto& e : read.enemies)
         CHECK(e.items.empty());
+}
+
+TEST_CASE("scoreboard_row_role: staly porzadek rol dla 5 wierszy, inaczej Unknown") {
+    CHECK(scoreboard_row_role(0, 5) == Role::Offlane);
+    CHECK(scoreboard_row_role(1, 5) == Role::Jungle);
+    CHECK(scoreboard_row_role(2, 5) == Role::Midlane);
+    CHECK(scoreboard_row_role(3, 5) == Role::Carry);
+    CHECK(scoreboard_row_role(4, 5) == Role::Support);
+    CHECK(scoreboard_row_role(0, 4) == Role::Unknown);
+    CHECK(scoreboard_row_role(5, 5) == Role::Unknown);
+    CHECK(scoreboard_row_role(-1, 5) == Role::Unknown);
 }

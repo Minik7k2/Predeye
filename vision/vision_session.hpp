@@ -27,9 +27,13 @@ struct LiveSlotView {
     bool confident = false; // cosine >= prog pewnosci
 };
 
-// Wiersz = jeden wrog: sloty + zmiany wzgledem poprzedniego odczytu.
-struct LiveEnemyView {
+// Wiersz = jeden gracz (wrog albo sojusznik): rola, sloty i zmiany wzgledem
+// poprzedniego odczytu. Rola z pozycji wiersza (scoreboard_row_role) — wiersz
+// wroga o tej samej roli to przeciwnik w linii (matchup).
+struct LiveRowView {
     int row = 0;
+    Role role = Role::Unknown;
+    std::string role_label; // "Offlane"... / "Wiersz N" gdy Unknown
     std::vector<LiveSlotView> slots;
     std::vector<std::string> changes; // "+Item" / "-Item" wzgledem poprzednika
 
@@ -41,9 +45,10 @@ struct LiveEnemyView {
     }
 };
 
-// Wynik jednego odczytu: rozpoznane itemy, profil wroga i counter-build.
+// Wynik jednego odczytu: obie druzyny, profil wroga i counter-build.
 struct LiveResult {
-    std::vector<LiveEnemyView> enemies;
+    std::vector<LiveRowView> enemies;
+    std::vector<LiveRowView> allies;
     int total_items = 0;
     int uncertain = 0;
     EnemyProfile profile;
@@ -71,10 +76,13 @@ class VisionSession {
     std::string set_objective(const std::string& hero, Role role, int budget_override = -1);
     bool has_objective() const { return has_obj_; }
 
-    void reset_diff() { prev_.clear(); }
+    void reset_diff() {
+        prev_enemy_.clear();
+        prev_ally_.clear();
+    }
 
-    // Jeden odczyt klatki -> itemy per wrog + profil + counter + diff.
-    // Aktualizuje wewnetrzny stan do kolejnego diffa.
+    // Jeden odczyt klatki -> itemy per gracz (obie druzyny) + profil wroga
+    // + counter + diff. Aktualizuje wewnetrzny stan do kolejnego diffa.
     LiveResult read(const cv::Mat& frame, const Calibration& calib);
 
   private:
@@ -88,7 +96,8 @@ class VisionSession {
     Objective obj_;
     bool has_obj_ = false;
     bool loaded_ = false;
-    std::vector<std::set<std::string>> prev_; // nazwy itemow per wiersz
+    std::vector<std::set<std::string>> prev_enemy_; // nazwy itemow per wiersz
+    std::vector<std::set<std::string>> prev_ally_;
 };
 
 } // namespace predeye

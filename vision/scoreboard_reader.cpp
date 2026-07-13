@@ -1,15 +1,17 @@
 #include "scoreboard_reader.hpp"
 
 namespace predeye {
+namespace {
 
-ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& calib,
-                               const IconMatcher& matcher, const ItemIndex& index) {
-    ScoreboardRead out;
-    const GridSpec& g = calib.enemy_item_grid;
+// Odczyt jednej siatki (druzyny): rows x cols slotow.
+std::vector<RowRead> read_grid(const cv::Mat& frame_bgr, const GridSpec& g,
+                               const IconMatcher& matcher, const ItemIndex& index,
+                               int& total_items, int& uncertain) {
+    std::vector<RowRead> out;
     const cv::Rect frame_rect(0, 0, frame_bgr.cols, frame_bgr.rows);
 
     for (int r = 0; r < g.rows; ++r) {
-        EnemyRead row;
+        RowRead row;
         row.row = r;
         for (int c = 0; c < g.cols; ++c) {
             SlotRead slot;
@@ -44,12 +46,33 @@ ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& cali
             }
             if (!slot.confident)
                 ++row.uncertain;
-            ++out.total_items;
+            ++total_items;
             row.slots.push_back(slot);
         }
-        out.uncertain += row.uncertain;
-        out.enemies.push_back(std::move(row));
+        uncertain += row.uncertain;
+        out.push_back(std::move(row));
     }
+    return out;
+}
+
+} // namespace
+
+Role scoreboard_row_role(int row, int rows) {
+    // Staly porzadek rol w scoreboardzie Predecessora (ZALOZENIE — patrz .hpp).
+    static constexpr Role kOrder[5] = {Role::Offlane, Role::Jungle, Role::Midlane, Role::Carry,
+                                       Role::Support};
+    if (rows != 5 || row < 0 || row >= 5)
+        return Role::Unknown;
+    return kOrder[row];
+}
+
+ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& calib,
+                               const IconMatcher& matcher, const ItemIndex& index) {
+    ScoreboardRead out;
+    out.enemies =
+        read_grid(frame_bgr, calib.enemy_item_grid, matcher, index, out.total_items, out.uncertain);
+    out.allies =
+        read_grid(frame_bgr, calib.ally_item_grid, matcher, index, out.total_items, out.uncertain);
     return out;
 }
 

@@ -2,9 +2,10 @@
 
 Projekt buduje dwa pliki wykonywalne:
 
-- `predeye` — narzędzie wiersza poleceń (build/counter/calibrate/fetch-icons),
-- `predeye-gui` — graficzna powłoka (Dear ImGui + GLFW): zakładki **Build** i
-  **Counter**, wywołania API w tle.
+- `predeye` — narzędzie wiersza poleceń (build/counter/calibrate/fetch-icons/live),
+- `predeye-gui` — graficzna powłoka (Dear ImGui + GLFW): zakładki **Kalibracja**
+  i **Live** (build/counter z ręcznym wpisywaniem składów zostały w CLI).
+  GUI wymaga toru wizyjnego (`PREDEYE_VISION=ON`).
 
 ## CLion — uruchomienie „za pierwszym razem"
 
@@ -13,11 +14,9 @@ vcpkg konfiguruje się **automatycznie** (`cmake/AutoVcpkg.cmake`) — nie trzeb
 niczego ustawiać ręcznie.
 
 1. **File → Open** i wskaż katalog repo.
-2. CLion pokaże presety CMake — wybierz jeden:
+2. CLion pokaże preset CMake:
    - **predeye (pełny)** — GUI + CLI + tor wizyjny (OpenCV). Pierwsza
      konfiguracja jest długa: vcpkg buduje OpenCV ze źródeł.
-   - **predeye (szybki)** — GUI + CLI **bez** OpenCV. Znacznie szybszy pierwszy
-     build; brak komend wizyjnych (`fetch-icons`, `calibrate`, `live`).
 3. Poczekaj, aż CMake skończy konfigurację (za pierwszym razem klonuje i
    bootstrapuje vcpkg do `./.vcpkg`, potem pobiera zależności).
 4. Wybierz cel **predeye-gui** (lub **predeye**) z listy konfiguracji
@@ -36,10 +35,6 @@ Wymagania: CMake ≥ 3.21, kompilator C++17 (MSVC / GCC / Clang), git.
 # Pełny build (auto-vcpkg — pierwszy raz długi przez OpenCV):
 cmake --preset default
 cmake --build build --config Release
-
-# Szybki build bez OpenCV:
-cmake --preset gui-only
-cmake --build build-gui --config Release
 ```
 
 Pliki: `build/gui/predeye-gui`, `build/app/predeye` (na Windows w podkatalogu
@@ -62,14 +57,15 @@ Dodaj `-DPREDEYE_VISION=OFF`, by pominąć OpenCV/tor wizyjny.
 
 | Opcja | Domyślnie | Znaczenie |
 |---|---|---|
-| `PREDEYE_BUILD_GUI` | ON | buduje `predeye-gui` (ImGui + GLFW) |
+| `PREDEYE_BUILD_GUI` | ON | buduje `predeye-gui` (ImGui + GLFW); wymaga `PREDEYE_VISION=ON` |
 | `PREDEYE_BUILD_CLI` | ON | buduje `predeye` (CLI) |
 | `PREDEYE_VISION` | ON | tor wizyjny (OpenCV): capture, matcher, kalibracja |
 | `PREDEYE_AUTO_VCPKG` | ON | auto-klonowanie vcpkg, gdy brak toolchaina |
 
-Przy `PREDEYE_VISION=OFF` w trybie vcpkg dodatkowo warto wyłączyć domyślną
+Przy `PREDEYE_VISION=OFF` GUI jest pomijane (jego zakładki Kalibracja/Live
+wymagają OpenCV); w trybie vcpkg warto wtedy dodatkowo wyłączyć domyślną
 funkcję manifestu (`-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON`), by vcpkg nie
-instalował OpenCV — robi to preset **gui-only**.
+instalował OpenCV.
 
 ## Zależności
 

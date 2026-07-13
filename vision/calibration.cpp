@@ -8,13 +8,65 @@
 namespace predeye {
 namespace {
 
-int req_int(const nlohmann::json& j, const char* key) {
+int req_int(const nlohmann::json& j, const char* key, const std::string& ctx) {
     if (!j.contains(key) || !j[key].is_number())
-        throw std::runtime_error(std::string("calibration.json: brak pola \"") + key + "\"");
+        throw std::runtime_error(ctx + ": brak pola \"" + key + "\"");
     return j[key].get<int>();
 }
 
+GridSpec parse_grid(const nlohmann::json& g, const std::string& ctx) {
+    if (!g.contains("origin") || !g["origin"].is_array() || g["origin"].size() != 2 ||
+        !g.contains("slot") || !g["slot"].is_array() || g["slot"].size() != 2)
+        throw std::runtime_error(ctx + " wymaga pol origin[2] i slot[2]");
+    GridSpec spec;
+    spec.origin = {g["origin"][0].get<int>(), g["origin"][1].get<int>()};
+    spec.slot = {g["slot"][0].get<int>(), g["slot"][1].get<int>()};
+    spec.dx = req_int(g, "dx", ctx);
+    spec.dy = req_int(g, "dy", ctx);
+    spec.cols = req_int(g, "cols", ctx);
+    spec.rows = req_int(g, "rows", ctx);
+    if (spec.cols <= 0 || spec.rows <= 0 || spec.slot.width <= 0 || spec.slot.height <= 0)
+        throw std::runtime_error(ctx + ": wymiary siatki musza byc dodatnie");
+    return spec;
+}
+
+nlohmann::json dump_grid(const GridSpec& g) {
+    return {
+        {"origin", {g.origin.x, g.origin.y}},
+        {"slot", {g.slot.width, g.slot.height}},
+        {"dx", g.dx},
+        {"dy", g.dy},
+        {"cols", g.cols},
+        {"rows", g.rows},
+    };
+}
+
+// Ramki slotow + numery wierszy jednej siatki, z etykieta nad originem.
+void draw_one_grid(cv::Mat& out, const GridSpec& g, const cv::Scalar& color,
+                   const std::string& label) {
+    const cv::Scalar yellow(0, 255, 255);
+    for (int r = 0; r < g.rows; ++r) {
+        for (int c = 0; c < g.cols; ++c)
+            cv::rectangle(out, g.slot_rect(r, c), color, 1);
+        const cv::Rect first = g.slot_rect(r, 0);
+        cv::putText(out, std::to_string(r + 1), {first.x - 22, first.y + first.height / 2 + 5},
+                    cv::FONT_HERSHEY_SIMPLEX, 0.55, yellow, 1);
+    }
+    // Krzyzyk na origin — najlatwiejszy punkt odniesienia przy iteracji.
+    cv::drawMarker(out, g.origin, yellow, cv::MARKER_CROSS, 14, 1);
+    cv::putText(out, label, {g.origin.x, g.origin.y - 10}, cv::FONT_HERSHEY_SIMPLEX, 0.5, color,
+                1);
+}
+
 } // namespace
+
+GridSpec mirror_grid(const GridSpec& enemy, const cv::Size& resolution) {
+    GridSpec ally = enemy;
+    // Prawy kraniec siatki wroga odbity w lewy kraniec siatki sojusznikow.
+    const int span = (enemy.cols - 1) * enemy.dx + enemy.slot.width;
+    ally.origin.x = resolution.width - enemy.origin.x - span;
+    return ally;
+}
 
 Calibration Calibration::load(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
@@ -29,33 +81,22 @@ Calibration Calibration::load(const std::string& path) {
         c.resolution = {j["resolution"][0].get<int>(), j["resolution"][1].get<int>()};
     if (!j.contains("enemy_item_grid") || !j["enemy_item_grid"].is_object())
         throw std::runtime_error(path + ": brak obiektu \"enemy_item_grid\"");
-    const auto& g = j["enemy_item_grid"];
-    if (!g.contains("origin") || !g["origin"].is_array() || g["origin"].size() != 2 ||
-        !g.contains("slot") || !g["slot"].is_array() || g["slot"].size() != 2)
-        throw std::runtime_error(path + ": enemy_item_grid wymaga pol origin[2] i slot[2]");
-    c.enemy_item_grid.origin = {g["origin"][0].get<int>(), g["origin"][1].get<int>()};
-    c.enemy_item_grid.slot = {g["slot"][0].get<int>(), g["slot"][1].get<int>()};
-    c.enemy_item_grid.dx = req_int(g, "dx");
-    c.enemy_item_grid.dy = req_int(g, "dy");
-    c.enemy_item_grid.cols = req_int(g, "cols");
-    c.enemy_item_grid.rows = req_int(g, "rows");
-    if (c.enemy_item_grid.cols <= 0 || c.enemy_item_grid.rows <= 0 ||
-        c.enemy_item_grid.slot.width <= 0 || c.enemy_item_grid.slot.height <= 0)
-        throw std::runtime_error(path + ": wymiary siatki musza byc dodatnie");
+    c.enemy_item_grid = parse_grid(j["enemy_item_grid"], path + ": enemy_item_grid");
+
+    // Kompatybilnosc ze starszymi plikami (tylko siatka wroga): sojusznicy
+    // dostaja lustrzana siatke orientacyjna — uzytkownik dostroi podgladem.
+    if (j.contains("ally_item_grid") && j["ally_item_grid"].is_object())
+        c.ally_item_grid = parse_grid(j["ally_item_grid"], path + ": ally_item_grid");
+    else
+        c.ally_item_grid = mirror_grid(c.enemy_item_grid, c.resolution);
     return c;
 }
 
 void Calibration::save(const std::string& path) const {
     nlohmann::json j;
     j["resolution"] = {resolution.width, resolution.height};
-    j["enemy_item_grid"] = {
-        {"origin", {enemy_item_grid.origin.x, enemy_item_grid.origin.y}},
-        {"slot", {enemy_item_grid.slot.width, enemy_item_grid.slot.height}},
-        {"dx", enemy_item_grid.dx},
-        {"dy", enemy_item_grid.dy},
-        {"cols", enemy_item_grid.cols},
-        {"rows", enemy_item_grid.rows},
-    };
+    j["enemy_item_grid"] = dump_grid(enemy_item_grid);
+    j["ally_item_grid"] = dump_grid(ally_item_grid);
     std::ofstream out(path, std::ios::binary | std::ios::trunc);
     if (!out)
         throw std::runtime_error("nie mozna zapisac " + path);
@@ -79,23 +120,14 @@ Calibration Calibration::default_for(const cv::Size& resolution) {
     // looks_empty.
     c.enemy_item_grid.cols = 7;
     c.enemy_item_grid.rows = 5;
+    c.ally_item_grid = mirror_grid(c.enemy_item_grid, resolution);
     return c;
 }
 
 cv::Mat draw_grid(const cv::Mat& frame_bgr, const Calibration& calib) {
     cv::Mat out = frame_bgr.clone();
-    const auto& g = calib.enemy_item_grid;
-    const cv::Scalar green(0, 255, 0), yellow(0, 255, 255);
-    for (int r = 0; r < g.rows; ++r) {
-        for (int c = 0; c < g.cols; ++c)
-            cv::rectangle(out, g.slot_rect(r, c), green, 1);
-        const cv::Rect first = g.slot_rect(r, 0);
-        cv::putText(out, std::to_string(r + 1),
-                    {first.x - 22, first.y + first.height / 2 + 5},
-                    cv::FONT_HERSHEY_SIMPLEX, 0.55, yellow, 1);
-    }
-    // Krzyzyk na origin — najlatwiejszy punkt odniesienia przy iteracji.
-    cv::drawMarker(out, g.origin, yellow, cv::MARKER_CROSS, 14, 1);
+    draw_one_grid(out, calib.enemy_item_grid, cv::Scalar(0, 0, 255), "WROGOWIE");
+    draw_one_grid(out, calib.ally_item_grid, cv::Scalar(0, 255, 0), "MOJA DRUZYNA");
     return out;
 }
 

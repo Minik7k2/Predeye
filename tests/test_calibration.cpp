@@ -1,4 +1,5 @@
-// Testy kalibracji: round-trip JSON, geometria siatki, podglad.
+// Testy kalibracji: round-trip JSON, kompatybilnosc wsteczna, geometria
+// siatki, podglad obu druzyn.
 #include "vision/calibration.hpp"
 
 #include <doctest/doctest.h>
@@ -8,7 +9,7 @@
 namespace fs = std::filesystem;
 using namespace predeye;
 
-TEST_CASE("Calibration: save/load round-trip") {
+TEST_CASE("Calibration: save/load round-trip (obie siatki)") {
     Calibration c;
     c.resolution = {1920, 1080};
     c.enemy_item_grid.origin = {1210, 300};
@@ -17,6 +18,8 @@ TEST_CASE("Calibration: save/load round-trip") {
     c.enemy_item_grid.dy = 96;
     c.enemy_item_grid.cols = 6;
     c.enemy_item_grid.rows = 5;
+    c.ally_item_grid = c.enemy_item_grid;
+    c.ally_item_grid.origin = {180, 310};
 
     const std::string path = (fs::temp_directory_path() / "predeye_calib_test.json").string();
     c.save(path);
@@ -28,6 +31,27 @@ TEST_CASE("Calibration: save/load round-trip") {
     CHECK(l.enemy_item_grid.dy == 96);
     CHECK(l.enemy_item_grid.cols == 6);
     CHECK(l.enemy_item_grid.rows == 5);
+    CHECK(l.ally_item_grid.origin == cv::Point(180, 310));
+    CHECK(l.ally_item_grid.slot == c.ally_item_grid.slot);
+    CHECK(l.ally_item_grid.dx == 38);
+}
+
+TEST_CASE("Calibration: starszy plik bez ally_item_grid dostaje siatke lustrzana") {
+    const std::string path = (fs::temp_directory_path() / "predeye_calib_old.json").string();
+    {
+        std::ofstream out(path, std::ios::trunc);
+        out << R"({ "resolution": [1920, 1080],
+                    "enemy_item_grid": { "origin": [1346, 256], "slot": [46, 46],
+                                          "dx": 59, "dy": 145, "cols": 7, "rows": 5 } })";
+    }
+    const Calibration l = Calibration::load(path);
+    // Geometria przejeta z wroga, origin.x odbity wzgledem srodka ekranu.
+    CHECK(l.ally_item_grid.slot == l.enemy_item_grid.slot);
+    CHECK(l.ally_item_grid.dx == l.enemy_item_grid.dx);
+    CHECK(l.ally_item_grid.cols == l.enemy_item_grid.cols);
+    const int span = 6 * 59 + 46;
+    CHECK(l.ally_item_grid.origin.x == 1920 - 1346 - span);
+    CHECK(l.ally_item_grid.origin.y == 256);
 }
 
 TEST_CASE("Calibration: czytelne bledy dla zepsutego pliku") {
@@ -53,14 +77,30 @@ TEST_CASE("GridSpec: geometria slotow") {
     CHECK(g.slot_rect(2, 1) == cv::Rect(140, 380, 30, 32));
 }
 
-TEST_CASE("draw_grid: nie modyfikuje oryginalu, rysuje w obrysie slotow") {
+TEST_CASE("mirror_grid: odbicie originu wzgledem srodka, geometria bez zmian") {
+    GridSpec e;
+    e.origin = {1346, 256};
+    e.slot = {46, 46};
+    e.dx = 59;
+    e.dy = 145;
+    e.cols = 7;
+    e.rows = 5;
+    const GridSpec a = mirror_grid(e, {1920, 1080});
+    CHECK(a.origin.x == 1920 - 1346 - (6 * 59 + 46));
+    CHECK(a.origin.y == 256);
+    CHECK(a.slot == e.slot);
+    CHECK(a.cols == e.cols);
+}
+
+TEST_CASE("draw_grid: nie modyfikuje oryginalu, rysuje obie siatki") {
     const Calibration c = Calibration::default_for({1920, 1080});
     cv::Mat frame(1080, 1920, CV_8UC3, cv::Scalar(0, 0, 0));
     const cv::Mat preview = draw_grid(frame, c);
     CHECK(preview.size() == frame.size());
     CHECK(cv::sum(frame) == cv::Scalar(0, 0, 0, 0)); // oryginal nietkniety
-    // Zielona ramka pierwszego slotu faktycznie narysowana.
-    const cv::Rect r = c.enemy_item_grid.slot_rect(0, 0);
-    const cv::Vec3b px = preview.at<cv::Vec3b>(r.y, r.x + r.width / 2);
-    CHECK(px == cv::Vec3b(0, 255, 0));
+    // Czerwona ramka pierwszego slotu wroga i zielona sojusznika narysowane.
+    const cv::Rect re = c.enemy_item_grid.slot_rect(0, 0);
+    CHECK(preview.at<cv::Vec3b>(re.y, re.x + re.width / 2) == cv::Vec3b(0, 0, 255));
+    const cv::Rect ra = c.ally_item_grid.slot_rect(0, 0);
+    CHECK(preview.at<cv::Vec3b>(ra.y, ra.x + ra.width / 2) == cv::Vec3b(0, 255, 0));
 }

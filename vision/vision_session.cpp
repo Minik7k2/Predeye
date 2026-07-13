@@ -10,6 +10,55 @@
 #include <utility>
 
 namespace predeye {
+namespace {
+
+// Widoki wierszy jednej druzyny + diff wzgledem poprzedniego odczytu.
+// `prev` jest podmieniane na biezacy stan (do nastepnego diffa).
+std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
+                                    std::vector<std::set<std::string>>& prev) {
+    std::vector<LiveRowView> views;
+    std::vector<std::set<std::string>> next;
+    next.reserve(rows.size());
+
+    for (const auto& r : rows) {
+        LiveRowView view;
+        view.row = r.row;
+        view.role = scoreboard_row_role(r.row, static_cast<int>(rows.size()));
+        view.role_label = view.role == Role::Unknown ? "Wiersz " + std::to_string(r.row + 1)
+                                                     : role_name(view.role);
+        std::set<std::string> names;
+
+        for (const auto& s : r.slots) {
+            LiveSlotView sv;
+            sv.empty = s.empty;
+            if (!s.empty) {
+                sv.name = s.name.empty() ? "?" : s.name;
+                sv.confident = s.confident;
+                if (!s.name.empty())
+                    names.insert(s.name);
+            }
+            view.slots.push_back(std::move(sv));
+        }
+
+        // Diff wzgledem poprzedniego odczytu tego wiersza (dodane, potem usuniete).
+        if (r.row < static_cast<int>(prev.size())) {
+            const auto& before = prev[static_cast<size_t>(r.row)];
+            for (const auto& n : names)
+                if (!before.count(n))
+                    view.changes.push_back("+" + n);
+            for (const auto& n : before)
+                if (!names.count(n))
+                    view.changes.push_back("-" + n);
+        }
+
+        next.push_back(std::move(names));
+        views.push_back(std::move(view));
+    }
+    prev = std::move(next);
+    return views;
+}
+
+} // namespace
 
 VisionSession::VisionSession(std::string cache_dir)
     : icon_dir_(cache_dir + "/icons"), api_(std::move(cache_dir)) {}
@@ -64,48 +113,18 @@ LiveResult VisionSession::read(const cv::Mat& frame, const Calibration& calib) {
     out.total_items = sb.total_items;
     out.uncertain = sb.uncertain;
     out.objective_name = obj_.name;
+    out.enemies = make_views(sb.enemies, prev_enemy_);
+    out.allies = make_views(sb.allies, prev_ally_);
 
+    // Profil i counter liczone WYLACZNIE z itemow wroga — sojusznicy sa
+    // wyswietlani informacyjnie (kto z kim walczy, co juz maja).
     std::vector<EnemyBuildProfile> builds;
-    std::vector<std::set<std::string>> next_prev;
-    next_prev.reserve(sb.enemies.size());
-
-    for (const auto& e : sb.enemies) {
-        LiveEnemyView view;
-        view.row = e.row;
-        std::set<std::string> names;
-
-        for (const auto& s : e.slots) {
-            LiveSlotView sv;
-            sv.empty = s.empty;
-            if (!s.empty) {
-                sv.name = s.name.empty() ? "?" : s.name;
-                sv.confident = s.confident;
-                if (!s.name.empty())
-                    names.insert(s.name);
-            }
-            view.slots.push_back(std::move(sv));
-        }
-
-        // Diff wzgledem poprzedniego odczytu tego wiersza (dodane, potem usuniete).
-        if (e.row < static_cast<int>(prev_.size())) {
-            const auto& before = prev_[static_cast<size_t>(e.row)];
-            for (const auto& n : names)
-                if (!before.count(n))
-                    view.changes.push_back("+" + n);
-            for (const auto& n : before)
-                if (!names.count(n))
-                    view.changes.push_back("-" + n);
-        }
-
+    for (const auto& e : sb.enemies)
         if (!e.items.empty())
             builds.push_back(classify_items(e.items));
-        next_prev.push_back(std::move(names));
-        out.enemies.push_back(std::move(view));
-    }
 
     refine_enemy_profile(out.profile, builds);
     out.counter = engine_->counter_build(obj_, out.profile);
-    prev_ = std::move(next_prev);
     return out;
 }
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21)
+cmake_minimum_required(VERSION 3.19)
 
 # Auto-vcpkg PRZED project() — zapewnia toolchain "za pierwszym razem"
 # (np. otwierajac w CLion). Szczegoly i wylaczenie: cmake/AutoVcpkg.cmake.
@@ -19,8 +19,19 @@ option(PREDEYE_BUILD_CLI "Narzedzie wiersza polecen predeye" ON)
 # Wysoki poziom ostrzezen — ostrzezenie = do naprawy przed commitem (§3.4).
 if(MSVC)
     add_compile_options(/W4 /permissive- /utf-8)
+    # std::getenv to standardowe C++ (rdzen przenosny, §4); C4996 to
+    # niestandardowa deprecjacja MSVC — wyciszamy, nie przepisujemy na _dupenv_s.
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
 else()
     add_compile_options(-Wall -Wextra)
+endif()
+
+# windows.h (wciagany przez d3d11.h w capture_dxgi i wprost w app/main.cpp)
+# definiuje makra min/max, ktore rozbijaja std::min/std::max w naglowkach
+# OpenCV (lawina bledow skladni w imgproc.hpp na MSVC). NOMINMAX je wylacza;
+# WIN32_LEAN_AND_MEAN przycina windows.h do potrzebnego minimum.
+if(WIN32)
+    add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 endif()
 
 # Straznik niezgodnosci ABI: MinGW g++ nie zlinkuje bibliotek C++ zbudowanych
@@ -62,11 +73,16 @@ if(PREDEYE_BUILD_CLI)
 endif()
 
 if(PREDEYE_BUILD_GUI)
-    add_subdirectory(third_party/imgui)
-    add_subdirectory(gui)
+    # GUI to wylacznie zakladki Kalibracja i Live (build/counter zostaly
+    # w CLI) — bez toru wizyjnego nie mialoby zadnej tresci.
+    if(PREDEYE_VISION)
+        add_subdirectory(third_party/imgui)
+        add_subdirectory(gui)
+    else()
+        message(WARNING "predeye-gui wymaga PREDEYE_VISION=ON "
+                        "(zakladki Kalibracja/Live) — pomijam GUI.")
+    endif()
 endif()
 
-include(CTest)
-if(BUILD_TESTING)
-    add_subdirectory(tests)
-endif()
+enable_testing()
+add_subdirectory(tests)

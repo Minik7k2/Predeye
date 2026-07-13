@@ -185,7 +185,8 @@ int cmd_calibrate(const std::vector<std::string>& args) {
     // 3) Podglad.
     cv::imwrite(preview_path, draw_grid(frame, calib));
     std::printf("Zapisano %s. Obejrzyj go, popraw wartosci w %s i uruchom "
-                "calibrate ponownie, az siatka trafi w sloty itemow wrogow.\n",
+                "calibrate ponownie, az siatki trafia w sloty itemow "
+                "(czerwona = wrogowie, zielona = moja druzyna).\n",
                 preview_path.c_str(), config_path.c_str());
     return 0;
 }
@@ -205,13 +206,12 @@ int cmd_fetch_icons() {
     return 0;
 }
 
-// Wydruk jednego odczytu live: rozpoznane itemy (z pewnoscia), diff wzgledem
-// poprzedniego odczytu, doostrzony profil i swiezy counter-build. Format
-// identyczny jak dotad — logika w VisionSession (wspolna z GUI).
-void print_live(const LiveResult& r) {
-    std::printf("--- odczyt: %d itemow (%d niepewnych) ---\n", r.total_items, r.uncertain);
-    for (const auto& e : r.enemies) {
-        std::printf("  Wrog %d: ", e.row + 1);
+// Wydruk wierszy jednej druzyny: rola, itemy (z pewnoscia), diff wzgledem
+// poprzedniego odczytu. Ta sama rola u wroga i sojusznika = matchup w linii.
+void print_team(const char* title, const std::vector<LiveRowView>& rows) {
+    std::printf("%s:\n", title);
+    for (const auto& e : rows) {
+        std::printf("  %-9s ", (e.role_label + ":").c_str());
         bool any = false;
         for (const auto& s : e.slots) {
             if (s.empty)
@@ -229,6 +229,14 @@ void print_live(const LiveResult& r) {
             std::printf("    zmiana: %s\n", delta.c_str());
         }
     }
+}
+
+// Wydruk jednego odczytu live: itemy obu druzyn, doostrzony profil wroga
+// i swiezy counter-build. Logika w VisionSession (wspolna z GUI).
+void print_live(const LiveResult& r) {
+    std::printf("--- odczyt: %d itemow (%d niepewnych) ---\n", r.total_items, r.uncertain);
+    print_team("Wrogowie", r.enemies);
+    print_team("Moja druzyna", r.allies);
 
     std::printf("Profil wroga: %.0f%% obrazen fizycznych%s%s%s\n", 100.0 * r.profile.physical_ratio,
                 r.profile.has_healing ? ", leczenie" : "", r.profile.has_crit ? ", kryt" : "",

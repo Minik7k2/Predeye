@@ -13,23 +13,9 @@
         "PREDEYE_BUILD_GUI": "ON",
         "PREDEYE_BUILD_CLI": "ON"
       }
-    },
-    {
-      "name": "gui-only",
-      "displayName": "predeye (szybki: GUI + CLI bez OpenCV)",
-      "description": "Pomija tor wizyjny i OpenCV — znacznie szybszy pierwszy build.",
-      "binaryDir": "${sourceDir}/build-gui",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "PREDEYE_VISION": "OFF",
-        "PREDEYE_BUILD_GUI": "ON",
-        "PREDEYE_BUILD_CLI": "ON",
-        "VCPKG_MANIFEST_NO_DEFAULT_FEATURES": "ON"
-      }
     }
   ],
   "buildPresets": [
-    { "name": "default", "configurePreset": "default" },
-    { "name": "gui-only", "configurePreset": "gui-only" }
+    { "name": "default", "configurePreset": "default" }
   ]
 }
