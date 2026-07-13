@@ -7,6 +7,7 @@
 #include "core/hero_context.hpp"
 #include "core/models.hpp"
 #include "vision/calibration.hpp"
+#include "vision/hero_matcher.hpp"
 #include "vision/icon_matcher.hpp"
 
 #include <array>
@@ -56,5 +57,19 @@ Role scoreboard_row_role(int row, int rows);
 // funkcja nigdy nie rzuca z powodu zlej geometrii.
 ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& calib,
                                const IconMatcher& matcher, const ItemIndex& index);
+
+// Identyfikacja bohatera kazdego wiersza jednego panelu z portretu przy
+// karcie gracza (portrait_rect). ROI poza klatka => hero_id 0 (pomijamy,
+// nie rzucamy). name z HeroDB po id ("" gdy id nieznane bazie).
+struct HeroRead {
+    int row = 0;
+    long long hero_id = 0; // 0 = nie odczytano
+    std::string name;      // display_name
+    float cosine = -1.0f;
+    bool confident = false;
+};
+std::vector<HeroRead> read_heroes(const cv::Mat& frame_bgr, const GridSpec& grid,
+                                  const cv::Size& resolution, const HeroMatcher& matcher,
+                                  const HeroDB& db);
 
 } // namespace predeye

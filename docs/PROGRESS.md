@@ -1,5 +1,32 @@
 # Postęp prac
 
+## Identyfikacja bohaterów z portretów (bez OCR)
+
+- **`vision/hero_matcher`**: rozpoznawanie bohatera każdego wiersza
+  scoreboardu z portretu przy karcie gracza, tą samą metodą co itemy
+  (kolor-NCC 32×32 + wyrównanie ±2 px). Grafiki z `/heroes.json` (pole
+  `image`) to TEN SAM art co portrety w grze — zweryfikowane. Baza 52
+  portretów w cache (`.../predeye/cache/portraits`), pobierana przy
+  pierwszym `live` (pauzy ~50 ms).
+- **Pomiar geometrii portretu** (gradientowo, 1080p): (170, 186) 78×76 przy
+  siatce sojuszników, wiersze co dy; panel wroga znów dokładnie **+1010 px**.
+  `portrait_rect()` w `vision/calibration` liczy ROI z originu siatki itemów
+  (skala z wysokością ekranu).
+- **Współdzielenie ścieżki z itemami**: z `icon_matcher` wydzielone
+  `ensure_image_cache`/`load_image_manifest` (wspólny manifest id→plik)
+  i `match_signatures` (dwustopniowe NCC) — `IconMatcher` i `HeroMatcher`
+  używają tego samego kodu. `HeroProfile` dostał pole `image`.
+- **Integracja**: `read_heroes()` w scoreboard_readerze; `VisionSession.read`
+  dopisuje bohatera do wierszy (CLI: „midlane Howitzer: …", GUI: kolumna
+  Rola), a **profil wroga liczy z KLAS rozpoznanych bohaterów** (jak
+  `counter` z ręcznie wpisanych nazw), doostrzony realnymi itemami.
+- **Walidacja na fixtures: 30/30 portretów bezbłędnie i pewnie** (3 zrzuty
+  × 10 graczy), w tym wiersz rozłączonego gracza z przyciemnionym overlayem
+  DISCONNECTED (normalizacja NCC znosi przyciemnienie) i „Iggy & Scorch".
+- Otwiera drogę (backlog): tie-break niepewnych itemów po `typical_build`
+  rozpoznanego bohatera (świadome uproszczenie z M4/M5) oraz auto-wybór
+  własnego bohatera w `live` z wiersza podświetlonego na zielono.
+
 ## M4 — kalibracja zmierzona na realnych zrzutach + naprawa sygnatur ikon
 
 - **Realne zrzuty TAB w repo**: `tests/fixtures/screens/` — 3 reprezentatywne

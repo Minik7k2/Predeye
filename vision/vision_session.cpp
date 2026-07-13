@@ -14,7 +14,9 @@ namespace {
 
 // Widoki wierszy jednej druzyny + diff wzgledem poprzedniego odczytu.
 // `prev` jest podmieniane na biezacy stan (do nastepnego diffa).
+// `heroes` (po wierszach, moze byc krotsze) dopisuje bohatera z portretu.
 std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
+                                    const std::vector<HeroRead>& heroes,
                                     std::vector<std::set<std::string>>& prev) {
     std::vector<LiveRowView> views;
     std::vector<std::set<std::string>> next;
@@ -26,6 +28,10 @@ std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
         view.role = scoreboard_row_role(r.row, static_cast<int>(rows.size()));
         view.role_label = view.role == Role::Unknown ? "Wiersz " + std::to_string(r.row + 1)
                                                      : role_name(view.role);
+        if (r.row >= 0 && r.row < static_cast<int>(heroes.size())) {
+            view.hero = heroes[static_cast<size_t>(r.row)].name;
+            view.hero_confident = heroes[static_cast<size_t>(r.row)].confident;
+        }
         std::set<std::string> names;
 
         for (const auto& s : r.slots) {
@@ -61,7 +67,8 @@ std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
 } // namespace
 
 VisionSession::VisionSession(std::string cache_dir)
-    : icon_dir_(cache_dir + "/icons"), api_(std::move(cache_dir)) {}
+    : icon_dir_(cache_dir + "/icons"), portrait_dir_(cache_dir + "/portraits"),
+      api_(std::move(cache_dir)) {}
 
 void VisionSession::ensure_loaded() {
     if (loaded_)
@@ -77,8 +84,9 @@ void VisionSession::ensure_matcher() {
     ensure_loaded();
     if (matcher_)
         return;
-    // Konstruktor pobiera brakujace ikony; po pierwszym pobraniu dziala offline.
+    // Konstruktory pobieraja brakujace grafiki; po pierwszym pobraniu offline.
     matcher_ = std::make_unique<IconMatcher>(items_, api_, icon_dir_);
+    hero_matcher_ = std::make_unique<HeroMatcher>(heroes_->all(), api_, portrait_dir_);
 }
 
 std::vector<std::string> VisionSession::hero_names() {
@@ -108,16 +116,29 @@ LiveResult VisionSession::read(const cv::Mat& frame, const Calibration& calib) {
         throw std::runtime_error("pusta baza ikon — uruchom fetch-icons / ensure_matcher");
 
     const ScoreboardRead sb = read_scoreboard(frame, calib, *matcher_, index_);
+    const auto enemy_heroes =
+        read_heroes(frame, calib.enemy_item_grid, calib.resolution, *hero_matcher_, *heroes_);
+    const auto ally_heroes =
+        read_heroes(frame, calib.ally_item_grid, calib.resolution, *hero_matcher_, *heroes_);
 
     LiveResult out;
     out.total_items = sb.total_items;
     out.uncertain = sb.uncertain;
     out.objective_name = obj_.name;
-    out.enemies = make_views(sb.enemies, prev_enemy_);
-    out.allies = make_views(sb.allies, prev_ally_);
+    out.enemies = make_views(sb.enemies, enemy_heroes, prev_enemy_);
+    out.allies = make_views(sb.allies, ally_heroes, prev_ally_);
 
-    // Profil i counter liczone WYLACZNIE z itemow wroga — sojusznicy sa
-    // wyswietlani informacyjnie (kto z kim walczy, co juz maja).
+    // Profil wroga: baza z KLAS rozpoznanych bohaterow (jak `counter` z nazw
+    // wpisanych recznie), doostrzona REALNYMI itemami ze scoreboardu.
+    // Sojusznicy wyswietlani informacyjnie (kto z kim walczy, co juz maja).
+    std::vector<HeroProfile> enemy_profiles;
+    for (const auto& h : enemy_heroes)
+        if (h.confident)
+            if (const HeroProfile* p = heroes_->by_id(h.hero_id))
+                enemy_profiles.push_back(*p);
+    if (!enemy_profiles.empty())
+        out.profile = enemy_from(enemy_profiles);
+
     std::vector<EnemyBuildProfile> builds;
     for (const auto& e : sb.enemies)
         if (!e.items.empty())

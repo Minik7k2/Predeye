@@ -60,6 +60,15 @@ void draw_one_grid(cv::Mat& out, const GridSpec& g, const cv::Scalar& color,
 
 } // namespace
 
+cv::Rect portrait_rect(const GridSpec& grid, int row, const cv::Size& resolution) {
+    // Zmierzone 1080p: portret zaczyna sie 163 px na lewo i 64 px nad
+    // originem siatki itemow; 78x76 px. Inne rozdzielczosci: skala z wysokoscia.
+    const double s = resolution.height / 1080.0;
+    return {grid.origin.x - static_cast<int>(163 * s),
+            grid.origin.y + row * grid.dy - static_cast<int>(64 * s), static_cast<int>(78 * s),
+            static_cast<int>(76 * s)};
+}
+
 GridSpec ally_grid_from_enemy(const GridSpec& enemy, const cv::Size& resolution) {
     GridSpec ally = enemy;
     // Panele NIE sa lustrzane: wiersz gracza (portret, crest, itemy) ma ten

@@ -96,6 +96,18 @@ TEST_CASE("ally_grid_from_enemy: przesuniecie paneli, geometria bez zmian") {
     CHECK(a14.origin.x == 1791 - 1346);
 }
 
+TEST_CASE("portrait_rect: offset od siatki itemow zmierzony na 1080p") {
+    const Calibration c = Calibration::default_for({1920, 1080});
+    // Wiersz 0 sojusznikow: portret (170, 186) 78x76 (pomiar gradientowy).
+    const cv::Rect p0 = portrait_rect(c.ally_item_grid, 0, c.resolution);
+    CHECK(p0 == cv::Rect(170, 186, 78, 76));
+    // Kolejne wiersze co dy; panel wroga przesuniety o +1010.
+    const cv::Rect p2 = portrait_rect(c.ally_item_grid, 2, c.resolution);
+    CHECK(p2.y == 186 + 2 * 145);
+    const cv::Rect e0 = portrait_rect(c.enemy_item_grid, 0, c.resolution);
+    CHECK(e0.x == 1180);
+}
+
 TEST_CASE("default_for: wartosci zmierzone na realnych zrzutach 1080p") {
     const Calibration c = Calibration::default_for({1920, 1080});
     CHECK(c.enemy_item_grid.origin == cv::Point(1343, 250));

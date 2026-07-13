@@ -160,7 +160,11 @@ void draw_team_table(const char* id, const char* title, const std::vector<LiveRo
     for (const auto& r : rows) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        ImGui::TextUnformatted(r.role_label.c_str());
+        // Bohater z portretu; "?" gdy dopasowanie ponizej progu pewnosci.
+        std::string who = r.role_label;
+        if (!r.hero.empty())
+            who += " " + r.hero + (r.hero_confident ? "" : "?");
+        ImGui::TextUnformatted(who.c_str());
         ImGui::TableSetColumnIndex(1);
         std::string line;
         for (const auto& s : r.slots) {

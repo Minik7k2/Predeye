@@ -248,7 +248,11 @@ int cmd_fetch_icons() {
 void print_team(const char* title, const std::vector<LiveRowView>& rows) {
     std::printf("%s:\n", title);
     for (const auto& e : rows) {
-        std::printf("  %-9s ", (e.role_label + ":").c_str());
+        // Bohater z portretu; "?" gdy dopasowanie ponizej progu pewnosci.
+        std::string who = e.role_label;
+        if (!e.hero.empty())
+            who += " " + e.hero + (e.hero_confident ? "" : "?");
+        std::printf("  %-22s ", (who + ":").c_str());
         bool any = false;
         for (const auto& s : e.slots) {
             if (s.empty)

@@ -43,6 +43,12 @@ struct Calibration {
 // odstep, zmierzony na realnych zrzutach 1080p (+1010 px, skala z wysokoscia).
 GridSpec ally_grid_from_enemy(const GridSpec& enemy, const cv::Size& resolution);
 
+// ROI portretu bohatera wiersza `row` danego panelu: staly offset wzgledem
+// originu siatki itemow, zmierzony gradientowo na realnych zrzutach 1080p
+// (portret (170,186) 78x76 przy siatce (333,250); wiersze co dy), skalowany
+// wysokoscia ekranu. Uzywa go identyfikacja bohaterow (hero_matcher).
+cv::Rect portrait_rect(const GridSpec& grid, int row, const cv::Size& resolution);
+
 // Rysuje obie siatki na kopii klatki (wrogowie czerwono, sojusznicy zielono,
 // numery wierszy) — podglad do iteracji kalibracji (CLI preview.png i GUI).
 cv::Mat draw_grid(const cv::Mat& frame_bgr, const Calibration& calib);

@@ -10,6 +10,7 @@
 #include "core/models.hpp"
 #include "core/omeda_client.hpp"
 #include "vision/calibration.hpp"
+#include "vision/hero_matcher.hpp"
 #include "vision/icon_matcher.hpp"
 
 #include <memory>
@@ -34,6 +35,8 @@ struct LiveRowView {
     int row = 0;
     Role role = Role::Unknown;
     std::string role_label; // "Offlane"... / "Wiersz N" gdy Unknown
+    std::string hero;       // display_name z portretu ("" gdy nie rozpoznano)
+    bool hero_confident = false;
     std::vector<LiveSlotView> slots;
     std::vector<std::string> changes; // "+Item" / "-Item" wzgledem poprzednika
 
@@ -63,7 +66,7 @@ class VisionSession {
     explicit VisionSession(std::string cache_dir = OmedaClient::default_dir());
 
     void ensure_loaded();  // items + heroes + silnik (sieciowe, cache TTL)
-    void ensure_matcher(); // baza ikon (pobiera brakujace); wymaga ensure_loaded
+    void ensure_matcher(); // bazy ikon i portretow (pobiera brakujace); wymaga ensure_loaded
 
     bool matcher_ready() const { return matcher_ && matcher_->base_size() > 0; }
     size_t icon_base_size() const { return matcher_ ? matcher_->base_size() : 0; }
@@ -87,12 +90,14 @@ class VisionSession {
 
   private:
     std::string icon_dir_;
+    std::string portrait_dir_;
     OmedaClient api_;
     std::vector<Item> items_;
     ItemIndex index_;
     std::unique_ptr<HeroDB> heroes_;
     std::unique_ptr<BuildEngine> engine_;
     std::unique_ptr<IconMatcher> matcher_;
+    std::unique_ptr<HeroMatcher> hero_matcher_;
     Objective obj_;
     bool has_obj_ = false;
     bool loaded_ = false;

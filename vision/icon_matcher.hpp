@@ -32,6 +32,27 @@ cv::Mat ncc_signature(const cv::Mat& bgr);
 // musza byc przygotowane identycznie.
 cv::Mat tile_from_asset(const cv::Mat& img);
 
+// Grafika do pobrania do lokalnego katalogu (webp per id + manifest).
+struct ImageRef {
+    long long id = 0;
+    std::string image; // sciezka API "/assets/....webp"
+    std::string label; // do komunikatow bledow (display_name)
+};
+
+// Manifest katalogu grafik (id -> plik); pusty gdy katalogu/manifestu brak.
+std::map<long long, std::string> load_image_manifest(const std::string& dir);
+
+// Zapewnia lokalny katalog grafik z API: pobiera brakujace (pauza ~50 ms),
+// utrzymuje manifest. Wspolne dla ikon itemow i portretow bohaterow.
+std::map<long long, std::string> ensure_image_cache(const std::vector<ImageRef>& wanted,
+                                                    OmedaClient& api, const std::string& dir);
+
+// Dwustopniowe dopasowanie NCC probki do bazy sygnatur (wiersz = sygnatura
+// jednego id): czyste NCC wylania kandydatow, potem najlepsze wyrownanie
+// probki po przesunieciach +/-2 px. Wspolne dla itemow i bohaterow.
+MatchResult match_signatures(const cv::Mat& signatures, const std::vector<long long>& ids,
+                             const cv::Mat& probe_bgr);
+
 // Zapewnia lokalna baze ikon kupowalnych itemow: pobiera brakujace
 // (pauza ~50 ms), utrzymuje manifest id -> plik. Zwraca manifest.
 std::map<long long, std::string> ensure_icon_cache(const std::vector<Item>& items,

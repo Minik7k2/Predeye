@@ -21,20 +21,6 @@ const cv::Scalar kTileBg(18.0, 21.0, 24.0);
 
 fs::path manifest_path(const std::string& dir) { return fs::path(dir) / "manifest.json"; }
 
-std::map<long long, std::string> load_manifest(const std::string& dir) {
-    std::map<long long, std::string> out;
-    std::ifstream in(manifest_path(dir), std::ios::binary);
-    if (!in)
-        return out;
-    auto j = nlohmann::json::parse(in, nullptr, false);
-    if (j.is_discarded() || !j.is_object())
-        return out;
-    for (const auto& [k, v] : j.items())
-        if (v.is_string())
-            out[std::stoll(k)] = v.get<std::string>();
-    return out;
-}
-
 void save_manifest(const std::string& dir, const std::map<long long, std::string>& m) {
     nlohmann::json j = nlohmann::json::object();
     for (const auto& [id, file] : m)
@@ -97,45 +83,66 @@ cv::Mat ncc_signature(const cv::Mat& bgr) {
     return f;
 }
 
-std::map<long long, std::string> ensure_icon_cache(const std::vector<Item>& items,
-                                                   OmedaClient& api,
-                                                   const std::string& icon_cache_dir) {
+std::map<long long, std::string> load_image_manifest(const std::string& dir) {
+    std::map<long long, std::string> out;
+    std::ifstream in(manifest_path(dir), std::ios::binary);
+    if (!in)
+        return out;
+    auto j = nlohmann::json::parse(in, nullptr, false);
+    if (j.is_discarded() || !j.is_object())
+        return out;
+    for (const auto& [k, v] : j.items())
+        if (v.is_string())
+            out[std::stoll(k)] = v.get<std::string>();
+    return out;
+}
+
+std::map<long long, std::string> ensure_image_cache(const std::vector<ImageRef>& wanted,
+                                                    OmedaClient& api, const std::string& dir) {
     std::error_code ec;
-    fs::create_directories(icon_cache_dir, ec);
-    auto manifest = load_manifest(icon_cache_dir);
+    fs::create_directories(dir, ec);
+    auto manifest = load_image_manifest(dir);
 
     int downloaded = 0, skipped = 0;
-    for (const auto& it : items) {
-        if (!it.buyable())
+    for (const auto& ref : wanted) {
+        auto entry = manifest.find(ref.id);
+        if (entry != manifest.end() && fs::exists(fs::path(dir) / entry->second, ec))
             continue;
-        auto entry = manifest.find(it.id);
-        if (entry != manifest.end() && fs::exists(fs::path(icon_cache_dir) / entry->second, ec))
-            continue;
-        if (it.image.empty()) {
-            std::fprintf(stderr, "predeye: brak sciezki ikony dla %s (id %lld) — pomijam\n",
-                         it.display_name.c_str(), it.id);
+        if (ref.image.empty()) {
+            std::fprintf(stderr, "predeye: brak sciezki grafiki dla %s (id %lld) — pomijam\n",
+                         ref.label.c_str(), ref.id);
             ++skipped;
             continue;
         }
         try {
-            const auto bytes = api.get_binary(it.image);
-            const std::string file = std::to_string(it.id) + ".webp";
-            std::ofstream out(fs::path(icon_cache_dir) / file, std::ios::binary | std::ios::trunc);
+            const auto bytes = api.get_binary(ref.image);
+            const std::string file = std::to_string(ref.id) + ".webp";
+            std::ofstream out(fs::path(dir) / file, std::ios::binary | std::ios::trunc);
             out.write(reinterpret_cast<const char*>(bytes.data()),
                       static_cast<std::streamsize>(bytes.size()));
-            manifest[it.id] = file;
+            manifest[ref.id] = file;
             ++downloaded; // pauze ~50 ms wymusza get_binary (§6.6)
         } catch (const OmedaError& ex) {
-            std::fprintf(stderr, "predeye: nie pobrano ikony %s: %s — pomijam\n",
-                         it.display_name.c_str(), ex.what());
+            std::fprintf(stderr, "predeye: nie pobrano grafiki %s: %s — pomijam\n",
+                         ref.label.c_str(), ex.what());
             ++skipped;
         }
     }
-    save_manifest(icon_cache_dir, manifest);
+    save_manifest(dir, manifest);
     if (downloaded || skipped)
-        std::fprintf(stderr, "predeye: ikony — pobrano %d, pominieto %d, w bazie %d\n",
+        std::fprintf(stderr, "predeye: grafiki — pobrano %d, pominieto %d, w bazie %d\n",
                      downloaded, skipped, static_cast<int>(manifest.size()));
     return manifest;
+}
+
+std::map<long long, std::string> ensure_icon_cache(const std::vector<Item>& items,
+                                                   OmedaClient& api,
+                                                   const std::string& icon_cache_dir) {
+    std::vector<ImageRef> wanted;
+    for (const auto& it : items)
+        if (it.buyable())
+            wanted.push_back({it.id, it.image, it.display_name});
+    return ensure_image_cache(wanted, api, icon_cache_dir);
 }
 
 void IconMatcher::build_base(const std::map<long long, std::string>& manifest,
@@ -166,17 +173,22 @@ IconMatcher::IconMatcher(const std::vector<Item>& items, OmedaClient& api,
 }
 
 IconMatcher::IconMatcher(const std::string& icon_cache_dir) {
-    build_base(load_manifest(icon_cache_dir), icon_cache_dir);
+    build_base(load_image_manifest(icon_cache_dir), icon_cache_dir);
 }
 
 MatchResult IconMatcher::match(const cv::Mat& slot_bgr) const {
+    return match_signatures(signatures_, ids_, slot_bgr);
+}
+
+MatchResult match_signatures(const cv::Mat& signatures, const std::vector<long long>& ids,
+                             const cv::Mat& probe_bgr) {
     MatchResult res;
-    if (signatures_.rows == 0)
+    if (signatures.rows == 0)
         return res;
 
     // Etap 1: czyste NCC (WIAZACE §6.6) do calej bazy — wylania kandydatow.
-    const cv::Mat sig0 = ncc_signature(slot_bgr);
-    const cv::Mat scores = signatures_ * sig0.t(); // N x 1
+    const cv::Mat sig0 = ncc_signature(probe_bgr);
+    const cv::Mat scores = signatures * sig0.t(); // N x 1
 
     // 16 (nie 8): przy 213 ikonach rodziny blizniaczych grafik (sztylety,
     // toniki) potrafia zepchnac wlasciwy item za czolowke etapu 1;
@@ -203,12 +215,12 @@ MatchResult IconMatcher::match(const cv::Mat& slot_bgr) const {
                 continue;
             const cv::Mat shift = (cv::Mat_<double>(2, 3) << 1, 0, dx, 0, 1, dy);
             cv::Mat probe;
-            cv::warpAffine(slot_bgr, probe, shift, slot_bgr.size(), cv::INTER_NEAREST,
+            cv::warpAffine(probe_bgr, probe, shift, probe_bgr.size(), cv::INTER_NEAREST,
                            cv::BORDER_REPLICATE);
             const cv::Mat sig = ncc_signature(probe);
             for (int k = 0; k < keep; ++k) {
                 const float c = static_cast<float>(
-                    signatures_.row(order[static_cast<size_t>(k)]).dot(sig));
+                    signatures.row(order[static_cast<size_t>(k)]).dot(sig));
                 best[static_cast<size_t>(k)] = std::max(best[static_cast<size_t>(k)], c);
             }
         }
@@ -222,7 +234,7 @@ MatchResult IconMatcher::match(const cv::Mat& slot_bgr) const {
 
     for (size_t k = 0; k < 3 && k < static_cast<size_t>(keep); ++k) {
         const int idx = order[static_cast<size_t>(rerank[k])];
-        res.top3[k] = {ids_[static_cast<size_t>(idx)], best[static_cast<size_t>(rerank[k])]};
+        res.top3[k] = {ids[static_cast<size_t>(idx)], best[static_cast<size_t>(rerank[k])]};
     }
     res.item_id = res.top3[0].first;
     res.cosine = res.top3[0].second;
