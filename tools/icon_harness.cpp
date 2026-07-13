@@ -93,11 +93,16 @@ int main(int argc, char** argv) {
     }
     const auto manifest = nlohmann::json::parse(min);
 
-    // Zrodlowe ikony do znieksztalcania — pelne rozdzielczosci z cache.
+    // Zrodlowe ikony do znieksztalcania — pelne rozdzielczosci z cache,
+    // przygotowane IDENTYCZNIE jak baza sygnatur (tile_from_asset): probka
+    // z realnego capture to kafelek scoreboardu, nie surowa grafika API.
     std::vector<std::pair<long long, cv::Mat>> icons;
     for (const auto& [k, v] : manifest.items()) {
         cv::Mat img = cv::imread((fs::path(dir) / v.get<std::string>()).string(),
-                                 cv::IMREAD_COLOR);
+                                 cv::IMREAD_UNCHANGED);
+        if (!img.empty() && img.channels() == 1)
+            cv::cvtColor(img, img, cv::COLOR_GRAY2BGR);
+        img = tile_from_asset(img);
         if (!img.empty())
             icons.emplace_back(std::stoll(k), img);
     }
@@ -121,13 +126,23 @@ int main(int argc, char** argv) {
                 ++sc.trials;
                 if (res.item_id == id)
                     ++sc.top1;
+                bool in3 = false;
                 for (const auto& [tid, cosine] : res.top3) {
                     (void)cosine;
                     if (tid == id) {
                         ++sc.top3;
+                        in3 = true;
                         break;
                     }
                 }
+                // Diagnostyka strojenia: ktore ikony wypadaja z top-3 i na
+                // rzecz czego (pary blizniaczych grafik widac tu od razu).
+                if (!in3)
+                    std::fprintf(stderr,
+                                 "  MISS top-3 (%s): id %lld -> top3 %lld/%.3f %lld/%.3f %lld/%.3f\n",
+                                 regime.name, id, res.top3[0].first, res.top3[0].second,
+                                 res.top3[1].first, res.top3[1].second, res.top3[2].first,
+                                 res.top3[2].second);
             }
         }
         const bool pass = sc.pct1() >= need1 && sc.pct3() >= 100.0;

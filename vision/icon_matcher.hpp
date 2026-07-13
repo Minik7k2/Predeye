@@ -25,6 +25,13 @@ struct MatchResult {
 // Sygnatura NCC: 32x32 BGR -> CV_32F 1x3072 -> minus srednia -> / norma L2.
 cv::Mat ncc_signature(const cv::Mat& bgr);
 
+// Przygotowanie grafiki API (webp z alfa, biala winieta, marginesy) do
+// postaci kafelka jak na scoreboardzie: kwadratowy bbox po alfie +
+// kompozycja na ciemnym tle kafelka. Obrazy bez alfy wracaja bez zmian.
+// Wspolna sciezka bazy sygnatur i narzedzi (icon_harness) — sondy i baza
+// musza byc przygotowane identycznie.
+cv::Mat tile_from_asset(const cv::Mat& img);
+
 // Zapewnia lokalna baze ikon kupowalnych itemow: pobiera brakujace
 // (pauza ~50 ms), utrzymuje manifest id -> plik. Zwraca manifest.
 std::map<long long, std::string> ensure_icon_cache(const std::vector<Item>& items,

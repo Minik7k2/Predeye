@@ -15,6 +15,10 @@ namespace {
 
 constexpr int kSide = 32;
 
+// Kolor tla kafelka itemu na scoreboardzie (BGR) — zmierzony z naroznikow
+// realnych slotow 1080p (patch 5.4.4). Uzywany do kompozycji alfy grafik API.
+const cv::Scalar kTileBg(18.0, 21.0, 24.0);
+
 fs::path manifest_path(const std::string& dir) { return fs::path(dir) / "manifest.json"; }
 
 std::map<long long, std::string> load_manifest(const std::string& dir) {
@@ -40,6 +44,40 @@ void save_manifest(const std::string& dir, const std::map<long long, std::string
 }
 
 } // namespace
+
+// Grafiki /assets/*.webp z API to duze obrazy (~420 px) z kanalem alfa,
+// biala winieta w RGB pod przezroczystoscia i marginesami — to NIE sa
+// kafelki renderowane na scoreboardzie (ciemne tlo, art wypelnia slot).
+// imread(IMREAD_COLOR) wtapial biel do sygnatur i psul NCC na realnych
+// zrzutach (zmierzone w M4). Przygotowanie: kwadratowy bbox po alfie
+// (jednorodna skala, jak kafelek w grze) + kompozycja na tle kafelka.
+cv::Mat tile_from_asset(const cv::Mat& img) {
+    if (img.empty() || img.channels() != 4)
+        return img;
+    std::vector<cv::Mat> ch;
+    cv::split(img, ch);
+    const cv::Rect box = cv::boundingRect(ch[3] > 32);
+    if (box.width <= 0 || box.height <= 0)
+        return {};
+    const int side = std::max(box.width, box.height);
+    const cv::Point center(box.x + box.width / 2, box.y + box.height / 2);
+    const cv::Rect square(center.x - side / 2, center.y - side / 2, side, side);
+    cv::Mat tile(side, side, CV_8UC3, kTileBg);
+    // Kwadrat moze wystawac poza obraz zrodlowy — tam zostaje samo tlo.
+    const cv::Rect src = square & cv::Rect(0, 0, img.cols, img.rows);
+    for (int y = 0; y < src.height; ++y) {
+        const cv::Vec4b* in = img.ptr<cv::Vec4b>(src.y + y) + src.x;
+        cv::Vec3b* out = tile.ptr<cv::Vec3b>(src.y - square.y + y) + (src.x - square.x);
+        for (int x = 0; x < src.width; ++x) {
+            const float a = static_cast<float>(in[x][3]) / 255.0f;
+            for (int c = 0; c < 3; ++c)
+                out[x][c] = cv::saturate_cast<uchar>(
+                    a * static_cast<float>(in[x][c]) +
+                    (1.0f - a) * static_cast<float>(kTileBg[c]));
+        }
+    }
+    return tile;
+}
 
 cv::Mat ncc_signature(const cv::Mat& bgr) {
     CV_Assert(!bgr.empty() && bgr.type() == CV_8UC3);
@@ -105,8 +143,11 @@ void IconMatcher::build_base(const std::map<long long, std::string>& manifest,
     std::vector<cv::Mat> sigs;
     sigs.reserve(manifest.size());
     for (const auto& [id, file] : manifest) {
-        const cv::Mat icon = cv::imread((fs::path(icon_cache_dir) / file).string(),
-                                        cv::IMREAD_COLOR);
+        cv::Mat icon = cv::imread((fs::path(icon_cache_dir) / file).string(),
+                                  cv::IMREAD_UNCHANGED);
+        if (!icon.empty() && icon.channels() == 1)
+            cv::cvtColor(icon, icon, cv::COLOR_GRAY2BGR);
+        icon = tile_from_asset(icon);
         if (icon.empty()) {
             std::fprintf(stderr, "predeye: nie zdekodowano ikony %s — pomijam\n", file.c_str());
             continue;
@@ -137,7 +178,10 @@ MatchResult IconMatcher::match(const cv::Mat& slot_bgr) const {
     const cv::Mat sig0 = ncc_signature(slot_bgr);
     const cv::Mat scores = signatures_ * sig0.t(); // N x 1
 
-    constexpr int kCandidates = 8;
+    // 16 (nie 8): przy 213 ikonach rodziny blizniaczych grafik (sztylety,
+    // toniki) potrafia zepchnac wlasciwy item za czolowke etapu 1;
+    // zmierzone harnessem — 8 gubilo Sai/Spell Slasher w top-3 pesymistycznie.
+    constexpr int kCandidates = 16;
     std::vector<int> order(static_cast<size_t>(scores.rows));
     for (int i = 0; i < scores.rows; ++i)
         order[static_cast<size_t>(i)] = i;

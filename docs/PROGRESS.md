@@ -1,5 +1,40 @@
 # Postęp prac
 
+## M4 — kalibracja zmierzona na realnych zrzutach + naprawa sygnatur ikon
+
+- **Realne zrzuty TAB w repo**: `tests/fixtures/screens/` — 3 reprezentatywne
+  (early/mid/late, 1080p, patch 5.4.4) + `calibration_1080p.json` (wzorzec);
+  pozostałe 10 lokalnie w `local/` (gitignore). Źródło: zrzuty Steam
+  użytkownika (2 mecze).
+- **Geometria zmierzona numerycznie** (skan jasności ramek slotów, zgodna
+  w obu meczach co do piksela): wnętrze slotu 52×52 (ramka 2 px, przerwa
+  4 px), dx 60, dy 145, **cols 6** (nie 7 — „7. kwadrat" to crest z własną
+  ikoną, oddzielony separatorem ~67 px przed item1), rows 5; origin wróg
+  (1343, 250), sojusznik (333, 250). Panele **nie są lustrzane** — panel
+  wroga = panel sojuszników + 1010 px w x (`mirror_grid`/`default_for`
+  do poprawy — następny krok).
+- **Naprawa sygnatur ikon (zmiana §6.6, zaakceptowana)**: grafiki
+  `item.image` z API to duże webp z kanałem alfa, białą winietą i
+  marginesami — NIE odpowiadają kafelkom na scoreboardzie; stare sygnatury
+  (imread bez alfy) dawały na realnym zrzucie bzdury (17/28 niepewnych,
+  identyfikacje losowe) mimo idealnej siatki. Nowe przygotowanie
+  `tile_from_asset`: IMREAD_UNCHANGED → kwadratowy bbox po alfie →
+  kompozycja na tle kafelka BGR(18,21,24) (zmierzonym ze zrzutów); harness
+  używa tej samej ścieżki dla sond. Dodatkowo etap 2 matchera bierze 16
+  kandydatów (nie 8) — 8 gubiło bliźniacze sztylety (Sai/Spell Slasher).
+- **Wyniki po naprawie**: harness (10 prób/ikonę) — **100% top-1 i top-3
+  w OBU reżimach** (progi wiążące 99/95/100 z zapasem). Realne zrzuty:
+  mecz 1 — 28 odczytów, 0 niepewnych, identyfikacje spójne (bliźniacze
+  ikony w różnych wierszach → identyczne itemy, „Codex, Codex" u gracza
+  z dwoma kodeksami); mecz 2 late-game — 56 odczytów, 3 niepewne wyłącznie
+  na wierszu rozłączonego gracza (przyciemniony overlay „DISCONNECTED").
+- **Odkrycie**: omeda.city robi 308 redirect na **pred.gg** (klient działa
+  dzięki follow-redirects); baza URL do aktualizacji.
+- Do zrobienia w M4: strojenie `looks_empty` (pojedyncze ciemne itemy
+  bywają zjadane), wybór monitora w `DxgiCapture` (u użytkownika gra na
+  środkowym z 3 monitorów), `calibrate --auto` (detekcja siatki skanem
+  ramek — algorytm zwalidowany ręcznie na pomiarach).
+
 ## GUI — kalibracja i tryb live wyciągnięte do interfejsu graficznego (DONE)
 
 - **Fasada `vision/vision_session` (`VisionSession`)**: wspólne źródło toru live

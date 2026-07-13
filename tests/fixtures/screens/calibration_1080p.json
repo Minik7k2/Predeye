@@ -1,0 +1,34 @@
+{
+  "ally_item_grid": {
+    "cols": 6,
+    "dx": 60,
+    "dy": 145,
+    "origin": [
+      333,
+      250
+    ],
+    "rows": 5,
+    "slot": [
+      52,
+      52
+    ]
+  },
+  "enemy_item_grid": {
+    "cols": 6,
+    "dx": 60,
+    "dy": 145,
+    "origin": [
+      1343,
+      250
+    ],
+    "rows": 5,
+    "slot": [
+      52,
+      52
+    ]
+  },
+  "resolution": [
+    1920,
+    1080
+  ]
+}
