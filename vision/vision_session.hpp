@@ -7,8 +7,10 @@
 #include "core/build_engine.hpp"
 #include "core/enemy_build.hpp"
 #include "core/hero_context.hpp"
+#include "core/local_data.hpp"
 #include "core/models.hpp"
 #include "core/omeda_client.hpp"
+#include "core/shopping_advisor.hpp"
 #include "vision/auto_calibrate.hpp"
 #include "vision/calibration.hpp"
 #include "vision/draft_reader.hpp"
@@ -29,6 +31,7 @@ struct LiveSlotView {
     bool empty = true;
     std::string name;       // display_name; "?" gdy rozpoznane, lecz bez indeksu
     bool confident = false; // cosine >= prog pewnosci
+    std::string tooltip_pl; // spolszczenie itemu (co robi / jak dziala); "" gdy brak
 };
 
 // Wiersz = jeden gracz (wrog albo sojusznik): rola, sloty i zmiany wzgledem
@@ -51,7 +54,8 @@ struct LiveRowView {
     }
 };
 
-// Wynik jednego odczytu: obie druzyny, profil wroga i counter-build.
+// Wynik jednego odczytu: obie druzyny, profil wroga, counter-build
+// i kolejka zakupow ("co kupic w nastepnej kolejce i dlaczego").
 struct LiveResult {
     std::vector<LiveRowView> enemies;
     std::vector<LiveRowView> allies;
@@ -60,6 +64,10 @@ struct LiveResult {
     EnemyProfile profile;
     BuildResult counter;
     std::string objective_name;
+    // Zakupy: counter minus itemy odczytane z MOJEGO wiersza sojusznikow
+    // (wiersz o roli celu); uzasadnienia po polsku (pl_items + tagi counter).
+    ShoppingAdvice shopping;
+    std::string shopping_note; // skad wzieto "moje" itemy (albo czemu ich brak)
 };
 
 // Trzyma stan toru live: dane API, baze ikon, cel gracza i poprzedni odczyt
@@ -117,6 +125,7 @@ class VisionSession {
 
     std::string icon_dir_, hero_icon_dir_;
     OmedaClient api_;
+    LocalData local_; // spolszczenia itemow + dane wlasciciela (data/)
     std::vector<Item> items_;
     ItemIndex index_;
     std::unique_ptr<HeroDB> heroes_;
@@ -124,6 +133,7 @@ class VisionSession {
     std::unique_ptr<IconMatcher> matcher_;
     std::unique_ptr<IconMatcher> hero_matcher_;
     Objective obj_;
+    Role role_ = Role::Unknown; // rola celu — wskazuje moj wiersz sojusznikow
     bool has_obj_ = false;
     bool loaded_ = false;
     std::vector<std::set<std::string>> prev_enemy_; // nazwy itemow per wiersz

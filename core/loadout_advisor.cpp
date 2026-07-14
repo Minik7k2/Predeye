@@ -21,8 +21,15 @@ LoadoutAdvice loadout_from_json(const nlohmann::json& builds_json, const ItemInd
     const long long crest_id = jll(*best, "crest_id");
     if (crest_id > 0) {
         const auto it = index.find(crest_id);
-        if (it != index.end())
+        if (it != index.end()) {
             out.crest = it->second;
+            if (const ItemPl* pl = local.item_pl(out.crest->slug)) {
+                out.crest_note_pl = pl->summary_pl;
+                if (!pl->effects.empty())
+                    out.crest_note_pl += " " + pl->effects.front().name + ": " +
+                                         ItemPl::text(pl->effects.front());
+            }
+        }
     }
 
     if (best->contains("skill_order") && (*best)["skill_order"].is_array()) {

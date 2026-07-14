@@ -4,8 +4,11 @@
 #pragma once
 
 #include "build_engine.hpp"
+#include "draft_advisor.hpp"
 #include "enemy_build.hpp"
 #include "hero_context.hpp"
+#include "loadout_advisor.hpp"
+#include "local_data.hpp"
 #include "models.hpp"
 #include "omeda_client.hpp"
 
@@ -32,6 +35,12 @@ struct AdvisorCounter {
     BuildResult counter;
 };
 
+// Sugestie draftu dla kreatora: bany i picki w jednym wyniku.
+struct AdvisorDraft {
+    std::vector<DraftSuggestion> bans;
+    std::vector<DraftSuggestion> picks;
+};
+
 // Fasada trzymajaca klienta API i leniwie ladowane dane (heroes/items).
 // Metody rzucaja wyjatkiem (OmedaError / runtime_error) — warstwa UI lapie.
 class Advisor {
@@ -45,14 +54,29 @@ class Advisor {
     AdvisorCounter counter(const std::string& hero, Role role,
                            const std::vector<std::string>& enemies);
 
+    // Kreator rankedowy: sugestie banow (excluded = juz zbanowani/wybrani)
+    // i pickow z puli (data/hero_pool.json) przeciw widocznym pickom wroga.
+    // Meta pobierana leniwie z API (cache TTL 6 h).
+    AdvisorDraft draft(const std::vector<std::string>& enemy_picks,
+                       const std::vector<std::string>& excluded);
+
+    // Crest + skill order z najlepszego buildu spolecznosci, eternalsy
+    // z data/eternals.json. Wskazniki eternali zyja tak dlugo jak Advisor.
+    LoadoutAdvice loadout(const std::string& hero, Role role);
+
+    // Reczne dane wlasciciela (pula, kontry, spolszczenie) — do statusu w GUI.
+    const LocalData& local() const { return local_; }
+
   private:
     void ensure_loaded(); // leniwe pobranie heroes+items (sieciowe)
 
     OmedaClient api_;
+    LocalData local_;
     std::unique_ptr<HeroDB> heroes_;
     std::vector<Item> items_;
     ItemIndex index_;
     std::unique_ptr<BuildEngine> engine_;
+    std::unique_ptr<DraftAdvisor> draft_advisor_; // leniwie (potrzebuje mety)
     bool loaded_ = false;
 };
 

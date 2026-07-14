@@ -40,6 +40,24 @@ AdvisorBuild Advisor::build(const std::string& hero, Role role) {
     return out;
 }
 
+AdvisorDraft Advisor::draft(const std::vector<std::string>& enemy_picks,
+                            const std::vector<std::string>& excluded) {
+    ensure_loaded();
+    if (!draft_advisor_)
+        draft_advisor_ = std::make_unique<DraftAdvisor>(*heroes_, local_,
+                                                        parse_meta(api_.meta(), *heroes_));
+    AdvisorDraft out;
+    out.bans = draft_advisor_->suggest_bans(excluded);
+    out.picks = draft_advisor_->suggest_picks(enemy_picks, excluded);
+    return out;
+}
+
+LoadoutAdvice Advisor::loadout(const std::string& hero, Role role) {
+    ensure_loaded();
+    const auto me = heroes_->by_names({hero}).front(); // rzuca gdy nieznany
+    return loadout_for(api_, index_, local_, me, role);
+}
+
 AdvisorCounter Advisor::counter(const std::string& hero, Role role,
                                 const std::vector<std::string>& enemies) {
     ensure_loaded();

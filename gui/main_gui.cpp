@@ -1,11 +1,15 @@
 // gui/main_gui — graficzna powloka predeye (Dear ImGui + GLFW + OpenGL3).
 //
-// Zakladki: Kalibracja (siatki slotow OBU druzyn na podgladzie zrzutu; zrzut
-// z pliku — dialog/drag&drop/galeria katalogu — albo z gry) oraz Live (odczyt
-// itemow obu druzyn ze scoreboardu -> profil wroga -> counter-build z diffem).
-// Budowane wylacznie z torem wizyjnym (patrz CMakeLists w korzeniu). Wszystkie
-// wywolania API/wizji ida w tle (AsyncTask), by petla renderowania nie
-// zamarzala. Build/counter z recznym wpisywaniem skladow zostaly w CLI.
+// KREATOR RANKEDOWY: lewy pasek prowadzi przez etapy meczu —
+//   1. Bany  2. Wybor bohatera  3. Eternals + skill  4. Crest  5. Itemy (live)
+// plus Kalibracja jako tryb zaawansowany. Nawigacja RECZNA (uzytkownik
+// przelacza etapy), w kazdym etapie przycisk (i hotkey F9 na Windows) robi
+// zrzut/odczyt na zyczenie. Kazdy przycisk ma opis co robi, a praca w tle
+// (AsyncTask) pokazuje animowany spinner — petla renderowania nie zamarza.
+//
+// Kalibracja siatek scoreboardu startuje AUTOMATYCZNIE: pierwszy odczyt live
+// bez pliku kalibracji robi auto-kalibracje (NCC wokol domyslnej siatki);
+// pewny wynik zapisuje sie sam, niepewny odsyla do etapu Kalibracja.
 //
 // Zero ingerencji w gre (§3): jedyne wejscie wizualne to zrzut ekranu przez
 // publiczne API systemu, prezentacja to wynik rdzenia.
@@ -37,6 +41,7 @@
 #include <array>
 #include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
@@ -71,6 +76,41 @@ std::string to_lower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(),
                    [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
     return s;
+}
+
+// --- Drobne widgety kreatora -------------------------------------------------
+
+// Animowany spinner "program pracuje" (luk obracajacy sie wg czasu ImGui).
+void draw_spinner(float radius = 8.0f) {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    const ImVec2 pos = ImGui::GetCursorScreenPos();
+    const ImVec2 center(pos.x + radius, pos.y + radius + 2.0f);
+    const float t = static_cast<float>(ImGui::GetTime());
+    const float a0 = t * 6.0f;
+    dl->PathArcTo(center, radius, a0, a0 + 4.7f, 24);
+    dl->PathStroke(ImGui::GetColorU32(ImGuiCol_ButtonHovered), 0, 3.0f);
+    ImGui::Dummy(ImVec2(radius * 2.0f + 4.0f, radius * 2.0f + 4.0f));
+}
+
+// Spinner + etykieta w tej samej linii (uzywac po przycisku etapu).
+void spinner_with_label(const char* label) {
+    ImGui::SameLine();
+    draw_spinner();
+    ImGui::SameLine();
+    ImGui::TextDisabled("%s", label);
+}
+
+// Znacznik "(?)" z tooltipem — opis co robi przycisk/sekcja.
+void help_marker(const char* text) {
+    ImGui::SameLine();
+    ImGui::TextDisabled("(?)");
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 28.0f);
+        ImGui::TextUnformatted(text);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
 }
 
 // Filtrowalna lista wyboru bohatera: pokazuje aktualny tekst w buf, po
@@ -145,34 +185,45 @@ void draw_build_table(const char* id, const BuildResult& res) {
     ImGui::TextWrapped("%s", res.summary.c_str());
 }
 
-// Tabela jednej druzyny z odczytu live: rola | itemy | zmiana od poprzednika.
-// Ta sama rola w tabeli wrogow i sojusznikow = przeciwnicy w linii (matchup).
+// Tabela jednej druzyny z odczytu live: rola+bohater | itemy | zmiana.
+// Itemy rysowane osobno — najechanie pokazuje spolszczenie (tooltip_pl).
 void draw_team_table(const char* id, const char* title, const std::vector<LiveRowView>& rows) {
     ImGui::SeparatorText(title);
     const ImGuiTableFlags flags =
         ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp;
     if (!ImGui::BeginTable(id, 3, flags))
         return;
-    ImGui::TableSetupColumn("Rola", ImGuiTableColumnFlags_WidthStretch, 0.9f);
-    ImGui::TableSetupColumn("Itemy", ImGuiTableColumnFlags_WidthStretch, 3.2f);
+    ImGui::TableSetupColumn("Rola / bohater", ImGuiTableColumnFlags_WidthStretch, 1.3f);
+    ImGui::TableSetupColumn("Itemy (najedz = opis PL)", ImGuiTableColumnFlags_WidthStretch, 3.2f);
     ImGui::TableSetupColumn("Zmiana", ImGuiTableColumnFlags_WidthStretch, 1.4f);
     ImGui::TableHeadersRow();
     for (const auto& r : rows) {
         ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
-        ImGui::TextUnformatted(r.role_label.c_str());
+        if (r.hero_name.empty())
+            ImGui::TextUnformatted(r.role_label.c_str());
+        else
+            ImGui::Text("%s (%s)", r.role_label.c_str(), r.hero_name.c_str());
         ImGui::TableSetColumnIndex(1);
-        std::string line;
+        bool any = false;
         for (const auto& s : r.slots) {
             if (s.empty)
                 continue;
-            if (!line.empty())
-                line += ", ";
-            line += s.name;
-            if (!s.confident)
-                line += " (niepewne)";
+            if (any)
+                ImGui::SameLine(0.0f, 0.0f);
+            std::string label = (any ? ", " : "") + s.name + (s.confident ? "" : " (niepewne)");
+            ImGui::TextUnformatted(label.c_str());
+            if (!s.tooltip_pl.empty() && ImGui::IsItemHovered()) {
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 30.0f);
+                ImGui::TextUnformatted(s.tooltip_pl.c_str());
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+            any = true;
         }
-        ImGui::TextWrapped("%s", line.empty() ? "(pusto)" : line.c_str());
+        if (!any)
+            ImGui::TextDisabled("(pusto)");
         ImGui::TableSetColumnIndex(2);
         if (!r.changes.empty()) {
             std::string delta;
@@ -212,50 +263,117 @@ struct GlTexture {
     }
 };
 
+// --- Wspolne zrodlo klatki (plik PNG albo zrzut z gry przez DXGI) ------------
+// Wolane z watku tla. Pusta sciezka = zrzut z gry (tylko Windows).
+cv::Mat grab_frame(const std::string& image_path) {
+    if (!image_path.empty())
+        return FileCapture(image_path).grab();
+#ifdef _WIN32
+    return DxgiCapture().grab();
+#else
+    throw std::runtime_error("podaj zrzut PNG — zrzut z gry dziala tylko na Windows");
+#endif
+}
+
 // --- Stan aplikacji ----------------------------------------------------------
+
+// Etapy kreatora (kolejnosc = przebieg meczu rankedowego).
+enum Stage {
+    kStageBans = 0,
+    kStagePick,
+    kStageEternals,
+    kStageCrest,
+    kStageItems,
+    kStageCalib,
+    kStageCount
+};
+constexpr const char* kStageNames[kStageCount] = {
+    "1. Bany",         "2. Wybor bohatera", "3. Eternals + skill",
+    "4. Crest",        "5. Itemy (live)",   "Kalibracja (zaawansowane)",
+};
+
 struct AppState {
-    // Advisor tylko do listy bohaterow — osobna instancja od VisionSession,
-    // by watek listy nie scigal sie z watkiem odczytu live o wspolny stan.
+    // Advisor: lista bohaterow + sugestie draftu/loadoutu (siec w tle).
+    // Osobna instancja od VisionSession — watki nie dziela stanu.
     Advisor advisor;
     gui::AsyncTask<std::vector<std::string>> hero_names_task;
     std::vector<std::string> hero_names;
 
-    // Wspolna sesja toru wizyjnego (dane API + baza ikon + stan diffa).
+    // Wspolna sesja toru wizyjnego (dane API + bazy ikon + stan diffa).
     VisionSession vision;
 
     GLFWwindow* window = nullptr; // wlasciciel natywnego dialogu pliku
+    int stage = kStageBans;
+    bool f9_edge = false; // F9 wcisniete w tej klatce (Windows)
 
-    // Zakladka Kalibracja.
+    // Wspolne ustawienia kreatora (naglowek).
+    std::string hero; // moj bohater (etap 2 moze go ustawic)
+    int role = 0;
+    char config_path[512] = "calibration.json";
+    char image_path[512] = ""; // puste = zrzut z gry (DXGI, Windows)
+
+    // Etapy 1-2: odczyt draftu + sugestie banow/pickow.
+    struct DraftStage {
+        gui::AsyncTask<DraftRead> read_task;
+        bool read_consumed = true;
+        std::optional<DraftRead> last;
+        gui::AsyncTask<AdvisorDraft> sugg_task;
+        bool sugg_consumed = true;
+        std::optional<AdvisorDraft> sugg;
+        std::string status;
+    } draft;
+
+    // Etapy 3-4: crest + skill order + eternalsy dla (bohater, rola).
+    struct LoadoutStage {
+        gui::AsyncTask<LoadoutAdvice> task;
+        bool consumed = true;
+        std::optional<LoadoutAdvice> last;
+        std::string applied_hero;
+        int applied_role = -1;
+    } loadout;
+
+    // Etap 5: live (odczyt scoreboardu + counter + zakupy).
+    struct LiveStage {
+        std::string applied_hero;
+        int applied_role = -1;
+        gui::AsyncTask<LiveResult> read_task;
+        bool read_consumed = true;
+        std::optional<LiveResult> last;
+        std::string status;
+    } live;
+
+    // Kalibracja (tryb zaawansowany).
     struct CalibTab {
-        Calibration calib;
+        Calibration calib = Calibration::default_for({1920, 1080});
         cv::Mat frame; // wczytany zrzut (BGR)
         bool has_frame = false;
         bool dirty = true; // przelicz overlay + upload tekstury
         GlTexture tex;
         char image_path[512] = "";
-        char config_path[512] = "calibration.json";
         std::string status;
-        int edit_grid = 0;                // 0 = wrogowie, 1 = moja druzyna
+        int edit_grid = 0;                // indeks kSlotGrids
         std::vector<std::string> gallery; // obrazy w katalogu ostatniego zrzutu (UTF-8)
         int gallery_idx = -1;             // pozycja biezacego zrzutu w galerii
         gui::AsyncTask<cv::Mat> shot_task; // zrzut z gry (DXGI, z odliczaniem)
         bool shot_consumed = true;         // czy wynik zrzutu juz odebrano
     } calib;
-
-    // Zakladka Live.
-    struct LiveTab {
-        std::string hero;
-        int role = 0;
-        char config_path[512] = "calibration.json";
-        char image_path[512] = "";
-        std::string applied_hero; // ostatnio ustawiony cel (do wykrycia zmiany)
-        int applied_role = -1;
-        gui::AsyncTask<LiveResult> read_task;
-        bool read_consumed = true; // czy wynik odczytu juz odebrano
-        std::optional<LiveResult> last;
-        std::string status;
-    } live;
 };
+
+// Ktora siatke edytuja suwaki kalibracji.
+struct GridChoice {
+    const char* label;
+    GridSpec& (*get)(Calibration&);
+};
+constexpr std::array<GridChoice, 8> kSlotGrids = {{
+    {"Itemy: wrogowie", [](Calibration& c) -> GridSpec& { return c.enemy_item_grid; }},
+    {"Itemy: moja druzyna", [](Calibration& c) -> GridSpec& { return c.ally_item_grid; }},
+    {"Portrety: wrogowie", [](Calibration& c) -> GridSpec& { return c.enemy_hero_grid; }},
+    {"Portrety: moja druzyna", [](Calibration& c) -> GridSpec& { return c.ally_hero_grid; }},
+    {"Draft: bany moje", [](Calibration& c) -> GridSpec& { return c.draft.ally_bans; }},
+    {"Draft: bany wroga", [](Calibration& c) -> GridSpec& { return c.draft.enemy_bans; }},
+    {"Draft: picki moje", [](Calibration& c) -> GridSpec& { return c.draft.ally_picks; }},
+    {"Draft: picki wroga", [](Calibration& c) -> GridSpec& { return c.draft.enemy_picks; }},
+}};
 
 #ifdef _WIN32
 // Natywny dialog "Otworz plik" (obrazy); zwraca sciezke UTF-8, pusta gdy
@@ -270,7 +388,7 @@ std::string open_image_dialog(GLFWwindow* owner) {
                       L"Wszystkie pliki (*.*)\0*.*\0";
     ofn.lpstrFile = buf;
     ofn.nMaxFile = static_cast<DWORD>(std::size(buf));
-    ofn.lpstrTitle = L"Wybierz zrzut scoreboardu";
+    ofn.lpstrTitle = L"Wybierz zrzut ekranu";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
     if (!GetOpenFileNameW(&ofn))
         return {};
@@ -282,6 +400,24 @@ std::string open_image_dialog(GLFWwindow* owner) {
     return utf8;
 }
 #endif
+
+// Wczytaj kalibracje z pliku, a gdy go brak — auto-kalibracja na klatce
+// (zapis przy pewnym wyniku). Wspolna sciezka odczytow live. Watek tla.
+Calibration load_or_autocalibrate(VisionSession& vs, const std::string& cfg,
+                                  const cv::Mat& frame, std::string& note) {
+    if (fs::exists(fs::u8path(cfg)))
+        return Calibration::load(cfg);
+    const AutoCalibResult ac = vs.auto_calibrate_frame(frame);
+    if (!ac.ok())
+        throw std::runtime_error(
+            "brak " + cfg + ", a auto-kalibracja niepewna (cosine " +
+            std::to_string(ac.enemy_confidence) +
+            ") — na ekranie musza byc widoczne itemy; dostroj siatke w etapie Kalibracja");
+    ac.calib.save(cfg);
+    note = "Auto-kalibracja OK (cosine " + std::to_string(ac.enemy_confidence).substr(0, 4) +
+           "), zapisano " + cfg + ".";
+    return ac.calib;
+}
 
 // Galeria: pliki obrazow z katalogu wczytanego zrzutu (posortowane) + pozycja
 // biezacego pliku. Sciezki trzymamy jako UTF-8 (zgodnie z FileCapture).
@@ -328,10 +464,380 @@ void calib_load_image(AppState::CalibTab& c, const std::string& path) {
     }
 }
 
-void draw_calibrate_tab(AppState& s) {
+// --- Etapy 1-2: draft ---------------------------------------------------------
+
+// Start odczytu ekranu draftu + (po nim) sugestii. Wspolny dla etapow 1 i 2.
+void start_draft_read(AppState& s) {
+    VisionSession* vs = &s.vision;
+    const std::string cfg = s.config_path;
+    const std::string img = s.image_path;
+    s.draft.read_consumed = false;
+    s.draft.status.clear();
+    s.draft.read_task.start([vs, cfg, img]() -> DraftRead {
+        const cv::Mat frame = grab_frame(img);
+        Calibration calib = fs::exists(fs::u8path(cfg)) ? Calibration::load(cfg)
+                                                        : Calibration::default_for(frame.size());
+        return vs->read_draft_frame(frame, calib);
+    });
+}
+
+// Po odczycie draftu: policz sugestie (bany + picki) w tle.
+void start_draft_suggestions(AppState& s) {
+    Advisor* adv = &s.advisor;
+    std::vector<std::string> enemy_picks, excluded;
+    if (s.draft.last) {
+        enemy_picks = DraftRead::names(s.draft.last->enemy_picks);
+        for (const auto& list : {s.draft.last->ally_bans, s.draft.last->enemy_bans,
+                                 s.draft.last->ally_picks, s.draft.last->enemy_picks})
+            for (const auto& n : DraftRead::names(list))
+                excluded.push_back(n);
+    }
+    s.draft.sugg_consumed = false;
+    s.draft.sugg_task.start(
+        [adv, enemy_picks, excluded] { return adv->draft(enemy_picks, excluded); });
+}
+
+// Przycisk odczytu wspolny dla etapow draftu; `via_f9` = wyzwolony hotkeyem.
+void draft_read_controls(AppState& s, bool via_f9) {
+    const bool busy = s.draft.read_task.running() || s.draft.sugg_task.running();
+    ImGui::BeginDisabled(busy);
+    const bool clicked = ImGui::Button("Odczytaj ekran draftu (F9)", ImVec2(240, 0));
+    ImGui::EndDisabled();
+    help_marker("Robi zrzut ekranu (lub czyta podany PNG), rozpoznaje portrety zbanowanych "
+                "i wybranych bohaterow z regionow draftu w kalibracji, a potem liczy sugestie "
+                "banow/pickow (meta z Omeda.city + Twoja baza kontr data/counters.json). "
+                "Wymaga skalibrowanych regionow draftu (etap Kalibracja) — potrzebny zrzut "
+                "ekranu draftu.");
+    if ((clicked || (via_f9 && !busy)))
+        start_draft_read(s);
+    if (s.draft.read_task.running())
+        spinner_with_label("odczyt ekranu draftu...");
+    if (s.draft.sugg_task.running())
+        spinner_with_label("licze sugestie (meta + kontry)...");
+
+    // Sugestie mozna policzyc tez bez odczytu ekranu (draft "w glowie").
+    ImGui::SameLine();
+    ImGui::BeginDisabled(busy);
+    if (ImGui::Button("Same sugestie##draft"))
+        start_draft_suggestions(s);
+    ImGui::EndDisabled();
+    help_marker("Liczy sugestie bez czytania ekranu (przydatne, gdy regiony draftu nie sa "
+                "jeszcze skalibrowane). Bany: najgrozniejsi z mety; picki: Twoja pula "
+                "(data/hero_pool.json) bez kontekstu pickow wroga.");
+
+    if (!s.draft.read_task.error().empty())
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Blad odczytu: %s",
+                           s.draft.read_task.error().c_str());
+    if (!s.draft.sugg_task.error().empty())
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Blad sugestii: %s",
+                           s.draft.sugg_task.error().c_str());
+    if (!s.draft.status.empty())
+        ImGui::TextWrapped("%s", s.draft.status.c_str());
+
+    if (s.draft.last && !s.draft.last->calibrated)
+        ImGui::TextColored(ImVec4(1.0f, 0.7f, 0.3f, 1.0f),
+                           "Regiony draftu nieskalibrowane — ustaw siatki \"Draft: ...\" "
+                           "w etapie Kalibracja na zrzucie ekranu draftu.");
+}
+
+// Lista rozpoznanych slotow draftu w jednej linii.
+std::string draft_line(const std::vector<DraftSlot>& slots) {
+    std::string out;
+    for (const auto& sl : slots) {
+        if (sl.empty)
+            continue;
+        out += (out.empty() ? "" : ", ") + (sl.hero_name.empty() ? "?" : sl.hero_name);
+        if (!sl.confident)
+            out += " (niepewne)";
+    }
+    return out.empty() ? "(nic nie rozpoznano)" : out;
+}
+
+void draw_suggestions_table(const char* id, const std::vector<DraftSuggestion>& sugg) {
+    const ImGuiTableFlags flags =
+        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp;
+    if (!ImGui::BeginTable(id, 2, flags))
+        return;
+    ImGui::TableSetupColumn("Bohater", ImGuiTableColumnFlags_WidthStretch, 1.0f);
+    ImGui::TableSetupColumn("Dlaczego", ImGuiTableColumnFlags_WidthStretch, 3.0f);
+    ImGui::TableHeadersRow();
+    for (const auto& b : sugg) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted(b.hero.c_str());
+        ImGui::TableSetColumnIndex(1);
+        ImGui::TextWrapped("%s", b.reason_pl.c_str());
+    }
+    ImGui::EndTable();
+}
+
+void draw_bans_stage(AppState& s) {
+    ImGui::TextDisabled("Faza banow: odczytaj ekran draftu, a program zaproponuje bany — "
+                        "najgrozniejsi bohaterowie z mety + kontry na Twoja pule.");
+    ImGui::Spacing();
+    draft_read_controls(s, s.f9_edge);
+    ImGui::Spacing();
+
+    if (s.draft.last && s.draft.last->calibrated) {
+        ImGui::SeparatorText("Odczyt draftu");
+        ImGui::Text("Bany wroga: %s", draft_line(s.draft.last->enemy_bans).c_str());
+        ImGui::Text("Bany moje:  %s", draft_line(s.draft.last->ally_bans).c_str());
+    }
+    if (s.draft.sugg) {
+        ImGui::SeparatorText("Sugestie banow");
+        draw_suggestions_table("bans_sugg", s.draft.sugg->bans);
+    }
+}
+
+void draw_pick_stage(AppState& s) {
+    ImGui::TextDisabled("Faza pickow: odczytaj drafta, a program oceni bohaterow z Twojej puli "
+                        "przeciw widocznym pickom wroga (kontry + meta + bilans obrazen).");
+    ImGui::Spacing();
+    draft_read_controls(s, s.f9_edge);
+    ImGui::Spacing();
+
+    if (s.draft.last && s.draft.last->calibrated) {
+        ImGui::SeparatorText("Odczyt draftu");
+        ImGui::Text("Picki wroga: %s", draft_line(s.draft.last->enemy_picks).c_str());
+        ImGui::Text("Picki moje:  %s", draft_line(s.draft.last->ally_picks).c_str());
+    }
+    if (s.draft.sugg) {
+        ImGui::SeparatorText("Sugestie pickow (Twoja pula: data/hero_pool.json)");
+        if (s.draft.sugg->picks.empty())
+            ImGui::TextWrapped("Brak kandydatow — uzupelnij data/hero_pool.json.");
+        draw_suggestions_table("picks_sugg", s.draft.sugg->picks);
+        // Klik przejmuje picka do naglowka (etapy 3-5 licza dla niego).
+        for (const auto& p : s.draft.sugg->picks) {
+            ImGui::PushID(p.hero.c_str());
+            if (ImGui::SmallButton(("Gram " + p.hero).c_str()))
+                s.hero = p.hero;
+            ImGui::PopID();
+            ImGui::SameLine();
+        }
+        ImGui::NewLine();
+    }
+}
+
+// --- Etapy 3-4: loadout (eternals + skill, crest) ------------------------------
+
+void loadout_controls(AppState& s) {
+    auto& lo = s.loadout;
+    const bool busy = lo.task.running();
+    const bool changed = (s.hero != lo.applied_hero || s.role != lo.applied_role);
+    ImGui::BeginDisabled(busy || s.hero.empty());
+    const bool clicked = ImGui::Button("Pobierz rekomendacje", ImVec2(240, 0));
+    ImGui::EndDisabled();
+    help_marker("Pobiera najlepszy build spolecznosci dla (bohater, rola) z Omeda.city "
+                "(crest + kolejnosc skillowania) i dokleja eternalsy z Twojej bazy "
+                "data/eternals.json. Bohatera i role ustawiasz w naglowku.");
+    if (clicked || (!busy && changed && lo.last)) {
+        Advisor* adv = &s.advisor;
+        const std::string hero = s.hero;
+        const Role role = kRoles[static_cast<size_t>(s.role)].role;
+        lo.applied_hero = s.hero;
+        lo.applied_role = s.role;
+        lo.consumed = false;
+        lo.task.start([adv, hero, role] { return adv->loadout(hero, role); });
+    }
+    if (busy)
+        spinner_with_label("pobieram build spolecznosci...");
+    if (!lo.task.error().empty())
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Blad: %s", lo.task.error().c_str());
+    if (s.hero.empty())
+        ImGui::TextDisabled("Najpierw wybierz bohatera w naglowku (albo w etapie 2).");
+}
+
+void draw_eternals_stage(AppState& s) {
+    ImGui::TextDisabled("Eternalsy i kolejnosc skillowania dla Twojego picka. Eternalsy "
+                        "pochodza z Twojej bazy data/eternals.json (API ich nie ma), "
+                        "skill order z najlepszego buildu spolecznosci.");
+    ImGui::Spacing();
+    loadout_controls(s);
+    if (!s.loadout.last)
+        return;
+    const LoadoutAdvice& lo = *s.loadout.last;
+
+    ImGui::SeparatorText("Eternalsy");
+    if (lo.eternals.empty()) {
+        ImGui::TextWrapped("Brak rekomendacji dla (%s, %s) w data/eternals.json — uzupelnij "
+                           "baze (ikony + opisy z gry/pred.gg).",
+                           lo.hero_name.c_str(),
+                           kRoles[static_cast<size_t>(s.role)].label);
+    }
+    for (const auto* e : lo.eternals) {
+        ImGui::BulletText("%s [%s]", e->name.c_str(), e->slot.c_str());
+        if (!e->description_pl.empty()) {
+            ImGui::Indent();
+            ImGui::TextWrapped("%s", e->description_pl.c_str());
+            ImGui::Unindent();
+        }
+    }
+
+    ImGui::SeparatorText("Kolejnosc skillowania");
+    if (lo.skill_order.empty()) {
+        ImGui::TextDisabled("Build spolecznosci nie zawiera skill order.");
+        return;
+    }
+    if (!lo.build_title.empty())
+        ImGui::TextDisabled("wg buildu: \"%s\"", lo.build_title.c_str());
+    const int levels = static_cast<int>(lo.skill_order.size());
+    if (ImGui::BeginTable("skill_order", levels + 1,
+                          ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit |
+                              ImGuiTableFlags_ScrollX)) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("Poziom");
+        for (int i = 0; i < levels; ++i) {
+            ImGui::TableSetColumnIndex(i + 1);
+            ImGui::Text("%d", i + 1);
+        }
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::TextUnformatted("Skill");
+        // Umiejetnosci numerowane 1..4 jak w rekordzie buildu (Q/E/RMB/ULT
+        // zaleznie od bohatera — numer slotu, nie klawisza).
+        for (int i = 0; i < levels; ++i) {
+            ImGui::TableSetColumnIndex(i + 1);
+            ImGui::Text("%d", lo.skill_order[static_cast<size_t>(i)]);
+        }
+        ImGui::EndTable();
+    }
+}
+
+void draw_crest_stage(AppState& s) {
+    ImGui::TextDisabled("Crest dla Twojego picka — z najlepszego buildu spolecznosci "
+                        "(najwiecej glosow na Omeda.city), ze spolszczeniem dzialania.");
+    ImGui::Spacing();
+    loadout_controls(s);
+    if (!s.loadout.last)
+        return;
+    const LoadoutAdvice& lo = *s.loadout.last;
+
+    ImGui::SeparatorText("Crest");
+    if (!lo.crest) {
+        ImGui::TextWrapped("Build spolecznosci nie wskazuje crestu (albo brak buildow dla "
+                           "tego bohatera).");
+        return;
+    }
+    ImGui::Text("%s", lo.crest->display_name.c_str());
+    if (!lo.build_title.empty())
+        ImGui::TextDisabled("wg buildu: \"%s\"", lo.build_title.c_str());
+    if (!lo.crest_note_pl.empty())
+        ImGui::TextWrapped("%s", lo.crest_note_pl.c_str());
+}
+
+// --- Etap 5: itemy (live) -------------------------------------------------------
+
+void start_live_read(AppState& s) {
+    auto& lv = s.live;
+    VisionSession* vs = &s.vision;
+    const std::string hero = s.hero;
+    const Role role = kRoles[static_cast<size_t>(s.role)].role;
+    const std::string cfg = s.config_path;
+    const std::string img = s.image_path;
+    // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
+    const bool set_obj = (hero != lv.applied_hero || s.role != lv.applied_role);
+    lv.applied_hero = hero;
+    lv.applied_role = s.role;
+    lv.read_consumed = false;
+    lv.status.clear();
+    lv.read_task.start([vs, hero, role, cfg, img, set_obj]() -> LiveResult {
+        if (set_obj)
+            vs->set_objective(hero, role);
+        const cv::Mat frame = grab_frame(img);
+        std::string note;
+        const Calibration calib = load_or_autocalibrate(*vs, cfg, frame, note);
+        LiveResult r = vs->read(frame, calib);
+        if (!note.empty())
+            r.shopping_note = note + " " + r.shopping_note;
+        return r;
+    });
+}
+
+void draw_items_stage(AppState& s) {
+    auto& lv = s.live;
+    ImGui::TextDisabled("Mecz: przytrzymaj TAB (scoreboard) i odczytaj — program rozpozna "
+                        "itemy i bohaterow obu druzyn, doostrzy profil wroga, policzy "
+                        "counter-build i podpowie NASTEPNY ZAKUP z uzasadnieniem.");
+    ImGui::Spacing();
+
+    const bool busy = lv.read_task.running();
+#ifndef _WIN32
+    const bool can_read = !s.hero.empty() && s.image_path[0] != '\0';
+#else
+    const bool can_read = !s.hero.empty();
+#endif
+    ImGui::BeginDisabled(busy || !can_read);
+    const bool clicked = ImGui::Button("Odczytaj scoreboard (F9)", ImVec2(240, 0));
+    ImGui::EndDisabled();
+    help_marker("Robi zrzut ekranu (przytrzymaj TAB w grze!) albo czyta podany PNG. "
+                "Rozpoznaje itemy i portrety bohaterow metoda NCC, liczy profil wroga "
+                "i counter-build. Pierwszy odczyt bez pliku kalibracji uruchamia "
+                "AUTO-KALIBRACJE (potrzebne widoczne itemy); pierwszy odczyt w ogole "
+                "pobiera tez baze ikon (moze potrwac). Najechanie na item = opis PL.");
+    if ((clicked || (s.f9_edge && !busy && can_read)))
+        start_live_read(s);
+    if (busy)
+        spinner_with_label("odczyt / pobieranie bazy ikon...");
+    if (s.vision.matcher_ready()) {
+        ImGui::SameLine();
+        ImGui::TextDisabled("baza: %d ikon", static_cast<int>(s.vision.icon_base_size()));
+    }
+    if (s.hero.empty())
+        ImGui::TextDisabled("Najpierw wybierz bohatera w naglowku (albo w etapie 2).");
+#ifndef _WIN32
+    if (s.image_path[0] == '\0')
+        ImGui::TextDisabled("Poza Windows podaj zrzut PNG w naglowku (brak DXGI).");
+#endif
+
+    if (!lv.read_task.error().empty())
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Blad: %s",
+                           lv.read_task.error().c_str());
+    if (!lv.last)
+        return;
+
+    const LiveResult& r = *lv.last;
+    ImGui::SeparatorText("Nastepny zakup");
+    if (!r.shopping_note.empty())
+        ImGui::TextDisabled("%s", r.shopping_note.c_str());
+    if (r.shopping.queue.empty()) {
+        ImGui::TextWrapped("Masz komplet itemow z planu counter-builda.");
+    } else {
+        const NextPurchase& np = r.shopping.queue.front();
+        ImGui::Text("KUP TERAZ: %s (%d zl)", np.item.display_name.c_str(),
+                    np.item.total_price);
+        ImGui::TextWrapped("Dlaczego: %s", np.reason_pl.c_str());
+        if (r.shopping.queue.size() > 1) {
+            std::string rest;
+            for (size_t i = 1; i < r.shopping.queue.size(); ++i)
+                rest += (rest.empty() ? "" : " -> ") + r.shopping.queue[i].item.display_name;
+            ImGui::TextDisabled("Potem: %s (razem %d zl)", rest.c_str(),
+                                r.shopping.remaining_cost);
+        }
+    }
+
+    ImGui::SeparatorText("Odczyt");
+    ImGui::Text("%d itemow (%d niepewnych)", r.total_items, r.uncertain);
+    ImGui::TextDisabled("Ta sama rola w obu tabelach = przeciwnicy w linii "
+                        "(scoreboard sortuje graczy wg rol).");
+    draw_team_table("live_enemies", "Wrogowie", r.enemies);
+    draw_team_table("live_allies", "Moja druzyna", r.allies);
+
+    ImGui::Text("Profil wroga: %.0f%% obrazen fizycznych%s%s%s", 100.0 * r.profile.physical_ratio,
+                r.profile.has_healing ? ", leczenie" : "", r.profile.has_crit ? ", kryt" : "",
+                r.profile.has_tanks ? ", tanki" : "");
+
+    ImGui::SeparatorText("Counter-build (pelny cel)");
+    draw_build_table("live_counter", r.counter);
+}
+
+// --- Kalibracja (zaawansowane) -------------------------------------------------
+
+void draw_calibrate_stage(AppState& s) {
     auto& c = s.calib;
-    ImGui::TextDisabled("Dopasuj siatki slotow do zrzutu scoreboardu (TAB): czerwona = wrogowie, "
-                        "zielona = moja druzyna. Klik na obraz ustawia origin edytowanej siatki.");
+    ImGui::TextDisabled("Tryb zaawansowany: reczne dopasowanie siatek do zrzutow. Zwykle "
+                        "NIEPOTRZEBNE dla scoreboardu (etap 5 auto-kalibruje) — konieczne "
+                        "dla regionow draftu (bany/picki) na zrzucie ekranu draftu.");
     ImGui::Spacing();
 
     // --- Zrodlo klatki ---
@@ -350,7 +856,7 @@ void draw_calibrate_tab(AppState& s) {
     const bool shooting = c.shot_task.running();
     ImGui::BeginDisabled(shooting);
     if (ImGui::Button("Zrzut z gry (3 s)##calibshot")) {
-        c.status = "Przelacz sie do gry i PRZYTRZYMAJ TAB — zrzut za 3 s...";
+        c.status = "Przelacz sie do gry (TAB dla scoreboardu / ekran draftu) — zrzut za 3 s...";
         c.shot_consumed = false;
         c.shot_task.start([] {
             std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -358,10 +864,8 @@ void draw_calibrate_tab(AppState& s) {
         });
     }
     ImGui::EndDisabled();
-    if (shooting) {
-        ImGui::SameLine();
-        ImGui::TextDisabled("odliczanie...");
-    }
+    if (shooting)
+        spinner_with_label("odliczanie do zrzutu...");
 #endif
     ImGui::TextDisabled("Mozesz tez przeciagnac plik obrazu na okno.");
 
@@ -395,14 +899,12 @@ void draw_calibrate_tab(AppState& s) {
         ImGui::TextDisabled("%d/%d", c.gallery_idx + 1, static_cast<int>(c.gallery.size()));
     }
 
-    // --- Plik kalibracji ---
-    ImGui::InputText("Plik JSON##calib", c.config_path, sizeof(c.config_path));
-    ImGui::SameLine();
+    // --- Plik kalibracji (wspolna sciezka w naglowku) ---
     if (ImGui::Button("Wczytaj JSON##calibcfg")) {
         try {
-            c.calib = Calibration::load(c.config_path);
+            c.calib = Calibration::load(s.config_path);
             c.dirty = true;
-            c.status = std::string("Wczytano ") + c.config_path + ".";
+            c.status = std::string("Wczytano ") + s.config_path + ".";
         } catch (const std::exception& ex) {
             c.status = std::string("Blad JSON: ") + ex.what();
         }
@@ -410,12 +912,13 @@ void draw_calibrate_tab(AppState& s) {
     ImGui::SameLine();
     if (ImGui::Button("Zapisz JSON##calibcfg")) {
         try {
-            c.calib.save(c.config_path);
-            c.status = std::string("Zapisano ") + c.config_path + ".";
+            c.calib.save(s.config_path);
+            c.status = std::string("Zapisano ") + s.config_path + ".";
         } catch (const std::exception& ex) {
             c.status = std::string("Blad zapisu: ") + ex.what();
         }
     }
+    help_marker("Plik kalibracji ustawiasz w naglowku (wspolny dla wszystkich etapow).");
     if (c.has_frame) {
         ImGui::SameLine();
         if (ImGui::Button("Domyslne dla rozdzielczosci##calib")) {
@@ -429,25 +932,19 @@ void draw_calibrate_tab(AppState& s) {
     ImGui::Separator();
 
     // --- Wybor edytowanej siatki + suwaki ---
-    ImGui::TextUnformatted("Edytowana siatka:");
-    ImGui::SameLine();
-    ImGui::RadioButton("Wrogowie##grid", &c.edit_grid, 0);
-    ImGui::SameLine();
-    ImGui::RadioButton("Moja druzyna##grid", &c.edit_grid, 1);
-    ImGui::SameLine();
-    if (ImGui::Button("Kopiuj geometrie do drugiej siatki##grid")) {
-        // Przenosi slot/dx/dy/cols/rows, zostawia origin drugiej siatki —
-        // panele druzyn maja identyczna geometrie, rozny punkt startu.
-        const GridSpec& from =
-            (c.edit_grid == 0) ? c.calib.enemy_item_grid : c.calib.ally_item_grid;
-        GridSpec& to = (c.edit_grid == 0) ? c.calib.ally_item_grid : c.calib.enemy_item_grid;
-        const cv::Point keep = to.origin;
-        to = from;
-        to.origin = keep;
-        c.dirty = true;
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 16.0f);
+    if (ImGui::BeginCombo("Edytowana siatka", kSlotGrids[static_cast<size_t>(c.edit_grid)].label)) {
+        for (int i = 0; i < static_cast<int>(kSlotGrids.size()); ++i) {
+            if (ImGui::Selectable(kSlotGrids[static_cast<size_t>(i)].label, i == c.edit_grid))
+                c.edit_grid = i;
+        }
+        ImGui::EndCombo();
     }
+    help_marker("Siatki draftu (bany/picki) startuja jako nieobecne (0 wierszy) — ustaw "
+                "wiersze/kolumny > 0 na zrzucie ekranu draftu, aby etapy 1-2 mogly czytac "
+                "bany i picki. Klik na obrazie ustawia origin edytowanej siatki.");
 
-    auto& g = (c.edit_grid == 0) ? c.calib.enemy_item_grid : c.calib.ally_item_grid;
+    auto& g = kSlotGrids[static_cast<size_t>(c.edit_grid)].get(c.calib);
     const int max_x = c.has_frame ? c.frame.cols : 4096;
     const int max_y = c.has_frame ? c.frame.rows : 4096;
     bool changed = false;
@@ -457,8 +954,8 @@ void draw_calibrate_tab(AppState& s) {
     changed |= ImGui::DragInt("slot wys.", &g.slot.height, 1.0f, 4, 256);
     changed |= ImGui::DragInt("dx (krok w wierszu)", &g.dx, 1.0f, 0, max_x);
     changed |= ImGui::DragInt("dy (krok wierszy)", &g.dy, 1.0f, 0, max_y);
-    changed |= ImGui::DragInt("kolumny", &g.cols, 0.1f, 1, 10);
-    changed |= ImGui::DragInt("wiersze", &g.rows, 0.1f, 1, 8);
+    changed |= ImGui::DragInt("kolumny", &g.cols, 0.1f, 0, 16);
+    changed |= ImGui::DragInt("wiersze", &g.rows, 0.1f, 0, 8);
     if (changed)
         c.dirty = true;
 
@@ -490,102 +987,58 @@ void draw_calibrate_tab(AppState& s) {
     }
 }
 
-void draw_live_tab(AppState& s) {
-    auto& lv = s.live;
-    ImGui::TextDisabled("Odczyt itemow obu druzyn ze scoreboardu -> profil wroga -> counter-build. "
-                        "Wymaga kalibracji i bazy ikon (pierwszy odczyt ja pobierze).");
-    ImGui::Spacing();
+// --- Uklad glowny ----------------------------------------------------------------
 
-    hero_combo("Bohater##live", lv.hero, s.hero_names);
-    role_combo("Rola##live", lv.role);
-    ImGui::InputText("Plik kalibracji##live", lv.config_path, sizeof(lv.config_path));
-#ifndef _WIN32
-    ImGui::InputText("Zrzut PNG##live", lv.image_path, sizeof(lv.image_path));
-#else
-    ImGui::InputText("Zrzut PNG (opcjonalnie)##live", lv.image_path, sizeof(lv.image_path));
-    ImGui::TextDisabled("Puste pole PNG = zrzut z gry (DXGI). Przytrzymaj TAB przed odczytem.");
-#endif
-    ImGui::Spacing();
+// Naglowek kreatora: bohater, rola, zrodlo klatki, plik kalibracji, statusy.
+void draw_header(AppState& s) {
+    ImGui::TextUnformatted("predeye - asystent rankedowy Predecessor");
+    ImGui::SameLine();
+    if (s.hero_names_task.running()) {
+        draw_spinner(6.0f);
+        ImGui::SameLine();
+        ImGui::TextDisabled("(laduje liste bohaterow...)");
+    } else if (s.hero_names.empty() && !s.hero_names_task.error().empty()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f),
+                           "(brak listy bohaterow: %s - mozna wpisac nazwe recznie)",
+                           s.hero_names_task.error().c_str());
+    } else if (!s.hero_names.empty()) {
+        ImGui::TextDisabled("(%d bohaterow)", static_cast<int>(s.hero_names.size()));
+    }
 
-    const bool busy = lv.read_task.running();
-#ifndef _WIN32
-    // Poza Windows nie ma zrzutu z gry (DXGI) — sciezka PNG jest wymagana.
-    const bool need_png = std::string(lv.image_path).empty();
-    const bool can_read = !lv.hero.empty() && !need_png;
-#else
-    const bool can_read = !lv.hero.empty();
-#endif
-    ImGui::BeginDisabled(busy || !can_read);
-    if (ImGui::Button("Odczytaj scoreboard", ImVec2(200, 0))) {
-        VisionSession* vs = &s.vision;
-        std::string hero = lv.hero;
-        Role role = kRoles[static_cast<size_t>(lv.role)].role;
-        std::string cfg = lv.config_path;
-        std::string img = lv.image_path;
-        // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
-        const bool set_obj = (hero != lv.applied_hero || lv.role != lv.applied_role);
-        lv.applied_hero = hero;
-        lv.applied_role = lv.role;
-        lv.read_consumed = false;
-        lv.read_task.start([vs, hero, role, cfg, img, set_obj]() -> LiveResult {
-            if (set_obj)
-                vs->set_objective(hero, role);
-            if (!std::filesystem::exists(cfg))
-                throw std::runtime_error("brak " + cfg +
-                                         " — najpierw skalibruj (zakladka Kalibracja)");
-            const Calibration calib = Calibration::load(cfg);
-            cv::Mat frame;
-            if (!img.empty()) {
-                frame = FileCapture(img).grab();
-            } else {
+    // Status recznych danych z data/ — kreator na nich polega.
+    const LocalData& ld = s.advisor.local();
+    ImGui::SameLine();
+    ImGui::TextDisabled("| dane: %d kontr, %d bohaterow w puli, %d spolszczen, %d eternalsow",
+                        ld.counters_count(), static_cast<int>(ld.hero_pool().heroes.size()),
+                        ld.items_pl_count(), static_cast<int>(ld.eternals().size()));
+    help_marker("Reczne dane z katalogu data/ w repo: counters.json (kontry), "
+                "hero_pool.json (Twoja pula), pl_items.json (spolszczenia), "
+                "eternals.json (eternalsy). Uzupelniaj je — sugestie beda trafniejsze.");
+
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 12.0f);
+    hero_combo("Moj bohater##hdr", s.hero, s.hero_names);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 8.0f);
+    role_combo("Rola##hdr", s.role);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 11.0f);
+    ImGui::InputText("Kalibracja##hdr", s.config_path, sizeof(s.config_path));
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(ImGui::GetFontSize() * 11.0f);
 #ifdef _WIN32
-                frame = DxgiCapture().grab();
+    ImGui::InputTextWithHint("Zrzut##hdr", "(puste = zrzut z gry)", s.image_path,
+                             sizeof(s.image_path));
 #else
-                throw std::runtime_error("podaj zrzut PNG — zrzut z gry dziala tylko na Windows");
+    ImGui::InputTextWithHint("Zrzut##hdr", "sciezka PNG (wymagana)", s.image_path,
+                             sizeof(s.image_path));
 #endif
-            }
-            return vs->read(frame, calib);
-        });
-    }
-    ImGui::EndDisabled();
-    if (busy) {
-        ImGui::SameLine();
-        ImGui::TextDisabled("odczyt / pobieranie bazy ikon...");
-    }
-    if (s.vision.matcher_ready()) {
-        ImGui::SameLine();
-        ImGui::TextDisabled("baza: %d ikon", static_cast<int>(s.vision.icon_base_size()));
-    }
-
-    if (!lv.read_task.error().empty())
-        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "Blad: %s",
-                           lv.read_task.error().c_str());
-    if (lv.read_task.has_result() && !lv.read_consumed) {
-        lv.last = lv.read_task.result();
-        lv.read_consumed = true;
-    }
-
-    if (!lv.last)
-        return;
-
-    const LiveResult& r = *lv.last;
-    ImGui::SeparatorText("Odczyt");
-    ImGui::Text("%d itemow (%d niepewnych)", r.total_items, r.uncertain);
-    ImGui::TextDisabled("Ta sama rola w obu tabelach = przeciwnicy w linii "
-                        "(scoreboard sortuje graczy wg rol).");
-    draw_team_table("live_enemies", "Wrogowie", r.enemies);
-    draw_team_table("live_allies", "Moja druzyna", r.allies);
-
-    ImGui::Text("Profil wroga: %.0f%% obrazen fizycznych%s%s%s", 100.0 * r.profile.physical_ratio,
-                r.profile.has_healing ? ", leczenie" : "", r.profile.has_crit ? ", kryt" : "",
-                r.profile.has_tanks ? ", tanki" : "");
-
-    ImGui::SeparatorText("Counter-build");
-    draw_build_table("live_counter", r.counter);
+    help_marker("Wspolne ustawienia wszystkich etapow. Bohater/rola = Twoj pick; plik "
+                "kalibracji tworzony auto-kalibracja przy pierwszym odczycie; pole Zrzut "
+                "pozwala czytac z pliku PNG zamiast ekranu (test bez gry).");
+    ImGui::Separator();
 }
 
 void draw_main_window(AppState& s) {
-    // Jedno okno wypelniajace obszar aplikacji.
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(vp->WorkPos);
     ImGui::SetNextWindowSize(vp->WorkSize);
@@ -593,34 +1046,46 @@ void draw_main_window(AppState& s) {
                                    ImGuiWindowFlags_NoSavedSettings |
                                    ImGuiWindowFlags_NoBringToFrontOnFocus;
     ImGui::Begin("predeye", nullptr, flags);
+    draw_header(s);
 
-    ImGui::TextUnformatted("predeye - asystent-trener Predecessor");
-    ImGui::SameLine();
-    if (s.hero_names_task.running())
-        ImGui::TextDisabled("(laduje liste bohaterow z Omeda.city...)");
-    else if (s.hero_names.empty() && !s.hero_names_task.error().empty())
-        ImGui::TextColored(ImVec4(1.0f, 0.6f, 0.2f, 1.0f),
-                           "(brak listy bohaterow: %s - mozna wpisac nazwe recznie)",
-                           s.hero_names_task.error().c_str());
-    else if (!s.hero_names.empty())
-        ImGui::TextDisabled("(%d bohaterow zaladowanych)", static_cast<int>(s.hero_names.size()));
-    ImGui::Separator();
-
-    if (ImGui::BeginTabBar("tabs")) {
-        if (ImGui::BeginTabItem("Kalibracja")) {
-            draw_calibrate_tab(s);
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Live")) {
-            draw_live_tab(s);
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
+    // Lewy pasek: etapy kreatora (nawigacja reczna).
+    ImGui::BeginChild("stages", ImVec2(ImGui::GetFontSize() * 13.0f, 0),
+                      ImGuiChildFlags_Borders);
+    for (int i = 0; i < kStageCount; ++i) {
+        if (ImGui::Selectable(kStageNames[i], s.stage == i))
+            s.stage = i;
     }
+    ImGui::Separator();
+    ImGui::TextDisabled("F9 = odczyt ekranu\nw biezacym etapie\n(Windows)");
+    ImGui::EndChild();
+    ImGui::SameLine();
+
+    ImGui::BeginChild("stage_content", ImVec2(0, 0));
+    switch (s.stage) {
+    case kStageBans:
+        draw_bans_stage(s);
+        break;
+    case kStagePick:
+        draw_pick_stage(s);
+        break;
+    case kStageEternals:
+        draw_eternals_stage(s);
+        break;
+    case kStageCrest:
+        draw_crest_stage(s);
+        break;
+    case kStageItems:
+        draw_items_stage(s);
+        break;
+    default:
+        draw_calibrate_stage(s);
+        break;
+    }
+    ImGui::EndChild();
     ImGui::End();
 }
 
-// Przeciagniecie pliku na okno -> wczytaj do zakladki Kalibracja.
+// Przeciagniecie pliku na okno -> wczytaj do etapu Kalibracja.
 // GLFW dostarcza sciezki w UTF-8 (spojnie z FileCapture).
 void drop_callback(GLFWwindow* window, int count, const char** paths) {
     if (count <= 0)
@@ -629,6 +1094,7 @@ void drop_callback(GLFWwindow* window, int count, const char** paths) {
     if (!s)
         return;
     calib_load_image(s->calib, paths[0]);
+    s->stage = kStageCalib;
 }
 
 void glfw_error_callback(int error, const char* description) {
@@ -657,7 +1123,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(1000, 720, "predeye", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1100, 760, "predeye", nullptr, nullptr);
     if (!window) {
         std::fprintf(stderr, "predeye-gui: nie udalo sie utworzyc okna\n");
         glfwTerminate();
@@ -683,14 +1149,49 @@ int main() {
         state.hero_names_task.start([adv] { return adv->hero_names(); });
     }
 
+#ifdef _WIN32
+    bool f9_down_prev = false;
+#endif
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+#ifdef _WIN32
+        // Globalny hotkey F9 (dziala, gdy fokus ma gra): zbocze narastajace
+        // wyzwala odczyt w biezacym etapie kreatora.
+        const bool f9_down = (GetAsyncKeyState(VK_F9) & 0x8000) != 0;
+        state.f9_edge = f9_down && !f9_down_prev;
+        f9_down_prev = f9_down;
+#else
+        state.f9_edge = false;
+#endif
 
         // Odbior wynikow z watkow tla.
         state.hero_names_task.poll();
         if (state.hero_names.empty() && state.hero_names_task.has_result())
             state.hero_names = state.hero_names_task.result();
         state.live.read_task.poll();
+        if (state.live.read_task.has_result() && !state.live.read_consumed) {
+            state.live.read_consumed = true;
+            state.live.last = state.live.read_task.result();
+        }
+        state.draft.read_task.poll();
+        if (state.draft.read_task.has_result() && !state.draft.read_consumed) {
+            state.draft.read_consumed = true;
+            state.draft.last = state.draft.read_task.result();
+            // Po odczycie draftu od razu policz sugestie w tle.
+            start_draft_suggestions(state);
+        }
+        state.draft.sugg_task.poll();
+        if (state.draft.sugg_task.has_result() && !state.draft.sugg_consumed) {
+            state.draft.sugg_consumed = true;
+            state.draft.sugg = state.draft.sugg_task.result();
+        }
+        state.loadout.task.poll();
+        if (state.loadout.task.has_result() && !state.loadout.consumed) {
+            state.loadout.consumed = true;
+            state.loadout.last = state.loadout.task.result();
+        }
         state.calib.shot_task.poll();
         if (state.calib.shot_task.has_result() && !state.calib.shot_consumed) {
             // Odbior swiezego zrzutu z gry (upload tekstury nastapi w draw).

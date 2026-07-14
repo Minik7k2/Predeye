@@ -20,6 +20,7 @@ struct LoadoutAdvice {
     std::string hero_name;
     std::string build_title;   // tytul buildu spolecznosci ("" gdy brak)
     std::optional<Item> crest; // crest_id rozwiazany przez indeks itemow
+    std::string crest_note_pl; // spolszczenie crestu z pl_items ("" gdy brak)
     // Kolejnosc skillowania: skill_order[i] = ktora umiejetnosc (1..4)
     // wbic na poziomie i+1. Pusta gdy build jej nie ma.
     std::vector<int> skill_order;

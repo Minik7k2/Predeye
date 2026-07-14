@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 #include <utility>
 
@@ -14,8 +15,10 @@ namespace {
 
 // Widoki wierszy jednej druzyny + diff wzgledem poprzedniego odczytu.
 // `prev` jest podmieniane na biezacy stan (do nastepnego diffa).
+// `tooltip_for(item_id)` dostarcza spolszczenie itemu do tooltipa (moze byc "").
 std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
-                                    std::vector<std::set<std::string>>& prev) {
+                                    std::vector<std::set<std::string>>& prev,
+                                    const std::function<std::string(long long)>& tooltip_for) {
     std::vector<LiveRowView> views;
     std::vector<std::set<std::string>> next;
     next.reserve(rows.size());
@@ -36,6 +39,7 @@ std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
             if (!s.empty) {
                 sv.name = s.name.empty() ? "?" : s.name;
                 sv.confident = s.confident;
+                sv.tooltip_pl = tooltip_for(s.item_id);
                 if (!s.name.empty())
                     names.insert(s.name);
             }
@@ -161,6 +165,7 @@ std::string VisionSession::set_objective(const std::string& hero, Role role, int
     ensure_loaded();
     const auto me = heroes_->by_names({hero}).front(); // rzuca gdy nieznany
     obj_ = objective_for(me, role, budget_override);
+    role_ = role;
     has_obj_ = true;
     reset_diff(); // zmiana celu = nowa sesja diffa
     return me.name;
@@ -193,12 +198,32 @@ LiveResult VisionSession::read(const cv::Mat& frame, const Calibration& calib) {
             apply_typical_tiebreak(row, *typical, index_);
     }
 
+    // Spolszczenie itemu do tooltipa: streszczenie + efekty (PL, fallback EN).
+    const auto tooltip_for = [this](long long id) -> std::string {
+        const auto it = index_.find(id);
+        if (it == index_.end())
+            return "";
+        const ItemPl* pl = local_.item_pl(it->second.slug);
+        if (!pl)
+            return "";
+        std::string out = pl->summary_pl;
+        for (const auto& e : pl->effects) {
+            const std::string& t = ItemPl::text(e);
+            if (t.empty())
+                continue;
+            if (!out.empty())
+                out += "\n";
+            out += (e.name.empty() ? "" : e.name + ": ") + t;
+        }
+        return out;
+    };
+
     LiveResult out;
     out.total_items = sb.total_items;
     out.uncertain = sb.uncertain;
     out.objective_name = obj_.name;
-    out.enemies = make_views(sb.enemies, prev_enemy_);
-    out.allies = make_views(sb.allies, prev_ally_);
+    out.enemies = make_views(sb.enemies, prev_enemy_, tooltip_for);
+    out.allies = make_views(sb.allies, prev_ally_, tooltip_for);
 
     // Profil i counter liczone WYLACZNIE z itemow wroga — sojusznicy sa
     // wyswietlani informacyjnie (kto z kim walczy, co juz maja).
@@ -209,6 +234,23 @@ LiveResult VisionSession::read(const cv::Mat& frame, const Calibration& calib) {
 
     refine_enemy_profile(out.profile, builds);
     out.counter = engine_->counter_build(obj_, out.profile);
+
+    // Kolejka zakupow: counter minus itemy z MOJEGO wiersza (rola celu).
+    std::vector<Item> mine;
+    bool found = false;
+    for (const auto& row : sb.allies) {
+        if (scoreboard_row_role(row.row, static_cast<int>(sb.allies.size())) == role_) {
+            mine = row.items;
+            found = true;
+            break;
+        }
+    }
+    out.shopping = next_purchases(out.counter, mine, local_);
+    out.shopping_note =
+        found ? "Twoje itemy z wiersza " + role_name(role_) + ": " +
+                    std::to_string(mine.size()) + " rozpoznanych"
+              : "Nie znaleziono Twojego wiersza (rola " + role_name(role_) +
+                    ") — kolejka liczona od pustego ekwipunku";
     return out;
 }
 
