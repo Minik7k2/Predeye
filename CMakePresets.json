@@ -1,11 +1,11 @@
 {
   "version": 3,
-  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "cmakeMinimumRequired": { "major": 3, "minor": 19, "patch": 0 },
   "configurePresets": [
     {
       "name": "default",
-      "displayName": "predeye (pelny: GUI + CLI + tor wizyjny)",
-      "description": "Buduje wszystko. Toolchain vcpkg konfiguruje sie automatycznie (cmake/AutoVcpkg.cmake).",
+      "displayName": "predeye (GCC, biblioteki systemowe)",
+      "description": "Pelny build (GUI + CLI + tor wizyjny) na GCC. Zaleznosci z pacman (MSYS2/UCRT64) lub apt/dnf (Linux) — patrz docs/BUILD.md.",
       "binaryDir": "${sourceDir}/build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
@@ -13,9 +13,33 @@
         "PREDEYE_BUILD_GUI": "ON",
         "PREDEYE_BUILD_CLI": "ON"
       }
+    },
+    {
+      "name": "msys2-ucrt64",
+      "displayName": "predeye (Windows: MSYS2/UCRT64)",
+      "description": "Jak default, jawnie pod srodowisko UCRT64 MSYS2 (generator Ninja, gcc/g++ z UCRT64).",
+      "inherits": "default",
+      "generator": "Ninja",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" },
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "vcpkg",
+      "displayName": "predeye (vcpkg, opcjonalnie)",
+      "description": "Wariant z auto-vcpkg zamiast bibliotek systemowych (dlugi pierwszy build: OpenCV ze zrodel).",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-vcpkg",
+      "cacheVariables": {
+        "PREDEYE_AUTO_VCPKG": "ON"
+      }
     }
   ],
   "buildPresets": [
-    { "name": "default", "configurePreset": "default" }
+    { "name": "default", "configurePreset": "default" },
+    { "name": "msys2-ucrt64", "configurePreset": "msys2-ucrt64" },
+    { "name": "vcpkg", "configurePreset": "vcpkg" }
   ]
 }
