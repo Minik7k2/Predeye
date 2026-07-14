@@ -1,5 +1,51 @@
 # Postęp prac
 
+## Kreator rankedowy + przejście na GCC (kod gotowy; weryfikacja Windows u właściciela)
+
+Duża rozbudowa wg zatwierdzonego planu (bany → pick → eternals/skill → crest
+→ itemy; rozpoznawanie bohaterów; spolszczenie itemów; GCC zamiast MSVC).
+Wszystko zweryfikowane na Linux GCC: pełny build `-Wall -Wextra` **0 ostrzeżeń**,
+testy doctest zielone, wariant `PREDEYE_VISION=OFF` też się buduje.
+
+- **Toolchain GCC (MSVC porzucone):** CMake odrzuca MSVC czytelnym błędem;
+  zależności z pacman (MSYS2/UCRT64, preset `msys2-ucrt64`) lub apt; vcpkg
+  został jako opcjonalny preset (`PREDEYE_AUTO_VCPKG` domyślnie OFF, nieudany
+  bootstrap = warning + fallback na biblioteki systemowe). Kroki: `docs/BUILD.md`.
+- **Dane lokalne (`core/local_data` + katalog `data/`):** `counters.json`
+  (ręczna baza kontr), `hero_pool.json` (pula picków), `eternals.json`
+  (eternalsy/perki — API ich NIE ma; treść wg pred.gg/gry, ikony ze zrzutów),
+  `pl_items.json` — **spolszczenie wszystkich 213 kupowalnych itemów**
+  (242 efekty przetłumaczone; puste `pl` ⇒ fallback EN; regeneracja po patchu:
+  `tools/gen_pl_items.py` przenosi tłumaczenia). Braki plików nigdy nie
+  wywalają programu.
+- **Wizja:** `IconMatcher` uogólniony na dowolną bazę sygnatur — te same NCC
+  32×32 rozpoznaje teraz **portrety bohaterów** (per wiersz scoreboardu ⇒
+  tożsamość + tie-break niepewnych itemów po typical_build — dotąd świadomie
+  pominięty) i bany/picki w nowym **`vision/draft_reader`**. Kalibracja v2:
+  siatki portretów + regiony draftu (opcjonalne, wstecznie kompatybilne).
+  **Auto-kalibracja** (`vision/auto_calibrate`): przeszukanie NCC wokół
+  domyślnej siatki; pewny wynik zapisuje się sam przy pierwszym odczycie live,
+  niepewny odsyła do ręcznej kalibracji. Progi wstępne — strojenie na realnych
+  zrzutach.
+- **Advisory rankedowe (core):** `draft_advisor` (bany: meta winrate×pickrate
+  z `/dashboard/hero_statistics.json` + kontry na moją pulę; picki: ocena puli
+  kontrą do picków wroga, z uzasadnieniami PL), `loadout_advisor` (crest +
+  skill order 1–18 z najlepszego buildu społeczności, eternalsy z bazy),
+  `shopping_advisor` („kup teraz X, bo…" — counter minus itemy odczytane
+  z MOJEGO wiersza scoreboardu, powody PL z pl_items).
+- **GUI = kreator:** lewy pasek etapów **1. Bany → 2. Wybór bohatera →
+  3. Eternals + skill → 4. Crest → 5. Itemy (live)** + Kalibracja
+  (zaawansowane, edycja wszystkich 8 siatek). Każdy etap: przycisk odczytu
+  z opisem i tooltipem `(?)`, **animowany spinner** przy pracy w tle, hotkey
+  **F9** wyzwala odczyt bieżącego etapu (Windows). Etap 5 pokazuje „NASTĘPNY
+  ZAKUP + dlaczego", tabele obu drużyn z bohaterami z portretów i **tooltipy
+  PL na itemach**. Klik „Gram X" w etapie 2 ustawia picka dla etapów 3–5.
+- **Do zrobienia u właściciela (Windows/MSYS2):** build wg `docs/BUILD.md`,
+  zrzuty ekranu draftu i wyboru eternalsów (kalibracja regionów draftu +
+  ikony eternalsów do `data/eternals/icons/`), uzupełnianie
+  `data/counters.json` i `data/hero_pool.json`, strojenie progów auto-kalibracji
+  i pewności na realnych zrzutach.
+
 ## GUI — kalibracja i tryb live wyciągnięte do interfejsu graficznego (DONE)
 
 - **Fasada `vision/vision_session` (`VisionSession`)**: wspólne źródło toru live

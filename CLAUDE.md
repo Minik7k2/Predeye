@@ -61,8 +61,8 @@ dHash odrzucony pomiarem — nie wracać do niego.
    (`predeye/<wersja> (osobisty trener; rozsadne uzycie)`), cache dyskowy
    z TTL (§5), pauza ≥ 0,3 s między ŻYWYMI zapytaniami. Testy automatyczne
    chodzą na fixtures (§9), nie na żywym API.
-4. **Czysty build** na wysokim poziomie ostrzeżeń (MSVC `/W4` lub
-   `-Wall -Wextra`). Ostrzeżenie = do naprawy przed commitem.
+4. **Czysty build** na wysokim poziomie ostrzeżeń (GCC `-Wall -Wextra`;
+   MSVC porzucone — patrz §7). Ostrzeżenie = do naprawy przed commitem.
 5. **Pytaj właściciela zanim:** dodasz zależność spoza listy (§7), zmienisz
    publiczny interfejs modułu, zaczniesz M6/M7, podejmiesz decyzję UI/UX.
 
@@ -386,36 +386,52 @@ predeye fetch-icons                                  # M2: pobranie bazy ikon
 
 ```
 predeye/
-  CMakeLists.txt          # C++17, warnings-as-errors nie; ale /W4 czysto
-  vcpkg.json
+  CMakeLists.txt          # C++17, warnings-as-errors nie; ale -Wall -Wextra czysto
+  vcpkg.json              # (opcjonalny wariant vcpkg)
   core/                   # przenośne: models, omeda_client, hero_context,
-                          #            enemy_build, build_engine
-  vision/                 # icon_matcher (przenośny), capture_dxgi (WIN32),
-                          #   calibration, scoreboard_reader
+                          #   enemy_build, build_engine, advisor, local_data,
+                          #   draft_advisor, loadout_advisor, shopping_advisor
+  vision/                 # icon_matcher (przenośny; itemy/portrety/eternalsy),
+                          #   capture_dxgi (WIN32), calibration (+ regiony
+                          #   draftu), scoreboard_reader, draft_reader,
+                          #   auto_calibrate, vision_session
+  gui/                    # predeye-gui: KREATOR RANKEDOWY (ImGui + GLFW)
   app/                    # main.cpp (CLI)
-  tools/                  # icon_harness (walidacja NCC), pomocnicze
+  tools/                  # icon_harness (walidacja NCC), gen_pl_items.py
   tests/                  # doctest + fixtures/
+  data/                   # RĘCZNE dane właściciela (wersjonowane!): counters,
+                          #   hero_pool, eternals (+ eternals/icons/), pl_items
   reference/              # (opcjonalnie) pliki prototypu
   assets/                 # cache ikon (gitignore)
   docs/
 ```
 
-- **Toolchain:** Windows 10/11, MSVC (VS Build Tools), CMake ≥ 3.21, vcpkg
-  (manifest mode). Rdzeń `core/` + `icon_matcher` muszą się kompilować też
-  bez WIN32 (guardy CMake `if(WIN32)` na capture/hotkey).
+- **Toolchain: wyłącznie GCC.** Windows: MSYS2/MinGW-w64 (środowisko UCRT64,
+  preset `msys2-ucrt64`), zależności z pacman; Linux: systemowy g++. MSVC NIE
+  jest wspierane (CMake przerywa konfigurację czytelnym błędem). CMake ≥ 3.19.
+  vcpkg pozostaje opcją (preset `vcpkg`; `PREDEYE_AUTO_VCPKG` domyślnie OFF,
+  nieudany bootstrap = warning + fallback na biblioteki systemowe).
+  Rdzeń `core/` + `icon_matcher` muszą się kompilować też bez WIN32
+  (guardy CMake `if(WIN32)` na capture/hotkey/dialogi).
 - **Zależności (zamknięta lista):** `curl`, `nlohmann-json`,
-  `opencv4` (potrzebne: core, imgproc, imgcodecs z PNG i **WebP**; przytnij
-  features w manifeście), `doctest` (testy). Nic więcej bez pytania.
+  `opencv4` (potrzebne: core, imgproc, imgcodecs z PNG i **WebP**),
+  `glfw3` + systemowy OpenGL (GUI; Dear ImGui wersjonowane w `third_party/`),
+  `doctest` (testy). Nic więcej bez pytania.
   Tesseract/OCR: NIE w tym zakresie (dopiero M7).
-- Build: `cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE=<vcpkg>/scripts/buildsystems/vcpkg.cmake`
-  → `cmake --build build --config Release`. Dodaj `docs/BUILD.md` z krokami.
+- Build: `cmake --preset default` (Windows: `--preset msys2-ucrt64`)
+  → `cmake --build build`. Kroki: `docs/BUILD.md`.
+- **Dane własne w `data/`:** API Omeda.city nie zna eternalsów, kontr ani
+  polskich opisów — utrzymuje je właściciel w JSON-ach w repo
+  (`core/local_data` czyta defensywnie; braki nie wywalają programu).
+  `pl_items.json` regeneruje `tools/gen_pl_items.py` (tłumaczenia
+  przenoszą się ze starego pliku).
 
 ---
 
 ## 8. Milestones (kolejność wiążąca, commit per milestone)
 
-- **M0 — szkielet:** struktura repo, CMake+vcpkg, pusty CLI się buduje na
-  MSVC /W4 czysto. DONE = zielony build + `predeye --help`.
+- **M0 — szkielet:** struktura repo, CMake, pusty CLI buduje się czysto na
+  wysokim poziomie ostrzeżeń. DONE = zielony build + `predeye --help`.
 - **M1 — rdzeń:** moduły §6.1–6.5 + komendy `build`/`counter`; testy
   parserów i silnika na fixtures zielone; smoke na żywym API ręcznie.
   DONE = `predeye counter "The Fey" midlane Wraith Wukong GRIM.exe Kallari Zinx`
