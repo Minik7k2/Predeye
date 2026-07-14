@@ -16,10 +16,15 @@ namespace {
 
 namespace fs = std::filesystem;
 
-std::string lower(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(),
-                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-    return s;
+// Kanoniczna forma nazwy bohatera: lowercase, znaki nie-alfanumeryczne -> "-".
+// Dzieki temu display_name ("The Fey", "GRIM.exe") i slug ("the-fey",
+// "grim-exe") wskazuja ten sam wpis w recznych plikach danych.
+std::string canon_hero(const std::string& in) {
+    std::string out;
+    out.reserve(in.size());
+    for (unsigned char c : in)
+        out += std::isalnum(c) ? static_cast<char>(std::tolower(c)) : '-';
+    return out;
 }
 
 // Wczytaj JSON z pliku; brak pliku => nullopt bez halasu (pliki sa opcjonalne),
@@ -98,7 +103,7 @@ LocalData::LocalData(std::string data_dir) : dir_(std::move(data_dir)) {
                 c.countered_by = jstrlist(e, "countered_by");
                 c.note_pl = jstr(e, "note_pl");
                 if (!c.hero.empty())
-                    counters_.emplace(lower(c.hero), std::move(c));
+                    counters_.emplace(canon_hero(c.hero), std::move(c));
             }
         }
     }
@@ -141,18 +146,18 @@ const ItemPl* LocalData::item_pl(const std::string& slug) const {
 }
 
 const CounterEntry* LocalData::counter_entry(const std::string& hero) const {
-    auto it = counters_.find(lower(hero));
+    auto it = counters_.find(canon_hero(hero));
     return it == counters_.end() ? nullptr : &it->second;
 }
 
 std::vector<const Eternal*> LocalData::eternals_for(const std::string& hero,
                                                     const std::string& role) const {
-    const std::string h = lower(hero), r = lower(role);
+    const std::string h = canon_hero(hero), r = canon_hero(role);
     std::vector<const Eternal*> out;
     for (const auto& e : eternals_) {
         for (const auto& rec : e.recommended_for) {
-            const bool hero_ok = rec.hero.empty() || lower(rec.hero) == h;
-            const bool role_ok = rec.role.empty() || lower(rec.role) == r;
+            const bool hero_ok = rec.hero.empty() || canon_hero(rec.hero) == h;
+            const bool role_ok = rec.role.empty() || canon_hero(rec.role) == r;
             if (hero_ok && role_ok) {
                 out.push_back(&e);
                 break;
