@@ -211,7 +211,11 @@ int cmd_fetch_icons() {
 void print_team(const char* title, const std::vector<LiveRowView>& rows) {
     std::printf("%s:\n", title);
     for (const auto& e : rows) {
-        std::printf("  %-9s ", (e.role_label + ":").c_str());
+        // Etykieta: rola + rozpoznany z portretu bohater (gdy jest).
+        std::string label = e.role_label;
+        if (!e.hero_name.empty())
+            label += " (" + e.hero_name + ")";
+        std::printf("  %-9s ", (label + ":").c_str());
         bool any = false;
         for (const auto& s : e.slots) {
             if (s.empty)

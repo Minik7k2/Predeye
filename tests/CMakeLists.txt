@@ -7,10 +7,13 @@ set(_test_sources
     test_hero_context.cpp
     test_build_engine.cpp
     test_enemy_build.cpp
+    test_local_data.cpp
+    test_advisors.cpp
 )
 if(PREDEYE_VISION)
     list(APPEND _test_sources test_icon_matcher.cpp test_calibration.cpp
-                              test_scoreboard_reader.cpp)
+                              test_scoreboard_reader.cpp test_draft_reader.cpp
+                              test_auto_calibrate.cpp)
 endif()
 
 add_executable(predeye_tests ${_test_sources})

@@ -18,6 +18,7 @@ double jdouble(const nlohmann::json& j, const std::string& key, double def = 0.0
 struct Item {
     long long id = 0;
     std::string name, display_name;
+    std::string slug; // stabilny klucz czytelny dla czlowieka (data/pl_items.json)
     std::string slot_type, aggression_type, hero_class;
     int total_price = 0; // 0 = niekupowalny (bazowe cresty, stadia)
     std::map<std::string, double> stats;

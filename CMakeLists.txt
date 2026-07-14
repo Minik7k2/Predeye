@@ -16,42 +16,22 @@ option(PREDEYE_VISION "Tor wizyjny (OpenCV): capture, matcher, kalibracja" ON)
 option(PREDEYE_BUILD_GUI "Graficzna powloka (Dear ImGui + GLFW)" ON)
 option(PREDEYE_BUILD_CLI "Narzedzie wiersza polecen predeye" ON)
 
-# Wysoki poziom ostrzezen — ostrzezenie = do naprawy przed commitem (§3.4).
+# Projekt celuje wylacznie w GCC (Linux oraz MSYS2/MinGW-w64 na Windows) —
+# patrz docs/BUILD.md. Wysoki poziom ostrzezen: ostrzezenie = do naprawy
+# przed commitem (§3.4).
 if(MSVC)
-    add_compile_options(/W4 /permissive- /utf-8)
-    # std::getenv to standardowe C++ (rdzen przenosny, §4); C4996 to
-    # niestandardowa deprecjacja MSVC — wyciszamy, nie przepisujemy na _dupenv_s.
-    add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
-else()
-    add_compile_options(-Wall -Wextra)
+    message(FATAL_ERROR
+        "predeye nie wspiera juz MSVC — buduj GCC-iem. Na Windows uzyj "
+        "MSYS2/MinGW-w64 (srodowisko UCRT64), kroki w docs/BUILD.md.")
 endif()
+add_compile_options(-Wall -Wextra)
 
 # windows.h (wciagany przez d3d11.h w capture_dxgi i wprost w app/main.cpp)
 # definiuje makra min/max, ktore rozbijaja std::min/std::max w naglowkach
-# OpenCV (lawina bledow skladni w imgproc.hpp na MSVC). NOMINMAX je wylacza;
+# OpenCV (lawina bledow skladni w imgproc.hpp). NOMINMAX je wylacza;
 # WIN32_LEAN_AND_MEAN przycina windows.h do potrzebnego minimum.
 if(WIN32)
     add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
-endif()
-
-# Straznik niezgodnosci ABI: MinGW g++ nie zlinkuje bibliotek C++ zbudowanych
-# przez MSVC. vcpkg na Windows domyslnie uzywa tripletu x64-windows (MSVC), wiec
-# kompilacja MinGW-iem (np. domyslny toolchain CLion) konczy sie setkami
-# "undefined reference to cv::..." — symbole C++ maja inne dekoracje nazw.
-# Lapiemy to tu jednym czytelnym komunikatem zamiast lawiny bledow linkera.
-# (Triplety MSVC: x64-windows, x86-windows, ...; MinGW: *-mingw-*).
-if(WIN32 AND MINGW AND DEFINED VCPKG_TARGET_TRIPLET
-   AND NOT VCPKG_TARGET_TRIPLET MATCHES "mingw")
-    message(FATAL_ERROR
-        "Niezgodnosc toolchainu: kompilujesz MinGW-iem (${CMAKE_CXX_COMPILER_ID}), "
-        "ale vcpkg dostarcza biblioteki dla tripletu MSVC '${VCPKG_TARGET_TRIPLET}'. "
-        "Linker MinGW nie dopasuje symboli C++ z bibliotek MSVC (undefined reference "
-        "do cv::...). Wybierz jedno:\n"
-        "  A) Przelacz toolchain na Visual Studio (MSVC) i usun katalog build/ "
-        "(zalecane; projekt celuje w MSVC — patrz CLAUDE.md §7).\n"
-        "  B) Zostan przy MinGW: skonfiguruj z "
-        "-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic "
-        "i usun katalog build/ (vcpkg przebuduje zaleznosci pod MinGW).")
 endif()
 
 add_subdirectory(core)

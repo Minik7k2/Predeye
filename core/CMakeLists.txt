@@ -8,6 +8,10 @@ add_library(predeye_core STATIC
     build_engine.cpp
     enemy_build.cpp
     advisor.cpp
+    local_data.cpp
+    draft_advisor.cpp
+    loadout_advisor.cpp
+    shopping_advisor.cpp
 )
 target_include_directories(predeye_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(predeye_core PUBLIC nlohmann_json::nlohmann_json PRIVATE CURL::libcurl)
