@@ -59,45 +59,64 @@ cv::Mat ncc_signature(const cv::Mat& bgr) {
     return f;
 }
 
-std::map<long long, std::string> ensure_icon_cache(const std::vector<Item>& items,
-                                                   OmedaClient& api,
-                                                   const std::string& icon_cache_dir) {
+std::map<long long, std::string>
+ensure_image_cache(const std::vector<std::pair<long long, std::string>>& sources,
+                   OmedaClient& api, const std::string& cache_dir, const char* label) {
     std::error_code ec;
-    fs::create_directories(icon_cache_dir, ec);
-    auto manifest = load_manifest(icon_cache_dir);
+    fs::create_directories(cache_dir, ec);
+    auto manifest = load_manifest(cache_dir);
 
     int downloaded = 0, skipped = 0;
-    for (const auto& it : items) {
-        if (!it.buyable())
+    for (const auto& [id, image] : sources) {
+        auto entry = manifest.find(id);
+        if (entry != manifest.end() && fs::exists(fs::path(cache_dir) / entry->second, ec))
             continue;
-        auto entry = manifest.find(it.id);
-        if (entry != manifest.end() && fs::exists(fs::path(icon_cache_dir) / entry->second, ec))
-            continue;
-        if (it.image.empty()) {
-            std::fprintf(stderr, "predeye: brak sciezki ikony dla %s (id %lld) — pomijam\n",
-                         it.display_name.c_str(), it.id);
+        if (image.empty()) {
+            std::fprintf(stderr, "predeye: brak sciezki obrazka (%s, id %lld) — pomijam\n",
+                         label, id);
             ++skipped;
             continue;
         }
         try {
-            const auto bytes = api.get_binary(it.image);
-            const std::string file = std::to_string(it.id) + ".webp";
-            std::ofstream out(fs::path(icon_cache_dir) / file, std::ios::binary | std::ios::trunc);
+            const auto bytes = api.get_binary(image);
+            const std::string file = std::to_string(id) + ".webp";
+            std::ofstream out(fs::path(cache_dir) / file, std::ios::binary | std::ios::trunc);
             out.write(reinterpret_cast<const char*>(bytes.data()),
                       static_cast<std::streamsize>(bytes.size()));
-            manifest[it.id] = file;
+            manifest[id] = file;
             ++downloaded; // pauze ~50 ms wymusza get_binary (§6.6)
         } catch (const OmedaError& ex) {
-            std::fprintf(stderr, "predeye: nie pobrano ikony %s: %s — pomijam\n",
-                         it.display_name.c_str(), ex.what());
+            std::fprintf(stderr, "predeye: nie pobrano obrazka (%s, id %lld): %s — pomijam\n",
+                         label, id, ex.what());
             ++skipped;
         }
     }
-    save_manifest(icon_cache_dir, manifest);
+    save_manifest(cache_dir, manifest);
     if (downloaded || skipped)
-        std::fprintf(stderr, "predeye: ikony — pobrano %d, pominieto %d, w bazie %d\n",
+        std::fprintf(stderr, "predeye: %s — pobrano %d, pominieto %d, w bazie %d\n", label,
                      downloaded, skipped, static_cast<int>(manifest.size()));
     return manifest;
+}
+
+std::map<long long, std::string> ensure_icon_cache(const std::vector<Item>& items,
+                                                   OmedaClient& api,
+                                                   const std::string& icon_cache_dir) {
+    std::vector<std::pair<long long, std::string>> sources;
+    sources.reserve(items.size());
+    for (const auto& it : items)
+        if (it.buyable())
+            sources.emplace_back(it.id, it.image);
+    return ensure_image_cache(sources, api, icon_cache_dir, "ikony itemow");
+}
+
+std::map<long long, std::string> ensure_hero_portrait_cache(const std::vector<HeroProfile>& heroes,
+                                                            OmedaClient& api,
+                                                            const std::string& cache_dir) {
+    std::vector<std::pair<long long, std::string>> sources;
+    sources.reserve(heroes.size());
+    for (const auto& h : heroes)
+        sources.emplace_back(h.id, h.image);
+    return ensure_image_cache(sources, api, cache_dir, "portrety bohaterow");
 }
 
 void IconMatcher::build_base(const std::map<long long, std::string>& manifest,
@@ -126,6 +145,20 @@ IconMatcher::IconMatcher(const std::vector<Item>& items, OmedaClient& api,
 
 IconMatcher::IconMatcher(const std::string& icon_cache_dir) {
     build_base(load_manifest(icon_cache_dir), icon_cache_dir);
+}
+
+IconMatcher::IconMatcher(const std::map<long long, std::string>& manifest,
+                         const std::string& dir) {
+    build_base(manifest, dir);
+}
+
+float IconMatcher::best_cosine(const cv::Mat& slot_bgr) const {
+    if (signatures_.rows == 0)
+        return -1.0f;
+    const cv::Mat scores = signatures_ * ncc_signature(slot_bgr).t(); // N x 1
+    double best = -1.0;
+    cv::minMaxLoc(scores, nullptr, &best);
+    return static_cast<float>(best);
 }
 
 MatchResult IconMatcher::match(const cv::Mat& slot_bgr) const {

@@ -54,6 +54,47 @@ TEST_CASE("Calibration: starszy plik bez ally_item_grid dostaje siatke lustrzana
     CHECK(l.ally_item_grid.origin.y == 256);
 }
 
+TEST_CASE("Calibration v2: round-trip siatek portretow i regionow draftu") {
+    Calibration c = Calibration::default_for({1920, 1080});
+    c.enemy_hero_grid.origin = {1280, 250};
+    c.draft.enemy_bans = {{100, 40}, {50, 50}, 60, 0, 3, 1};
+    c.draft.ally_picks = {{60, 200}, {70, 70}, 0, 90, 1, 5};
+
+    const std::string path = (fs::temp_directory_path() / "predeye_calib_v2.json").string();
+    c.save(path);
+    const Calibration l = Calibration::load(path);
+    CHECK(l.enemy_hero_grid.origin == cv::Point(1280, 250));
+    CHECK(l.enemy_hero_grid.cols == 1);
+    CHECK(l.ally_hero_grid.origin == c.ally_hero_grid.origin);
+    REQUIRE(l.draft.present());
+    CHECK(l.draft.enemy_bans.cols == 3);
+    CHECK(l.draft.enemy_bans.rows == 1);
+    CHECK(l.draft.ally_picks.rows == 5);
+    // Regiony niezapisane pozostaja nieobecne.
+    CHECK(!l.draft.ally_bans.present());
+    CHECK(!l.draft.enemy_picks.present());
+}
+
+TEST_CASE("Calibration v2: starszy plik dostaje wyprowadzone siatki portretow, draft nieobecny") {
+    const std::string path = (fs::temp_directory_path() / "predeye_calib_old2.json").string();
+    {
+        std::ofstream out(path, std::ios::trunc);
+        out << R"({ "resolution": [1920, 1080],
+                    "enemy_item_grid": { "origin": [1346, 256], "slot": [46, 46],
+                                          "dx": 59, "dy": 145, "cols": 7, "rows": 5 } })";
+    }
+    const Calibration l = Calibration::load(path);
+    // Kolumna portretow: 1 kolumna, tyle samo wierszy co itemy, na lewo od nich.
+    CHECK(l.enemy_hero_grid.cols == 1);
+    CHECK(l.enemy_hero_grid.rows == 5);
+    CHECK(l.enemy_hero_grid.origin.x < l.enemy_item_grid.origin.x);
+    // Sojusznicy: na prawo od swojej siatki itemow.
+    const int ally_right = l.ally_item_grid.origin.x + 6 * l.ally_item_grid.dx +
+                           l.ally_item_grid.slot.width;
+    CHECK(l.ally_hero_grid.origin.x >= ally_right);
+    CHECK(!l.draft.present());
+}
+
 TEST_CASE("Calibration: czytelne bledy dla zepsutego pliku") {
     const std::string path = (fs::temp_directory_path() / "predeye_calib_bad.json").string();
     {

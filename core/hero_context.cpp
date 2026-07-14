@@ -92,6 +92,7 @@ HeroDB::HeroDB(const nlohmann::json& heroes_json) {
         p.id = jll(h, "id");
         p.name = jstr(h, "display_name");
         p.slug = jstr(h, "slug");
+        p.image = jstr(h, "image");
         if (h.contains("classes") && h["classes"].is_array())
             for (const auto& c : h["classes"])
                 if (c.is_string())

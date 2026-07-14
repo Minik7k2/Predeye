@@ -20,6 +20,7 @@ struct HeroProfile {
     long long id = 0;
     std::string name; // display_name
     std::string slug;
+    std::string image; // "/assets/....webp" — portret (baza rozpoznawania NCC)
     std::vector<std::string> classes, roles;
     DamageType damage = DamageType::Physical;
     bool deals_crit = false, can_heal = false, is_tanky = false;

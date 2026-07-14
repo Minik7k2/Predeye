@@ -5,6 +5,7 @@
 #include <doctest/doctest.h>
 #include <filesystem>
 #include <fstream>
+#include <nlohmann/json.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <random>
@@ -159,6 +160,61 @@ TEST_CASE("read_scoreboard: ROI poza klatka traktowane jak puste, nie rzuca") {
     CHECK(read.total_items == 0);
     for (const auto& e : read.enemies)
         CHECK(e.items.empty());
+}
+
+TEST_CASE("read_scoreboard: rozpoznaje bohaterow z kolumny portretow") {
+    const IconMatcher matcher(make_icon_dir());
+    const ItemIndex index = make_index();
+    Calibration calib = make_calib({340, 160});
+
+    // Matcher "portretow": id 101..102 na bazie synth-ikon 11..12.
+    const fs::path hdir = fs::temp_directory_path() / "predeye_test_sb_heroes";
+    fs::create_directories(hdir);
+    std::map<long long, std::string> hmanifest;
+    for (long long id = 101; id <= 102; ++id) {
+        const std::string file = std::to_string(id) + ".png";
+        cv::imwrite((hdir / file).string(), synth_icon(static_cast<uint32_t>(id - 90)));
+        hmanifest[id] = file;
+    }
+    const IconMatcher hero_matcher(hmanifest, hdir.string());
+
+    nlohmann::json hj = nlohmann::json::array();
+    for (long long id = 101; id <= 102; ++id)
+        hj.push_back({{"id", id},
+                      {"display_name", "Hero" + std::to_string(id)},
+                      {"slug", "hero-" + std::to_string(id)},
+                      {"classes", {"Mage"}},
+                      {"roles", {"Midlane"}}});
+    const HeroDB heroes(hj);
+
+    // Kolumna portretow na prawo od siatki itemow wroga.
+    calib.enemy_hero_grid = calib.enemy_item_grid;
+    calib.enemy_hero_grid.cols = 1;
+    calib.enemy_hero_grid.origin = {250, 10};
+    calib.ally_hero_grid.origin = {5000, 5000};
+
+    cv::Mat frame(160, 340, CV_8UC3, cv::Scalar(10, 10, 12));
+    paste_icon(frame, calib.enemy_item_grid.slot_rect(0, 0), 1);
+    // Portrety: wiersz 0 = Hero101 (seed 11), wiersz 1 = Hero102 (seed 12).
+    cv::Mat p1, p2;
+    cv::resize(synth_icon(11), p1, calib.enemy_hero_grid.slot_rect(0, 0).size());
+    p1.copyTo(frame(calib.enemy_hero_grid.slot_rect(0, 0)));
+    cv::resize(synth_icon(12), p2, calib.enemy_hero_grid.slot_rect(1, 0).size());
+    p2.copyTo(frame(calib.enemy_hero_grid.slot_rect(1, 0)));
+
+    const ScoreboardRead read =
+        read_scoreboard(frame, calib, matcher, index, &hero_matcher, &heroes);
+    REQUIRE(read.enemies.size() == 2);
+    CHECK(read.enemies[0].hero_id == 101);
+    CHECK(read.enemies[0].hero_name == "Hero101");
+    CHECK(read.enemies[0].hero_confident);
+    CHECK(read.enemies[1].hero_name == "Hero102");
+    // Sojusznicy: siatka portretow poza klatka -> brak tozsamosci.
+    for (const auto& a : read.allies)
+        CHECK(a.hero_id == 0);
+    // Bez matchera bohaterow zachowanie jak dotad.
+    const ScoreboardRead plain = read_scoreboard(frame, calib, matcher, index);
+    CHECK(plain.enemies[0].hero_id == 0);
 }
 
 TEST_CASE("scoreboard_row_role: staly porzadek rol dla 5 wierszy, inaczej Unknown") {
