@@ -1,0 +1,17 @@
+{
+ "_comment": "Reczna baza kontr draftowych (uzupelniaj wlasna wiedza). 'hero', 'counters' i 'countered_by' to slug albo display_name bohatera (wielkosc liter bez znaczenia). 'counters' = kogo ten bohater wygrywa; 'countered_by' = kto go wygrywa. 'note_pl' pokazywane jest w uzasadnieniu sugestii banow/pickow.",
+ "entries": [
+  {
+   "hero": "the-fey",
+   "counters": ["gideon"],
+   "countered_by": ["kallari", "wraith"],
+   "note_pl": "Wygrywa wymiany na dystans, ale bez mobilnosci - przegrywa z dive'em i snajperka."
+  },
+  {
+   "hero": "grim-exe",
+   "counters": [],
+   "countered_by": ["crunch"],
+   "note_pl": "Przyklad wpisu - uzupelnij wedle wlasnego doswiadczenia."
+  }
+ ]
+}

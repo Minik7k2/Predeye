@@ -1,0 +1,24 @@
+{
+ "eternals": [
+  {
+   "id": "focus-primary",
+   "name": "Focus",
+   "slot": "primary",
+   "description_pl": "Testowy eternal glowny.",
+   "icon": "eternals/icons/focus.png",
+   "recommended_for": [
+    { "hero": "the-fey", "role": "midlane", "note_pl": "poke" },
+    { "hero": "", "role": "carry", "note_pl": "dowolny carry" }
+   ]
+  },
+  {
+   "id": "swift-minor",
+   "name": "Swift",
+   "slot": "minor",
+   "description_pl": "Testowy eternal poboczny bez rekomendacji.",
+   "icon": "",
+   "recommended_for": []
+  },
+  { "name": "bez id - do pominiecia" }
+ ]
+}

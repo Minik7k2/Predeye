@@ -7,6 +7,7 @@ set(_test_sources
     test_hero_context.cpp
     test_build_engine.cpp
     test_enemy_build.cpp
+    test_local_data.cpp
 )
 if(PREDEYE_VISION)
     list(APPEND _test_sources test_icon_matcher.cpp test_calibration.cpp

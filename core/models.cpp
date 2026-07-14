@@ -46,6 +46,7 @@ std::vector<Item> parse_items(const nlohmann::json& j) {
         it.id = jll(e, "id");
         it.name = jstr(e, "name");
         it.display_name = jstr(e, "display_name");
+        it.slug = jstr(e, "slug");
         it.slot_type = jstr(e, "slot_type");
         it.aggression_type = jstr(e, "aggression_type");
         it.hero_class = jstr(e, "hero_class");

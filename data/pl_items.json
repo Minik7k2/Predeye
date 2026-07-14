@@ -1,0 +1,2486 @@
+{
+ "_comment": "Spolszczenie itemow (generowane + tlumaczenia PL). Edytuj pole 'pl'; puste 'pl' => program pokaze 'en'. Regeneracja po patchu: tools/gen_pl_items.py.",
+ "items": {
+  "absolution": {
+   "name": "Absolution",
+   "summary_pl": "Item pasywny; +75% nieustepliwosc, +35 odpornosc magiczna, +25% szybkosc ataku, +40 moc fizyczna; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Bravery",
+     "pl": "Po unieruchomieniu: zyskujesz 25% redukcji obrażeń i 40% szybkości ruchu na 3 s.",
+     "en": "On being Immobilized: - Gain 25% Damage Mitigation. - Gain 40% Movement Speed. - Lasts 3s.",
+     "cooldown": "45s"
+    }
+   ]
+  },
+  "aegis-of-agawar": {
+   "name": "Aegis Of Agawar",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +15% szansa na kryt, +400 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Bludgeon",
+     "pl": "Zyskujesz dodatkowo (+2,5%) mocy fizycznej.",
+     "en": "- Gain (+2.5%) Physical Power."
+    },
+    {
+     "name": "Agawar's Protection",
+     "pl": "Zyskujesz 10% całkowitego pancerza i 10% całkowitej odporności magicznej. Poniżej 40% zdrowia: zamiast tego po 20% obu.",
+     "en": "- Gain 10% Total Physical Armor. - Gain 10% Total Magical Armor. While below 40% Health: - Gain 20% Total Physical Armor instead. - Gain 20% Total Magical Armor instead."
+    }
+   ]
+  },
+  "alchemical-rod": {
+   "name": "Alchemical Rod",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc magiczna, +150 mana.",
+   "effects": [
+    {
+     "name": "Font",
+     "pl": "Za zabicie dowolnej jednostki: +5 maks. many (liderzy obozów +15), do 400 kumulacji. Przy 400: zyskujesz (+3,5%) mocy magicznej.",
+     "en": "On Killing any Unit: - Gain 5 Max Mana. - Camp Leaders grant 15. - Stacks up to 400. - At 400, gain (+3.5%) Magical Power."
+    }
+   ]
+  },
+  "alternata": {
+   "name": "Alternata",
+   "summary_pl": "Item pasywny; +12 przebicie pancerza, +350 mana, +10 przyspieszenie umiejetnosci, +50 moc fizyczna; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Alternate Reality",
+     "pl": "Twoja umiejętność alternatywna zadaje 15% więcej obrażeń.",
+     "en": "- Your Alternate Ability deals 15% more damage."
+    },
+    {
+     "name": "Nata Style",
+     "pl": "Po użyciu umiejętności alternatywnej: skracasz odnowienia pozostałych podstawowych umiejętności o 12%.",
+     "en": "Upon using your Alternate Ability: - Reduce your other current Basic Ability Cooldowns by 12%."
+    }
+   ]
+  },
+  "alternator": {
+   "name": "Alternator",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +10 przebicie pancerza, +300 mana, +50 moc fizyczna; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Alternate Reality",
+     "pl": "Twoja umiejętność alternatywna zadaje 15% więcej obrażeń.",
+     "en": "- Your Alternate Ability deals 15% more damage."
+    },
+    {
+     "name": "Adeptus",
+     "pl": "Trafiaj bohaterów umiejętnością alternatywną: każde uruchomienie Adeptusa daje kumulację (raz na umiejętność). Przy 15 kumulacjach wróć do bazy, by ulepszyć item w Alternatę.",
+     "en": "Damage Heroes with your Alternate Ability: - Upon triggering Adeptus, gain a stack (once per ability). - Upon reaching 15 stacks, return to Base to Evolve this item into Alternata."
+    }
+   ]
+  },
+  "amulet-of-chaos": {
+   "name": "Amulet Of Chaos",
+   "summary_pl": "Item pasywny (nagradza multi-kille); +11 przebicie odpornosci mag., +95 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Deadly Wish",
+     "pl": "Za udział w zabójstwie: skracasz bieżące odnowienia podstawowych umiejętności o 65% i odzyskujesz 35% brakującej many.",
+     "en": "On Takedown: - Reduce your current Basic Ability Cooldowns by 65%. - Restore 35% of your Missing Mana."
+    }
+   ]
+  },
+  "ashbringer": {
+   "name": "Ashbringer",
+   "summary_pl": "Item pasywny; +45 moc fizyczna, +25% szybkosc ataku, +10 przyspieszenie umiejetnosci, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Chrono Strikes",
+     "pl": "Za trafiony atak podstawowy: skracasz bieżące odnowienia (poza ultimate) o 8% przy trafieniu (4% na nie-bohaterach; raz na umiejętność). Krytyki dają 1,5× tej redukcji.",
+     "en": "On Successful Basic Attack: - Decrease current Non-Ultimate Cooldowns by 8% On-Hit. - Reduced to 4% against Non-Heroes. - Only triggers once per ability. - Critical Strikes grant 1.5x the cooldown reduction."
+    }
+   ]
+  },
+  "astral-catalyst": {
+   "name": "Astral Catalyst",
+   "summary_pl": "Item pasywny; +250 mana, +20 przyspieszenie umiejetnosci, +85 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Ravenous",
+     "pl": "Za udział w zabójstwie: skracasz odnowienie ultimate o 20%.",
+     "en": "On Takedown: - Reduce Ultimate Cooldown by 20%."
+    },
+    {
+     "name": "Event Horizon",
+     "pl": "Obrażenia w cel z tarczą: +40% obrażeń (nie więcej niż rozmiar tarczy).",
+     "en": "On damaging a Shielded Target: - Deal 40% bonus Damage. - Does not exceed the size of the Shield."
+    }
+   ]
+  },
+  "augmentation": {
+   "name": "Augmentation",
+   "summary_pl": "Item pasywny; +225 zdrowie, +30 moc fizyczna, +20 przyspieszenie umiejetnosci, +25% szybkosc ataku; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "True Strike",
+     "pl": "Po użyciu umiejętności: wzmacniasz następny atak podstawowy (4 s) — zadaje dodatkowo (+90% bazowej mocy fizycznej) obrażeń przy trafieniu.",
+     "en": "On Ability Cast: - Empower your next Basic Attack within 4s. - Deal (+90% Base Physical Power) Damage On-Hit.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "azure-core": {
+   "name": "Azure Core",
+   "summary_pl": "Item pasywny; +450 mana, +70 moc magiczna, +15 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Spirit Shield",
+     "pl": "Po spadku poniżej 40% zdrowia: zyskujesz tarczę 100 (+12%) na 5 s.",
+     "en": "On going below 40% Health: - Gain a 100 (+12%) Shield for 5s.",
+     "cooldown": "90s"
+    },
+    {
+     "name": "Font",
+     "pl": "Za zabicie dowolnej jednostki: +5 maks. many (liderzy obozów +15), do 400 kumulacji. Przy 400: zyskujesz (+3,5%) mocy magicznej.",
+     "en": "On Killing any Unit: - Gain 5 Max Mana. - Camp Leaders grant 15. - Stacks up to 400. - At 400, gain (+3.5%) Magical Power."
+    }
+   ]
+  },
+  "banded-emerald": {
+   "name": "Banded Emerald",
+   "summary_pl": "Item pasywny (ofensywny); +250 zdrowie.",
+   "effects": []
+  },
+  "barbaric-cleaver": {
+   "name": "Barbaric Cleaver",
+   "summary_pl": "Item pasywny (ofensywny); +25 moc fizyczna.",
+   "effects": [
+    {
+     "name": "Cleave",
+     "pl": "Trafione ataki podstawowe zadają (+25%) obrażeń wokół celu (spadek od 100% do 50% z odległością).",
+     "en": "On Successful Basic Attacks: - Deal (+25%) Damage around the Target. - Damage decreases from 100% to 50% based on distance."
+    }
+   ]
+  },
+  "barbed-pauldron": {
+   "name": "Barbed Pauldron",
+   "summary_pl": "Item pasywny (ofensywny); +25 pancerz.",
+   "effects": [
+    {
+     "name": "Lesser Stifle",
+     "pl": "Gdy trafi cię atak podstawowy: obniżasz szybkość ataku napastnika o 2,5% na 2,5 s (kumuluje się do 5 razy).",
+     "en": "On being hit by a Basic Attack: - Reduce the Source's Attack Speed by 2.5% for 2.5s. - Stacks up to 5 times."
+    }
+   ]
+  },
+  "basilisk": {
+   "name": "Basilisk",
+   "summary_pl": "Item pasywny (kruszy pancerz); +20 przyspieszenie umiejetnosci, +40 moc fizyczna, +275 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Corrode",
+     "pl": "Obrażenia w bohatera: obniżają jego pancerz o 4,5% na 3 s (do 6 kumulacji). Przy 6 staje się Skorodowany.",
+     "en": "On damaging a Hero: - Reduce their Physical Armor by 4.5% for 3s. - Stacks up to 6 times. - At 6 stacks they become Eroded."
+    },
+    {
+     "name": "Eminence",
+     "pl": "Obrażenia w Skorodowanego bohatera: +8% szybkości ruchu na 2 s.",
+     "en": "Upon damaging an Eroded Hero: - Gain 8% Movement Speed for 2s."
+    }
+   ]
+  },
+  "berserkers-axe": {
+   "name": "Berserker's Axe",
+   "summary_pl": "Item pasywny (daje mobilnosc); +300 zdrowie, +3 szybkosc ruchu, +40 moc fizyczna, +15 przyspieszenie umiejetnosci; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Blitz",
+     "pl": "Po doskoku lub skoku: wzmacniasz następny atak podstawowy (3 s) — 50 (+40%) obrażeń i spowolnienie 50% na 0,75 s.",
+     "en": "On Dashing or Leaping: - Empower your next Basic Attack within 3s. - Deal 50 (+40%) Damage. - Slows by 50% for 0.75s.",
+     "cooldown": "8s"
+    },
+    {
+     "name": "Mist Runner",
+     "pl": "Po przejściu przez ścianę mgły: +15% szybkości ruchu na 1,5 s.",
+     "en": "On crossing a Fog Wall: - Gain 15% Movement Speed for 1.5s."
+    }
+   ]
+  },
+  "blood-tome": {
+   "name": "Blood Tome",
+   "summary_pl": "Item pasywny (ofensywny); +25 moc magiczna, +5% magiczna kradziez zycia.",
+   "effects": []
+  },
+  "bloodletter": {
+   "name": "Bloodletter",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +4% omniwamp.",
+   "effects": []
+  },
+  "brimstone": {
+   "name": "Brimstone",
+   "summary_pl": "Item pasywny (ofensywny); +250 zdrowie.",
+   "effects": [
+    {
+     "name": "Blaze",
+     "pl": "Podpala pobliskie jednostki wroga: 12 obrażeń co sekundę.",
+     "en": "Burn nearby Enemy Units: - Deals 12 Damage each second."
+    }
+   ]
+  },
+  "catalytic-drive": {
+   "name": "Catalytic Drive",
+   "summary_pl": "Item pasywny; +80% regeneracja zdrowia, +250 zdrowie, +40 odpornosc magiczna, +10 przyspieszenie umiejetnosci; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Deconstruct",
+     "pl": "Na miniony i małe potwory: następny atak podstawowy egzekwuje je przy trafieniu — 60 (+5%) obrażeń wokół, leczy cię za 30 (+3%) i daje +8 złota.",
+     "en": "Against Minions & Small Monsters: - Your next Basic Attack On-Hit Executes them. - Deals 60 (+5%) Damage to nearby Enemies. - Heals you for 30 (+3%). - Grants you +8 bonus Gold.",
+     "cooldown": "15s"
+    },
+    {
+     "name": "Converter",
+     "pl": "Po egzekucji 20 jednostek: wejdź do bazy, by ulepszyć item w Cybernetic Drive.",
+     "en": "Upon Executing 20 Units: - Enter Base to Evolve this item into Cybernetic Drive."
+    }
+   ]
+  },
+  "caustica": {
+   "name": "Caustica",
+   "summary_pl": "Item pasywny (przebija pancernych); +100% regeneracja many, +75 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Magus",
+     "pl": "Ignorujesz 35% odporności magicznej celu.",
+     "en": "- Ignore 35% of Magical Armor."
+    },
+    {
+     "name": "Arcane Might",
+     "pl": "Obrażenia z umiejętności w bohatera powyżej 50% zdrowia: +0,2% obrażeń za każdy punkt jego dodatkowej odporności magicznej.",
+     "en": "On dealing Ability Damage to a Hero: - While they are above 50% Health. - For every point of Bonus Magical Armor they possess. - Deal 0.2% more Damage."
+    }
+   ]
+  },
+  "cerulean-stone": {
+   "name": "Cerulean Stone",
+   "summary_pl": "Item pasywny (ofensywny); +75% regeneracja many, +25 pancerz.",
+   "effects": []
+  },
+  "chaotic-core": {
+   "name": "Chaotic Core",
+   "summary_pl": "Item pasywny (ofensywny); +150 zdrowie, +25 moc magiczna.",
+   "effects": []
+  },
+  "chronomatic-wand": {
+   "name": "Chronomatic Wand",
+   "summary_pl": "Item pasywny (ofensywny); +30 moc magiczna, +8 przyspieszenie umiejetnosci.",
+   "effects": []
+  },
+  "citadel": {
+   "name": "Citadel",
+   "summary_pl": "Item pasywny; +35 moc fizyczna, +300 zdrowie, +40 pancerz; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Fortification",
+     "pl": "Za każdego pobliskiego wrogiego bohatera: +5 pancerza.",
+     "en": "For each nearby Enemy Hero: - Gain 5 Physical Armor."
+    },
+    {
+     "name": "Intimidation",
+     "pl": "Pobliscy wrodzy bohaterowie mają pancerz obniżony o 20%.",
+     "en": "Nearby Enemy Heroes: - Have their Physical Armor decreased by 20%."
+    }
+   ]
+  },
+  "claw-of-hermes": {
+   "name": "Claw Of Hermes",
+   "summary_pl": "Item pasywny (chroni przed magia); +200 zdrowie, +80% regeneracja zdrowia, +85 moc magiczna, +250 mana; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Mana Burn",
+     "pl": "Trafiony atak podstawowy: wysysa 2,5% maks. many celu w zwarciu (4% u dystansowych) i zadaje obrażenia nieuchronne równe 75% wyssanej many. U bohaterów dystansowych efekt działa w 50%.",
+     "en": "On Successful Basic Attack: - Against Melee Heroes: Drain 2.5% of their Max Mana. - Against Ranged Heroes: Drain 4% of their Max Mana. - Deals True Damage equal to 75% of the Mana Drained. - If you are a Ranged Hero, Mana Burn is 50% as effective."
+    },
+    {
+     "name": "Mindflare",
+     "pl": "Im więcej many brakuje celowi, tym mocniejsze umiejętności: 0–12% dodatkowych obrażeń.",
+     "en": "Based on the Target's Missing Mana: - Abilities deal 0-12% more Damage."
+    }
+   ]
+  },
+  "claymore": {
+   "name": "Claymore",
+   "summary_pl": "Item pasywny (ofensywny); +12% szansa na kryt, +20 moc fizyczna.",
+   "effects": []
+  },
+  "codex": {
+   "name": "Codex",
+   "summary_pl": "Item pasywny (ofensywny); +12 moc magiczna.",
+   "effects": []
+  },
+  "combustion": {
+   "name": "Combustion",
+   "summary_pl": "Item pasywny (wzmacnia burst); +9 przebicie odpornosci mag., +400 mana, +85 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Pyro",
+     "pl": "Obrażenia z umiejętności: 50 (+18%) obrażeń w cel i pobliskich wrogów.",
+     "en": "On dealing Ability Damage: - Deal 50 (+18%) Damage to the Target and nearby Enemies.",
+     "cooldown": "15s"
+    },
+    {
+     "name": "Pyromaniac",
+     "pl": "Obrażenia w bohaterów skracają odnowienie Pyro o 0,5 s.",
+     "en": "On damaging Heroes: - Reduce the Cooldown of Pyro by 0.5s."
+    }
+   ]
+  },
+  "composite-bow": {
+   "name": "Composite Bow",
+   "summary_pl": "Item pasywny (ofensywny); +15% szybkosc ataku.",
+   "effects": [
+    {
+     "name": "Honed Strikes",
+     "pl": "Trafione ataki podstawowe zadają 15 obrażeń przy trafieniu.",
+     "en": "On Successful Basic Attacks: - Deal 15 Damage On-Hit."
+    }
+   ]
+  },
+  "crescelia": {
+   "name": "Crescelia",
+   "summary_pl": "Item pasywny; +20 przyspieszenie umiejetnosci, +125% regeneracja many, +45 moc magiczna; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Moonblade",
+     "pl": "Po użyciu umiejętności: wzmacniasz następny atak podstawowy (4 s) — 50 (+20%) obrażeń przy trafieniu i skrócenie odnowień (poza ultimate) o 12%.",
+     "en": "On Ability Cast: - Empower your next Basic Attack within 4s. - Deal 50 (+20%) Damage On-Hit. - Reduce Non-Ultimate Cooldowns by 12%.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "crimson-edge": {
+   "name": "Crimson Edge",
+   "summary_pl": "Item pasywny (ofensywny); +5% kradziez zycia, +15 moc fizyczna.",
+   "effects": []
+  },
+  "crossbow": {
+   "name": "Crossbow",
+   "summary_pl": "Item pasywny (ofensywny); +10% szansa na kryt.",
+   "effects": []
+  },
+  "crystal-tear": {
+   "name": "Crystal Tear",
+   "summary_pl": "Item pasywny (uzytkowy); +150% regeneracja many, +10 przyspieszenie umiejetnosci, +40 moc magiczna, +12% moc leczenia/tarcz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Elation",
+     "pl": "Za wyleczenie/otarczowanie bohatera: oboje zyskujecie 30 mocy magicznej i 15 przyspieszenia umiejętności na 5 s.",
+     "en": "On Healing or Shielding Heroes: - You both gain 30 Magical Power for 5s. - You both gain 15 Ability Haste for 5s."
+    }
+   ]
+  },
+  "crystalline-cuirass": {
+   "name": "Crystalline Cuirass",
+   "summary_pl": "Item pasywny (chroni przed magia); +3 szybkosc ruchu, +300 zdrowie, +60 odpornosc magiczna; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Celestial Carapace",
+     "pl": "Za otrzymanie obrażeń magicznych: kumulacja Celestytu na 5 s (do 5, najwyżej co 0,5 s).",
+     "en": "On taking Magical Damage: - Gain a stack of Celestite for 5s. - Stacks up to 5 times. - Stacks can only be gained once every 0.5s."
+    },
+    {
+     "name": "Celestite",
+     "pl": "+5 odporności magicznej za kumulację; przy 5 kumulacjach +12% szybkości ruchu.",
+     "en": "- Gain 5 Magical Armor per stack. - At 5 stacks gain 12% Movement Speed."
+    }
+   ]
+  },
+  "cursed-ring": {
+   "name": "Cursed Ring",
+   "summary_pl": "Item pasywny; +35 moc fizyczna, +35 moc magiczna, +35% szybkosc ataku; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Curse of Swiftness",
+     "pl": "Mnoży twoją całkowitą szybkość ataku ×1,2, ale ataki podstawowe zadają 25% mniej obrażeń.",
+     "en": "- Increase your Total Attack Speed by 1.2x. - Your Basic Attacks deal 25% less damage."
+    },
+    {
+     "name": "Broken Chains",
+     "pl": "Podnosi limit ataków na sekundę z 3 do 4.",
+     "en": "- Increase the Attacks per Second Cap from 3 to 4."
+    },
+    {
+     "name": "",
+     "pl": "Ograniczenie: tylko 1 przeklęty item.",
+     "en": "Restriction: Limited to 1 Cursed Item."
+    }
+   ]
+  },
+  "cursed-scroll": {
+   "name": "Cursed Scroll",
+   "summary_pl": "Item pasywny; +20% szybkosc ataku, +150% regeneracja zdrowia, +50 pancerz, +30 odpornosc magiczna; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Curse of Pain",
+     "pl": "Atak podstawowy zadaje 30 (+4%) obrażeń wrogowi ORAZ tobie (nie zbije cię poniżej 35% zdrowia).",
+     "en": "On Basic Attack: - Deal 30 (+4%) Damage to yourself and the Enemy Target. - This damage cannot hurt you below 35% Health."
+    },
+    {
+     "name": "Forbidden Art",
+     "pl": "Za każde 100 brakującego zdrowia: +2,5% szybkości ataku i +25% bazowej regeneracji zdrowia.",
+     "en": "For every 100 Health you are missing: - Gain +2.5% Attack Speed. - Gain +25% Base Health Regen."
+    },
+    {
+     "name": "",
+     "pl": "Ograniczenie: tylko 1 przeklęty item.",
+     "en": "Restriction: Limited to 1 Cursed Item."
+    }
+   ]
+  },
+  "cybernetic-drive": {
+   "name": "Cybernetic Drive",
+   "summary_pl": "Item pasywny (defensywny); +45 odpornosc magiczna, +250 zdrowie, +10 przyspieszenie umiejetnosci, +100% regeneracja zdrowia; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Lesser Deconstruct",
+     "pl": "Na miniony i małe potwory: następny atak podstawowy egzekwuje je przy trafieniu — 80 (+5%) obrażeń wokół i leczenie 30 (+3%).",
+     "en": "Against Minions & Small Monsters: - Your next Basic Attack On-Hit Executes them. - Deals 80 (+5%) Damage to nearby Enemies. - Heals you for 30 (+3%).",
+     "cooldown": "15s"
+    },
+    {
+     "name": "Cybernetic Conversion",
+     "pl": "Zyskujesz 12% całkowitego pancerza i 12% całkowitej odporności magicznej.",
+     "en": "- Gain 12% Total Physical Armor. - Gain 12% Total Magical Armor."
+    }
+   ]
+  },
+  "dawnstar": {
+   "name": "Dawnstar",
+   "summary_pl": "Item pasywny; +30 pancerz, +10 przyspieszenie umiejetnosci, +225 zdrowie, +100% regeneracja zdrowia; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Debilitating Strikes",
+     "pl": "Ataki podstawowe w bohaterów: obniżają ich zadawane obrażenia o 2,5% na 3 s (do 5 kumulacji; ataki w zwarciu dają 2).",
+     "en": "On Basic Attacking Heroes: - Reduce their damage dealt by 2.5% for 3s. - Stacks up to 5 times. - Melee basic attacks apply 2 stacks."
+    },
+    {
+     "name": "Crusader-",
+     "pl": "Za unieruchomienie bohatera: +30% szybkości ataku na 3 s.",
+     "en": "On Immobilizing Heroes: - Gain 30% Attack Speed for 3s."
+    }
+   ]
+  },
+  "deathstalker": {
+   "name": "Deathstalker",
+   "summary_pl": "Item pasywny (kruszy pancerz); +10 przebicie pancerza, +20% szybkosc ataku, +45 moc fizyczna; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Virulent Strikes",
+     "pl": "Ataki podstawowe w bohaterów: kruszą 3 pancerza na 3 s (do 4 kumulacji).",
+     "en": "On Basic Attacking Heroes: - Shred 3 Physical Armor for 3s. - Stacks up to 4 times."
+    },
+    {
+     "name": "Onslaught",
+     "pl": "Zyskujesz (+100%) szybkości ataku.",
+     "en": "- Gain (+100%) Attack Speed."
+    }
+   ]
+  },
+  "demolisher": {
+   "name": "Demolisher",
+   "summary_pl": "Item pasywny (przebija pancernych); +45 moc fizyczna, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Puncture",
+     "pl": "Ignorujesz 25% pancerza celu.",
+     "en": "- Ignore 25% of Physical Armor."
+    },
+    {
+     "name": "Trauma",
+     "pl": "Dodatkowo ataki podstawowe i krytyki ignorują 30% dodatkowego pancerza.",
+     "en": "- Additionally, your Basic Attacks and Critical Strikes ignore 30% of Bonus Physical Armor."
+    }
+   ]
+  },
+  "demon-edge": {
+   "name": "Demon Edge",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +200 zdrowie, +45 moc fizyczna, +10 przebicie pancerza; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Demonic",
+     "pl": "Obrażenia w cel z tarczą: +20% szybkości ruchu na 2 s i +45% obrażeń (nie więcej niż rozmiar tarczy).",
+     "en": "On damaging a Shielded Target: - Gain 20% Movement Speed for 2s. - Deal 45% bonus Damage. - Does not exceed the size of the Shield."
+    }
+   ]
+  },
+  "devotion": {
+   "name": "Devotion",
+   "summary_pl": "Item pasywny (chroni przed magia); +80% regeneracja many, +35 odpornosc magiczna, +40 moc magiczna, +10% moc leczenia/tarcz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Fidelity",
+     "pl": "Twoje leczenie i tarcze są o 10% silniejsze na sojusznikach poniżej 40% zdrowia.",
+     "en": "- Your Heals and Shields are 10% stronger on Allied Heroes that are below 40% Health."
+    },
+    {
+     "name": "Mystica",
+     "pl": "Przy otrzymaniu obrażeń magicznych: jeśli pojedyncze uderzenie przekracza 150, redukujesz je o 15%.",
+     "en": "Upon taking magical damage: - If the incoming damage instance is greater than 150, reduce it by 15%."
+    }
+   ]
+  },
+  "diffusal-cane": {
+   "name": "Diffusal Cane",
+   "summary_pl": "Item pasywny (ofensywny); +5 przebicie odpornosci mag., +35 moc magiczna.",
+   "effects": []
+  },
+  "divine-potion": {
+   "name": "Divine Potion",
+   "summary_pl": "Item aktywny.",
+   "effects": [
+    {
+     "name": "",
+     "pl": "Trwale ulepsza twoją uzupełnialną miksturę.",
+     "en": "Permanently upgrades your Refillable Potion."
+    },
+    {
+     "name": "Consume",
+     "pl": "Regeneruje 165–300 zdrowia i 70–120 many przez 15 s (rośnie z poziomem). Maks. 2 ładunki, odnawiane w bazie.",
+     "en": "- Regenerate 165-300 Health and 70-120 Mana over 15s. - Based on Level. - Max Charges: 2. - Charges are restored upon entering Base.",
+     "active": true
+    }
+   ]
+  },
+  "divine-pouch": {
+   "name": "Divine Pouch",
+   "summary_pl": "Item pasywny (ofensywny); +6% moc leczenia/tarcz, +150 zdrowie.",
+   "effects": []
+  },
+  "divine-wreath": {
+   "name": "Divine Wreath",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc magiczna, +6% moc leczenia/tarcz.",
+   "effects": []
+  },
+  "draconum": {
+   "name": "Draconum",
+   "summary_pl": "Item pasywny; +45 moc fizyczna, +40 pancerz, +15 przyspieszenie umiejetnosci; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Surge",
+     "pl": "Za zadanie obrażeń bohaterom lub potworom: +2% przyjmowanego leczenia na 5 s (do 10 kumulacji).",
+     "en": "On dealing damage to Heroes or Monsters: - Gain 2% increased Healing for 5s. - Stacks up to 10 times."
+    },
+    {
+     "name": "Flow",
+     "pl": "Za udział w zabójstwie: odzyskujesz (+120%)(+6%) zdrowia.",
+     "en": "On Takedown: - Restore (+120%)(+6%) Health."
+    }
+   ]
+  },
+  "dread": {
+   "name": "Dread",
+   "summary_pl": "Item pasywny (chroni przed magia); +12 przebicie pancerza, +55 moc fizyczna, +40 odpornosc magiczna; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Vital Shield",
+     "pl": "Przy obrażeniach magicznych od bohatera: blokujesz 25% obrażeń magicznych przez 3 s. Efekt wraca po 20 s bez obrażeń od bohaterów.",
+     "en": "On receiving Magical Damage from a Hero: - Block 25% of Magical Damage for 3s. - Vital Shield returns after not taking Hero Damage for 20s."
+    }
+   ]
+  },
+  "dreambinder": {
+   "name": "Dreambinder",
+   "summary_pl": "Item pasywny; +80 moc magiczna, +325 zdrowie; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Chilling Spells",
+     "pl": "Obrażenia z umiejętności spowalniają o 25% na 1 s (15% dla umiejętności DoT).",
+     "en": "On dealing Ability Damage: - Slows by 25% for 1s. - Reduced to 15% for DoT Abilities."
+    },
+    {
+     "name": "",
+     "pl": "Ograniczenie: nie działa z obrażeniami z proców.",
+     "en": "Restriction: Does not apply with Proc Damage."
+    }
+   ]
+  },
+  "dusk-stave": {
+   "name": "Dusk Stave",
+   "summary_pl": "Item pasywny (ofensywny); +30 moc magiczna, +200 mana.",
+   "effects": []
+  },
+  "dust-devil": {
+   "name": "Dust Devil",
+   "summary_pl": "Item pasywny (daje mobilnosc); +4 szybkosc ruchu, +30% szybkosc ataku, +30 moc fizyczna, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Menace",
+     "pl": "Ataki podstawowe w bohaterów: +3% szybkości ataku na 3 s (do 5 kumulacji; przy 5 dodatkowo +10% szybkości ruchu; krytyki dają 2 kumulacje).",
+     "en": "On Basic Attacking Heroes: - Gain 3% Attack Speed for 3s. - Stacks up to 5 times. - At 5 stacks gain 10% Movement Speed. - Critical Strikes grant 2 stacks."
+    }
+   ]
+  },
+  "dynamo": {
+   "name": "Dynamo",
+   "summary_pl": "Item pasywny; +25 pancerz, +10 przyspieszenie umiejetnosci, +300 zdrowie; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Immobilizer",
+     "pl": "Za unieruchomienie wroga: przyjmuje 10% więcej obrażeń przez 2,5 s.",
+     "en": "On Immobilizing an Enemy: - They take 10% more damage for 2.5s."
+    },
+    {
+     "name": "Adaptive Aggression",
+     "pl": "+20 mocy fizycznej; gdy twoja moc magiczna > dodatkowej mocy fizycznej — zamiast tego +30 mocy magicznej.",
+     "en": "- Gain 20 Physical Power. - When your Magical Power > Bonus Physical Power. - Gain 30 Magical Power instead."
+    }
+   ]
+  },
+  "earthshaker": {
+   "name": "Earthshaker",
+   "summary_pl": "Item pasywny; +40 moc fizyczna, +250 zdrowie, +10 przyspieszenie umiejetnosci, +20% szybkosc ataku; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Battleborn",
+     "pl": "Za zadanie obrażeń bohaterom lub potworom: +1% obrażeń z umiejętności na 3 s (do 10 kumulacji; bohaterowie w zwarciu kumulują 2× szybciej).",
+     "en": "On dealing damage to Heroes or Monsters: - Increase your Ability Damage dealt by 1% for 3s. - Stacks up to 10 times. - Melee Heroes gain Stacks twice as fast."
+    }
+   ]
+  },
+  "echelon-cloak": {
+   "name": "Echelon Cloak",
+   "summary_pl": "Item pasywny (uzytkowy); +45 moc fizyczna, +25% szybkosc ataku, +250 zdrowie, +10 przyspieszenie umiejetnosci; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Shadow",
+     "pl": "Po 2 s bezruchu bez obrażeń: kamuflaż. Kończy go odejście 800u, użycie umiejętności lub obrażenia.",
+     "en": "On standing still and unharmed for 2s: - Become Camouflaged. - Moving 800u from this location, casting an ability, or receiving damage ends this effect.",
+     "cooldown": "10s"
+    },
+    {
+     "name": "Unseen Threat",
+     "pl": "W kamuflażu: odzyskujesz co sekundę 1% brakującego zdrowia i many oraz zadajesz 8% więcej obrażeń (trwa 3 s po wyjściu z kamuflażu).",
+     "en": "While Camouflaged: - Gain 1% of your Missing Health and Mana every second. - Increase your damage dealt by 8%. - Lasts 3s after exiting Camouflage."
+    }
+   ]
+  },
+  "elafrost": {
+   "name": "Elafrost",
+   "summary_pl": "Item pasywny; +125% regeneracja many, +15 przyspieszenie umiejetnosci, +300 zdrowie, +45 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Frostblade",
+     "pl": "Po użyciu umiejętności: wzmacniasz następny atak podstawowy (4 s) — 70 (+2%) obrażeń wokół celu i spowolnienie 35% na 1,25 s (+60% obrażeń na potworach).",
+     "en": "On Ability Cast: - Empower your next Basic Attack within 4s. - Deal 70 (+2%) Damage On-Hit around the Target. - Slows by 35% for 1.25s. - Damage is increased by 60% against Monsters.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "energy-stream": {
+   "name": "Energy Stream",
+   "summary_pl": "Item pasywny (ofensywny); +50% regeneracja many.",
+   "effects": []
+  },
+  "enras-blessing": {
+   "name": "Enra's Blessing",
+   "summary_pl": "Item pasywny; +40 moc magiczna, +250 mana, +15 przyspieszenie umiejetnosci, +225 zdrowie; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Enra's Protection",
+     "pl": "Gdy sojuszniczy bohater w 1000u zostanie unieruchomiony: dostaje tarczę 50 (+30%)(+8%) na 3,5 s (odnowienie liczone per cel).",
+     "en": "- When within 1000u of an Ally Hero, if they are Immobilized: - Grant them a 50 (+30%)(+8%) Shield for 3.5s. - Cooldown is per Target.",
+     "cooldown": "15s"
+    }
+   ]
+  },
+  "entropy": {
+   "name": "Entropy",
+   "summary_pl": "Item pasywny (ofensywny); +15 przyspieszenie umiejetnosci, +70 moc magiczna, +400 mana; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Degradation",
+     "pl": "Obrażenia z umiejętności: +3 (+3%) dodatkowych obrażeń (każda umiejętność najwyżej co 0,2 s na cel).",
+     "en": "On dealing Ability Damage: - Deal 3 (+3%) additional Damage. - Each Ability can only trigger this effect once every 0.2s, per Target."
+    }
+   ]
+  },
+  "envy": {
+   "name": "Envy",
+   "summary_pl": "Item pasywny; +10 przebicie pancerza, +45 moc fizyczna, +250 mana; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Sacrificial Strike",
+     "pl": "Po doskoku, skoku lub wyjściu z kamuflażu: następny atak podstawowy (2,5 s) trafia krytycznie.",
+     "en": "On Dashing, Leaping or exiting Camo: - Your next Basic Attack within 2.5s will Critically Strike."
+    },
+    {
+     "name": "Hush",
+     "pl": "Użycie Sacrificial Strike na bohaterze: ucisza go na 0,8 s.",
+     "en": "On using Sacrificial Strike on a Hero: - Silence them for 0.8s.",
+     "cooldown": "60s"
+    }
+   ]
+  },
+  "equinox": {
+   "name": "Equinox",
+   "summary_pl": "Item pasywny (daje sustain); +30% szybkosc ataku, +40 moc fizyczna, +20% szansa na kryt, +80% nieustepliwosc; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Adamance",
+     "pl": "Po spadku poniżej 40% zdrowia: tarcza 350–750 na 4 s (rośnie z poziomem).",
+     "en": "On going below 40% Health: - Gain a 350-750 Shield for 4s. - Shield size increases with Level.",
+     "cooldown": "90s"
+    }
+   ]
+  },
+  "essence-ring": {
+   "name": "Essence Ring",
+   "summary_pl": "Item pasywny (ofensywny); +100% regeneracja many, +8 przyspieszenie umiejetnosci.",
+   "effects": []
+  },
+  "everbloom": {
+   "name": "Everbloom",
+   "summary_pl": "Item pasywny; +200 zdrowie, +45 moc magiczna, +10% moc leczenia/tarcz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Divine Protection",
+     "pl": "Za wyleczenie/otarczowanie sojusznika: dostaje 5% redukcji obrażeń i 20 nieustępliwości na 2 s.",
+     "en": "On Healing or Shielding an Ally: - Grant them 5% Damage Mitigation and 20 Tenacity for 2s."
+    }
+   ]
+  },
+  "fire-blossom": {
+   "name": "Fire Blossom",
+   "summary_pl": "Item pasywny; +50 pancerz, +350 zdrowie; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Heatwave",
+     "pl": "Podpala pobliskie jednostki wroga: 15 (+0,7%) obrażeń co sekundę. Firestorm: trafiany cel dostaje co sekundę o 6,25% więcej (do 50%); reset po 2,5 s bez obrażeń.",
+     "en": "Burn nearby Enemy Units: - Deals 15 (+0.7%) Damage each second. Firestorm - When Heatwave damages a Target: - Deals 6.25% more damage each second, up to 50%. - Resets after not damaging the Target for 2.5s."
+    }
+   ]
+  },
+  "fist-of-razuul": {
+   "name": "Fist Of Razuul",
+   "summary_pl": "Item pasywny; +550 zdrowie, +20 przyspieszenie umiejetnosci; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Razuul's Might",
+     "pl": "Zadając lub przyjmując obrażenia: co sekundę kumulacja (przez 3 s). Przy 4: wzmocniony atak podstawowy — (+2,5%) dodatkowych obrażeń (2× na bohaterach i potworach), leczy za 65% bonusu.",
+     "en": "When dealing or receiving damage: - For the next 3s, generate a stack each second. - Upon reaching 4 stacks, Empower your next Basic Attack. - Deals (+2.5%) bonus Damage, increased by 2x on Heroes & Monsters. - Heal for 65% of bonus damage dealt."
+    },
+    {
+     "name": "Minion Crusher",
+     "pl": "Zadajesz 25% więcej obrażeń minionom.",
+     "en": "- Deal 25% increased damage to Minions."
+    }
+   ]
+  },
+  "flux-matrix": {
+   "name": "Flux Matrix",
+   "summary_pl": "Item pasywny; +40 odpornosc magiczna, +12 przyspieszenie umiejetnosci, +300 zdrowie; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Unstable Shackles",
+     "pl": "Pobliscy wrodzy bohaterowie: przyjmują 10% więcej obrażeń magicznych i mają nieustępliwość obniżoną o 50%.",
+     "en": "Nearby Enemy Heroes: - Take 10% additional Magical Damage. - Have their Tenacity decreased by 50%."
+    }
+   ]
+  },
+  "fortified-mantle": {
+   "name": "Fortified Mantle",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +15 pancerz.",
+   "effects": []
+  },
+  "frosted-lure": {
+   "name": "Frosted Lure",
+   "summary_pl": "Item pasywny (defensywny); +300 zdrowie, +10 przyspieszenie umiejetnosci, +35 pancerz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Frostwave",
+     "pl": "Po 4 s przy wrogich bohaterach: 50 (+4%) obrażeń w pobliskich bohaterów, spowolnienie 40% na 1,5 s i tarcza dla ciebie za 150% zadanych obrażeń (4 s).",
+     "en": "On being near Enemy Heroes for 4s: - Deal 50 (+4%) Damage to nearby Heroes. - Slows by 40% for 1.5s. - Shields you for 150% of the damage dealt for 4s.",
+     "cooldown": "45s"
+    }
+   ]
+  },
+  "frostguard": {
+   "name": "Frostguard",
+   "summary_pl": "Item pasywny (defensywny); +200 zdrowie, +40 odpornosc magiczna, +40 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Chilling Presence",
+     "pl": "Przy wrogich bohaterach: co 1 s nakładasz kumulację Stifle.",
+     "en": "On being near Enemy Heroes: - Apply a stack of Stifle every 1s."
+    },
+    {
+     "name": "Stifle",
+     "pl": "Gdy trafi cię atak podstawowy: obniżasz szybkość ataku napastnika o 3,5% na 2,5 s (do 5 kumulacji).",
+     "en": "On being hit by a Basic Attack: - Reduce the Source's Attack Speed by 3.5% for 2.5s. - Stacks up to 5 times."
+    }
+   ]
+  },
+  "gaia-greaves": {
+   "name": "Gaia Greaves",
+   "summary_pl": "Item pasywny (daje mobilnosc); +300 zdrowie, +45 pancerz, +10 przyspieszenie umiejetnosci; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Tremor",
+     "pl": "Ruch generuje do 100 kumulacji: dają do 40 szybkości ruchu. Atak podstawowy zużywa wszystkie na dodatkowe obrażenia — do 40 (+60%)(+5%). Spowolnienie/unieruchomienie zabiera 50 kumulacji na sekundę.",
+     "en": "Move to generate up to 100 stacks: - Stacks grant up to 40 Movement Speed. - Basic Attacks expend all stacks for bonus Damage. - Deals up to 40 (+60%)(+5%) Damage. - Lose 50 stacks per second while Slowed or Immobilized."
+    },
+    {
+     "name": "Unburden",
+     "pl": "Zwiększa wysokość twojego skoku o 65%.",
+     "en": "- Increase your Jump Height by 65%."
+    }
+   ]
+  },
+  "galaxy-greaves": {
+   "name": "Galaxy Greaves",
+   "summary_pl": "Item pasywny (daje mobilnosc); +30 odpornosc magiczna, +100% regeneracja many, +30 pancerz, +10 przyspieszenie umiejetnosci; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "ZeroG",
+     "pl": "W ruchu generujesz kumulacje ZeroG; przy 100 następny skok jest wyższy.",
+     "en": "While moving: - Generate stacks of ZeroG. - At 100 stacks your next jump has increased height."
+    },
+    {
+     "name": "Celerity",
+     "pl": "Poza walką: +7% szybkości ruchu.",
+     "en": "While out of combat: - Gain 7% Movement Speed."
+    }
+   ]
+  },
+  "gaussian-greaves": {
+   "name": "Gaussian Greaves",
+   "summary_pl": "Item pasywny (daje mobilnosc); +35 pancerz, +200 zdrowie, +10 przyspieszenie umiejetnosci, +55 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "System Shock",
+     "pl": "Możesz wykonać podwójny skok w powietrzu. Lądowanie po nim emituje falę: 100 (+50%) obrażeń i spowolnienie 40% na 1,25 s.",
+     "en": "- Gain the ability to Double Jump while mid-air. - After Double Jumping, emit a shockwave upon landing. - Deals 100 (+50%) Damage. - Slows by 40% for 1.25s.",
+     "cooldown": "15s"
+    },
+    {
+     "name": "Galvanize",
+     "pl": "Poza walką: +7% szybkości ruchu.",
+     "en": "While out of combat: - Gain 7% Movement Speed."
+    }
+   ]
+  },
+  "giants-ring": {
+   "name": "Giant's Ring",
+   "summary_pl": "Item pasywny; +300 zdrowie, +15 przyspieszenie umiejetnosci, +50 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Retribution",
+     "pl": "Gdy trafiają cię ataki podstawowe: skracasz odnowienia (poza ultimate) o 0,25 s.",
+     "en": "When hit by Basic Attacks: - Reduce your Non-Ultimate Cooldowns by 0.25s.",
+     "cooldown": "0.5s"
+    },
+    {
+     "name": "Gigantism",
+     "pl": "Po użyciu ultimate: +15% rozmiaru bohatera, 5% redukcji obrażeń i 2× skuteczność Retribution na 6 s.",
+     "en": "On casting your Ultimate: - Gain 15% Hero Size. - Mitigate 5% of damage taken. - Double the effectiveness of Retribution for 6s.",
+     "cooldown": "30s"
+    }
+   ]
+  },
+  "gilded-pendant": {
+   "name": "Gilded Pendant",
+   "summary_pl": "Item pasywny (ofensywny); +8 przyspieszenie umiejetnosci, +20 pancerz.",
+   "effects": []
+  },
+  "golems-gift": {
+   "name": "Golem's Gift",
+   "summary_pl": "Item pasywny (chroni przed burstem); +75 moc magiczna, +40 pancerz, +100% regeneracja many, +15 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Stone Skin",
+     "pl": "Poza walką: 5 kumulacji Kamiennej Skóry — każda daje 4 mocy magicznej i 4 pancerza.",
+     "en": "When out of combat: - Gain 5 stacks of Stone Skin. - Gain 4 Magical Power and 4 Physical Armor per stack."
+    },
+    {
+     "name": "Stoneweaver",
+     "pl": "Obrażenia fizyczne od bohatera zabierają 1 kumulację; użycie umiejętności przywraca 1.",
+     "en": "- On taking Physical Damage from a Hero: Lose 1 stack. - On casting an Ability: Restore 1 stack."
+    }
+   ]
+  },
+  "greatsword": {
+   "name": "Greatsword",
+   "summary_pl": "Item pasywny (ofensywny); +30 moc fizyczna.",
+   "effects": []
+  },
+  "heroic-guard": {
+   "name": "Heroic Guard",
+   "summary_pl": "Item pasywny (ofensywny); +85% nieustepliwosc, +20 odpornosc magiczna.",
+   "effects": []
+  },
+  "hexbound-bracers": {
+   "name": "Hexbound Bracers",
+   "summary_pl": "Item pasywny; +300 mana, +375 zdrowie, +15 przyspieszenie umiejetnosci, +10% moc leczenia/tarcz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Mana Reactor",
+     "pl": "Odzyskujesz manę równą 15% otrzymanych obrażeń (5% od nie-bohaterów). Im mniej many, tym +1–3 dodatkowej regeneracji many.",
+     "en": "- Restore Mana equal to 15% of damage taken. - Reduced to 5% when damaged by Non-Heroes. - Based on your Missing Mana, gain 1-3 additional Mana Regen."
+    },
+    {
+     "name": "Hexed Guard",
+     "pl": "Przyjmujesz o 5 (+1 na poziom) mniej obrażeń z ataków podstawowych bohaterów.",
+     "en": "- Take 5 (+1 per Level) less damage from Hero Basic Attacks."
+    }
+   ]
+  },
+  "honed-kris": {
+   "name": "Honed Kris",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +3 przebicie pancerza.",
+   "effects": []
+  },
+  "horned-plate": {
+   "name": "Horned Plate",
+   "summary_pl": "Item pasywny (ofensywny); +25 pancerz.",
+   "effects": [
+    {
+     "name": "Blighted Skin",
+     "pl": "Gdy trafi cię atak podstawowy: obniżasz leczenie napastnika o 35% na 3 s.",
+     "en": "On being hit by a Basic Attack: - Reduce the Source's Healing by 35% for 3s."
+    }
+   ]
+  },
+  "imbued-amulet": {
+   "name": "Imbued Amulet",
+   "summary_pl": "Item pasywny (ofensywny); +200 mana, +150 zdrowie.",
+   "effects": []
+  },
+  "imperator": {
+   "name": "Imperator",
+   "summary_pl": "Item pasywny; +65 moc fizyczna, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Precision",
+     "pl": "Trafienia krytyczne zadają 30% więcej obrażeń.",
+     "en": "- Critical Strikes deal 30% more damage."
+    }
+   ]
+  },
+  "infernum": {
+   "name": "Infernum",
+   "summary_pl": "Item pasywny (wzmacnia burst); +250 mana, +10 przyspieszenie umiejetnosci, +45 moc fizyczna, +9 przebicie pancerza; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Cinder",
+     "pl": "Umiejętności i ataki podstawowe nakładają Kindling (2,5 s). Przy 4 kumulacjach: podpalenie — 4 (+1,5%)% maks. zdrowia celu jako obrażenia przez 2 s.",
+     "en": "Damaging Abilities and Basic Attacks: - Apply stacks of Kindling to Enemy Units for 2.5s. - At 4 stacks, ignite them. - Deals 4 (+1.5%)% of their Max Health as Damage over 2s."
+    },
+    {
+     "name": "Furnace",
+     "pl": "Za każdy punkt dodatkowego pancerza wroga Cinder zadaje 0,65% więcej obrażeń.",
+     "en": "Based on Enemy Bonus Armor: - For each point, Cinder deals 0.65% more Damage."
+    }
+   ]
+  },
+  "inquisition": {
+   "name": "Inquisition",
+   "summary_pl": "Item pasywny; +200 mana, +10 przyspieszenie umiejetnosci, +275 zdrowie, +40 odpornosc magiczna; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Psywave",
+     "pl": "Po użyciu umiejętności: fala energii — 65 (+1,5%) obrażeń w okolicy (+45% na potworach).",
+     "en": "On Ability Cast: - Emit a wave of energy. - Deals 65 (+1.5%) Damage to Enemies in the area. - Damage is increased by 45% against Monsters.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "intellect-tonic": {
+   "name": "Intellect Tonic",
+   "summary_pl": "Item aktywny (ofensywny); tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Consume",
+     "pl": "+60 mocy magicznej i +200% regeneracji many na 300 s. Efekt znika po śmierci.",
+     "en": "- Gain 60 Magical Power and 200% Mana Regen for 300s. - Effect is lost upon death.",
+     "active": true
+    },
+    {
+     "name": "Restriction",
+     "pl": "Zakup od 13. poziomu.",
+     "en": "- Level 13 required for purchase."
+    }
+   ]
+  },
+  "ironwood-warbow": {
+   "name": "Ironwood Warbow",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +15% szybkosc ataku.",
+   "effects": []
+  },
+  "leather-tunic": {
+   "name": "Leather Tunic",
+   "summary_pl": "Item pasywny (ofensywny); +20 odpornosc magiczna, +20 pancerz.",
+   "effects": []
+  },
+  "legacy": {
+   "name": "Legacy",
+   "summary_pl": "Item pasywny; +35 moc fizyczna, +40 odpornosc magiczna, +75% nieustepliwosc, +225 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Tenacious Bravery",
+     "pl": "Po spadku poniżej 40% zdrowia: zdejmujesz z siebie efekty kontroli i zyskujesz odporność na CC na 3 s.",
+     "en": "On going below 40% Health: - Self Cleanse. - Gain CC Immunity for 3s.",
+     "cooldown": "120s"
+    }
+   ]
+  },
+  "life-ring": {
+   "name": "Life Ring",
+   "summary_pl": "Item pasywny; +60% regeneracja zdrowia, +20 pancerz.",
+   "effects": []
+  },
+  "life-stream": {
+   "name": "Life Stream",
+   "summary_pl": "Item pasywny (ofensywny); +40% regeneracja zdrowia.",
+   "effects": []
+  },
+  "lifebinder": {
+   "name": "Lifebinder",
+   "summary_pl": "Item pasywny (daje sustain); +12% magiczna kradziez zycia, +15 przyspieszenie umiejetnosci, +80 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Twilight Sonata",
+     "pl": "Za każde brakujące 10% zdrowia: +2,5 mocy magicznej i +1% magicznej kradzieży życia.",
+     "en": "For every 10% Missing Health - Gain 2.5 Magical Power and 1% Magical Lifesteal."
+    }
+   ]
+  },
+  "lifecore": {
+   "name": "Lifecore",
+   "summary_pl": "Item pasywny; +15 przyspieszenie umiejetnosci, +12% moc leczenia/tarcz, +350 mana, +85 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Life Extraction",
+     "pl": "Obrażenia w bohaterów ładują item (15% zadanych obrażeń). Przy 100 ładunkach kolejne trafienie bohatera wyzwala Healing Wisp.",
+     "en": "Upon damaging Heroes: - Gain charges equal to 15% of damage dealt. - At 100 charges, damage a Hero to trigger Healing Wisp."
+    },
+    {
+     "name": "Healing Wisp",
+     "pl": "Wystrzeliwuje leczący pocisk do sojusznika z najniższym zdrowiem w 1000u — leczy 100 (+40%).",
+     "en": "- Fire a healing wisp at the Lowest Health Allied Hero within a 1000u radius. - Heals for 100 (+40%)."
+    }
+   ]
+  },
+  "lightning-hawk": {
+   "name": "Lightning Hawk",
+   "summary_pl": "Item pasywny; +20% szansa na kryt, +25% szybkosc ataku, +55 moc fizyczna; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Chilling Momentum",
+     "pl": "Ruch i trafione ataki generują Momentum. Przy 100: wzmocniony atak podstawowy — 40 (+20%) obrażeń i spowolnienie 20% na 0,75 s.",
+     "en": "While moving or landing Basic Attacks: - Generate stacks of Momentum. - At 100 stacks empower your next Basic Attack On-Hit. - Deal 40 (+20%) Damage. - Slows by 20% for 0.75s."
+    }
+   ]
+  },
+  "loch-shawl": {
+   "name": "Loch Shawl",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +50% regeneracja zdrowia, +20 odpornosc magiczna.",
+   "effects": [
+    {
+     "name": "Blighted Veil",
+     "pl": "Za otrzymanie obrażeń magicznych: obniżasz leczenie źródła o 35% na 3 s.",
+     "en": "On taking Magical Damage: - Reduce the Source's Healing by 35% for 3s."
+    }
+   ]
+  },
+  "longbow": {
+   "name": "Longbow",
+   "summary_pl": "Item pasywny (ofensywny); +10% szybkosc ataku.",
+   "effects": []
+  },
+  "lucky-feather": {
+   "name": "Lucky Feather",
+   "summary_pl": "Item pasywny; +3% omniwamp, +5 przyspieszenie umiejetnosci.",
+   "effects": [
+    {
+     "name": "Profiteer",
+     "pl": "+5% obrażeń potworom i minionom. Zabicia dają +5 złota (liderzy obozów i miniony oblężnicze +15, bohaterowie +40).",
+     "en": "- Deal 5% increased damage to Monsters and Minions. - Killing Enemy Units grants 5 additional Gold. - Camp Leaders & Siege Minions grant 15. - Heroes grant 40."
+    },
+    {
+     "name": "Restriction",
+     "pl": "Item niszczy się po twojej śmierci. Sprzedaż: 400 złota.",
+     "en": "- This item Destroys Itself upon Death. - Sells for 400 Gold."
+    }
+   ]
+  },
+  "lunaria": {
+   "name": "Lunaria",
+   "summary_pl": "Item pasywny; +55 moc magiczna, +10 przyspieszenie umiejetnosci, +15% moc leczenia/tarcz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Incandescence",
+     "pl": "Obrażenia w bohaterów ładują item (25% zadanych obrażeń). Limit ładunków 100–250, rośnie z poziomem.",
+     "en": "On dealing damage to Heroes: - Gain charges equal to 25% of damage dealt. - Charge Limit: 100-250, based on Level."
+    },
+    {
+     "name": "Mending",
+     "pl": "Za wyleczenie/otarczowanie sojusznika: zużywasz wszystkie ładunki i leczysz go o ich wartość (priorytet: najniższe zdrowie).",
+     "en": "On Healing or Shielding an Ally Hero: - Consume all Incandescence charges. - Heal them for the amount. - Prioritizes Lowest Health Target."
+    }
+   ]
+  },
+  "luxforge-lantern": {
+   "name": "Luxforge Lantern",
+   "summary_pl": "Item pasywny; +15 przyspieszenie umiejetnosci, +30 moc fizyczna, +200 zdrowie; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Lumos",
+     "pl": "Udziały w zabójstwach i niszczenie wardów dają po 2 kumulacje; każda trwale +1 mocy fizycznej (maks. 30).",
+     "en": "On Takedown or Ward Kill, gain stacks: - Stacks permanently grant +1 Physical Power. - Takedowns: 2 stacks. - Ward Kills: 2 stacks. - Max Stacks: 30."
+    },
+    {
+     "name": "The Wanderer",
+     "pl": "Poza walką: +7% szybkości ruchu.",
+     "en": "While out of combat: - Gain 7% Movement Speed."
+    }
+   ]
+  },
+  "magnify": {
+   "name": "Magnify",
+   "summary_pl": "Item pasywny; +15 przyspieszenie umiejetnosci, +10% omniwamp, +60 moc magiczna, +300 zdrowie; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Shredding Spells",
+     "pl": "Obrażenia z umiejętności w bohaterów: obniżają ich odporność magiczną o 6% na 3,5 s (do 5 kumulacji).",
+     "en": "Upon damaging Heroes with an Ability: - Reduce their Magical Armor by 6% for 3.5s. - Stacks up to 5 times."
+    }
+   ]
+  },
+  "malady": {
+   "name": "Malady",
+   "summary_pl": "Item pasywny (wzmacnia burst); +12 przebicie pancerza, +8 przyspieszenie umiejetnosci, +50 moc fizyczna; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Parting Gift",
+     "pl": "Zabite przez ciebie jednostki eksplodują, zadając obrażenia zależne od ich maks. zdrowia.",
+     "en": "On Killing a Unit: - Cause them to explode. - Deals Damage based on their Max Health.",
+     "cooldown": "2s"
+    },
+    {
+     "name": "Demise",
+     "pl": "Obrażenia w bohatera poniżej 40% zdrowia: 20 (+15%) obrażeń + kumulacja Demise (każda +4 obrażeń). Udział w zabójstwie resetuje odnowienie.",
+     "en": "On damaging a Hero below 40% Health: - Deal 20 (+15%) Damage. - Gain a stack of Demise. - Damage increases by 4 per stack of Demise. - Takedowns reset the Cooldown.",
+     "cooldown": "45s"
+    }
+   ]
+  },
+  "manta-scythe": {
+   "name": "Manta Scythe",
+   "summary_pl": "Item pasywny; +10 przebicie pancerza, +30 moc fizyczna, +25% szybkosc ataku, +7% kradziez zycia; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Insatiable Harvest",
+     "pl": "Ataki podstawowe zadają 1,5× obrażeń minionom i małym potworom. Zabicie miniona oblężniczego/lidera obozu trwale daje +0,5 mocy fizycznej.",
+     "en": "On Basic Attack: - Deal 1.5x damage to Minions and Small Monsters. - Upon killing Siege Minions and Camp Leaders, permanently gain +0.5 Physical Power."
+    },
+    {
+     "name": "Divide & Conquer",
+     "pl": "Wrogowie w 2500u bez sojusznika w promieniu 1000u przyjmują od ciebie 10% więcej obrażeń.",
+     "en": "Against Enemy Units within 2500u: - If they have no Ally within 1000u of themselves, deal 10% more damage to them."
+    }
+   ]
+  },
+  "marshal": {
+   "name": "Marshal",
+   "summary_pl": "Item pasywny; +15 przyspieszenie umiejetnosci, +45 moc magiczna, +100% regeneracja many; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Sheriff",
+     "pl": "Wzmacnia ciebie i pobliskich bohaterów: +15% szybkości ataku i 10 (+1 na poziom) obrażeń przy trafieniu.",
+     "en": "Buff yourself and nearby Heroes to: - Gain 15% Attack Speed. - Deal 10 (+1 Per Level) Damage On-Hit."
+    }
+   ]
+  },
+  "megacosm": {
+   "name": "Megacosm",
+   "summary_pl": "Item pasywny (przebija pancernych); +250 zdrowie, +65 moc magiczna, +10 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Disintegrate",
+     "pl": "Obrażenia z umiejętności: dodatkowo 2,5% maks. zdrowia celu jako obrażenia przez 3 s (odświeżane kolejnymi trafieniami).",
+     "en": "On dealing Ability Damage: - Deal 2.5% of Target's Max Health as Damage over 3s. - Additional applications refresh the duration."
+    },
+    {
+     "name": "Star Killer",
+     "pl": "Obrażenia z umiejętności w bohaterów: dodatkowo 6% ich dodatkowego zdrowia jako obrażenia przez 3 s.",
+     "en": "On dealing Ability Damage to Heroes: - Deal 6% of Target's Bonus Health as Damage over 3s."
+    }
+   ]
+  },
+  "mesmer": {
+   "name": "Mesmer",
+   "summary_pl": "Item pasywny (tarcza na umiejetnosc); +250 zdrowie, +55 moc fizyczna, +10 przebicie pancerza; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Vengeful Shroud",
+     "pl": "Dostajesz tarczę antymagiczną blokującą następną umiejętność.",
+     "en": "- Gain a Spell Shield that blocks the next Ability.",
+     "cooldown": "60s"
+    }
+   ]
+  },
+  "mindrazor": {
+   "name": "Mindrazor",
+   "summary_pl": "Item pasywny; +300 mana, +45 moc fizyczna, +15 przyspieszenie umiejetnosci; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Razor Cleave",
+     "pl": "Trafione ataki podstawowe zadają (+40%) obrażeń wokół celu (spadek od 100% do 50% z odległością).",
+     "en": "On Successful Basic Attack: - Deal (+40%) Damage around the Target. - Damage decreases from 100% to 50% based on distance."
+    },
+    {
+     "name": "Technician",
+     "pl": "Zyskujesz dodatkowo (+2%) mocy fizycznej.",
+     "en": "- Gain (+2%) Physical Power."
+    }
+   ]
+  },
+  "mistmeadow-buckler": {
+   "name": "Mistmeadow Buckler",
+   "summary_pl": "Item pasywny (chroni przed magia); +15 przyspieszenie umiejetnosci, +45 moc fizyczna, +40 odpornosc magiczna, +100% regeneracja zdrowia; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Mistwood Guard",
+     "pl": "Masz 100 ładunków (regeneracja 5/s). Przy pełnych 100: +15 odporności magicznej.",
+     "en": "- Gain 100 charges. Regenerate 5 charges each second. - While at 100 charges, gain 15 Magical Armor."
+    },
+    {
+     "name": "Bark Skin",
+     "pl": "Otrzymując obrażenia magiczne: zużywasz ładunki — 1 obrażenie zablokowane za ładunek (do 50% otrzymanych obrażeń).",
+     "en": "On taking Magical Damage: - Consume Mistwood Guard charges. - Block 1 Damage for each charge consumed. - Can block up to 50% of the Damage received."
+    }
+   ]
+  },
+  "mutilator": {
+   "name": "Mutilator",
+   "summary_pl": "Item pasywny (przebija pancernych); +45 moc fizyczna, +15 przyspieszenie umiejetnosci, +12% omniwamp; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Mutilate",
+     "pl": "Ataki podstawowe w bohaterów zadają dodatkowo 1% ich maks. zdrowia.",
+     "en": "On Basic Attacking Heroes: - Deal 1% of their Max Health as Damage."
+    },
+    {
+     "name": "Devour",
+     "pl": "Trafienia umiejętnościami nakładają Mutilate 3 razy (raz na umiejętność).",
+     "en": "Ability Hits on Heroes: - Apply Mutilate 3 times (once per ability)."
+    }
+   ]
+  },
+  "mystic-cane": {
+   "name": "Mystic Cane",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc magiczna, +75% regeneracja many.",
+   "effects": []
+  },
+  "necrosis": {
+   "name": "Necrosis",
+   "summary_pl": "Item pasywny; +35% szybkosc ataku, +20% szansa na kryt, +40 moc fizyczna; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Necro's Edge",
+     "pl": "Zyskujesz 25 przyspieszenia ultimate.",
+     "en": "- Gain 25 Ultimate Haste."
+    },
+    {
+     "name": "Matter Disruptor",
+     "pl": "Twoje ultimate zadaje 15% więcej obrażeń.",
+     "en": "- Your Ultimate Ability deals 15% more damage."
+    }
+   ]
+  },
+  "nether-shard": {
+   "name": "Nether Shard",
+   "summary_pl": "Item pasywny (ofensywny); +8 przyspieszenie umiejetnosci, +30 moc magiczna.",
+   "effects": [
+    {
+     "name": "Monster Slayer",
+     "pl": "Umiejętności zadają 12% więcej obrażeń potworom.",
+     "en": "- Abilities deal 12% more damage to Monsters."
+    }
+   ]
+  },
+  "nightfall": {
+   "name": "Nightfall",
+   "summary_pl": "Item pasywny (daje sustain); +10 przebicie pancerza, +8% omniwamp, +50 moc fizyczna; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Eclipse",
+     "pl": "Umiejętności leczą cię za 6% obrażeń zadanych bohaterom.",
+     "en": "- Abilities Heal for 6% of damage dealt to Heroes."
+    },
+    {
+     "name": "Dusk Reaver",
+     "pl": "Za udział w zabójstwie: tarcza 200–400 na 3,5 s (rośnie z poziomem).",
+     "en": "On Takedown: - Gain a 200-400 Shield for 3.5s. - Shield size increases with Level."
+    }
+   ]
+  },
+  "noxia": {
+   "name": "Noxia",
+   "summary_pl": "Item pasywny (wzmacnia burst); +90 moc magiczna, +20 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Evil Eye",
+     "pl": "Obrażenia z umiejętności oznaczają bohatera na 3 s. Trafienie oznaczonego INNĄ umiejętnością aktywuje Dark Matter.",
+     "en": "Mark Heroes for 3s upon dealing Ability Damage: - With a separate ability, deal damage to a Marked Hero to activate Dark Matter."
+    },
+    {
+     "name": "Dark Matter",
+     "pl": "Dodatkowe obrażenia: 6% maks. zdrowia celu.",
+     "en": "- Deal 6% of Target's Maximum Health as bonus Damage.",
+     "cooldown": "8s"
+    }
+   ]
+  },
+  "nuclear-rounds": {
+   "name": "Nuclear Rounds",
+   "summary_pl": "Item pasywny; +20% szansa na kryt, +55% szybkosc ataku, +20 przyspieszenie umiejetnosci; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Havoc",
+     "pl": "Im wyższa szansa na kryt, tym mocniejsze umiejętności: +10–20% obrażeń.",
+     "en": "Based on Critical Strike Chance: - Increase Ability Damage by 10-20%."
+    }
+   ]
+  },
+  "nullifying-mask": {
+   "name": "Nullifying Mask",
+   "summary_pl": "Item pasywny (ofensywny); +20 odpornosc magiczna.",
+   "effects": []
+  },
+  "oathkeeper": {
+   "name": "Oathkeeper",
+   "summary_pl": "Item pasywny (wzmacnia burst); +275 mana, +15 przyspieszenie umiejetnosci, +175 zdrowie, +80 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Celestial Spellblade",
+     "pl": "Po użyciu umiejętności: wzmacniasz następny atak podstawowy (4 s) — 60 (+35%) obrażeń przy trafieniu.",
+     "en": "On Ability Cast: - Empower your next Basic Attack within 4s. - Deal 60 (+35%) Damage On-Hit.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "oblivion-crown": {
+   "name": "Oblivion Crown",
+   "summary_pl": "Item pasywny; +120 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Eradicate",
+     "pl": "Zwiększa twoją moc magiczną o 25%.",
+     "en": "- Increase your Magical Power by 25%."
+    }
+   ]
+  },
+  "omen": {
+   "name": "Omen",
+   "summary_pl": "Item pasywny; +50 moc fizyczna, +10 przebicie pancerza, +10 przyspieszenie umiejetnosci; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Bestial Momentum",
+     "pl": "Ruch i trafione ataki generują Momentum. Przy 100: wzmocniony atak podstawowy — 30 (+20%) obrażeń i skrócenie odnowień (poza ultimate) o 25%.",
+     "en": "While moving or landing Basic Attacks: - Generate stacks of Momentum. - At 100 stacks empower your next Basic Attack On-Hit. - Deal 30 (+20%) Damage. - Reduce your Non-Ultimate Cooldowns by 25%."
+    }
+   ]
+  },
+  "onixian-quiver": {
+   "name": "Onixian Quiver",
+   "summary_pl": "Item pasywny; +55% szybkosc ataku, +20% szansa na kryt, +7% kradziez zycia; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Multishot",
+     "pl": "Dystansowy atak podstawowy wystrzeliwuje 2 dodatkowe pociski — każdy 8–30% obrażeń (rośnie z zasięgiem); mogą trafiać krytycznie i liczyć kradzież życia.",
+     "en": "On Ranged Basic Attack: - Fire 2 additional projectiles. - Each deals 8-30% (increases with Range) () Damage. - Can Critically Strike and apply Lifesteal."
+    },
+    {
+     "name": "Onixia",
+     "pl": "Tylko bohaterowie w zwarciu: ×1,25 całkowitej szansy na kryt i +1% redukcji obrażeń za każde brakujące 10% zdrowia.",
+     "en": "On Melee Heroes only: - Increase your Total Critical Strike Chance by 25%. - Gain 1% Damage Mitigation for every 10% Missing Health."
+    }
+   ]
+  },
+  "orb-of-enlightenment": {
+   "name": "Orb Of Enlightenment",
+   "summary_pl": "Item pasywny; +70 moc magiczna, +250 zdrowie, +250 mana; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Enlightened",
+     "pl": "Za każdy poziom bohatera: +3 mocy magicznej i +15 zdrowia.",
+     "en": "For each Hero Level: - Gain 3 Magical Power. - Gain 15 Health."
+    },
+    {
+     "name": "Art Of Fortitude",
+     "pl": "Po użyciu umiejętności: odzyskujesz 3% brakującego zdrowia przez 3 s.",
+     "en": "On Ability Cast: - Restore 3% Missing Health over 3s."
+    }
+   ]
+  },
+  "orb-of-growth": {
+   "name": "Orb Of Growth",
+   "summary_pl": "Item pasywny; +70 moc magiczna, +250 zdrowie, +250 mana; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Inner Growth",
+     "pl": "Zabicia dają dodatkowe PD: miniony/potwory 6, liderzy obozów 15, udziały w zabójstwach 50. Po 500 PD: wejdź do bazy, by ulepszyć item w Orb Of Enlightenment.",
+     "en": "On Killing Units, gain bonus XP: - Minions and Monsters grant 6. - Camp Leaders grant 15. - Takedowns grant 50. - On gaining 500 bonus XP: - Enter Base to Evolve this item into Orb Of Enlightenment."
+    },
+    {
+     "name": "Art Of Fortitude",
+     "pl": "Po użyciu umiejętności: odzyskujesz 3% brakującego zdrowia przez 3 s.",
+     "en": "On Ability Cast: - Restore 3% Missing Health over 3s."
+    }
+   ]
+  },
+  "orion": {
+   "name": "Orion",
+   "summary_pl": "Item pasywny; +300 mana, +80 moc magiczna, +15 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Hasty",
+     "pl": "Zyskujesz szybkość ataku równą 80% przyspieszenia umiejętności z itemów.",
+     "en": "- Gain Attack Speed equal to 80% of your Ability Haste from Items."
+    },
+    {
+     "name": "Interstellar",
+     "pl": "Trafienia przy ataku: +2% obrażeń w ten cel na 3,5 s (kumuluje się do 16%).",
+     "en": "Upon successful On-Hit Attack: - Deal 2% increased damage to the Target for 3.5s, up to a maximum of 16%."
+    }
+   ]
+  },
+  "overlord": {
+   "name": "Overlord",
+   "summary_pl": "Item pasywny; +275 zdrowie, +30 moc fizyczna; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Colossal Cleave",
+     "pl": "Trafione ataki podstawowe zadają (+1%) obrażeń oraz (+30%)(+2,5%) obrażeń wokół celu (spadek od 100% do 50% z odległością).",
+     "en": "On Successful Basic Attack: - Deal (+1%) Damage. - Deal (+30%) (+2.5%) Damage around the Target. - Damage decreases from 100% to 50% based on distance."
+    },
+    {
+     "name": "Devourer",
+     "pl": "Za zabicie jednostki: trwale +1 zdrowia (liderzy obozów +3, bohaterowie +5). Przy 100 kumulacjach dodatkowe +125 zdrowia.",
+     "en": "On Killing an Enemy Unit: - Permanently gain 1 Health. - Camp Leaders grant 3. - Heroes grant 5. - Upon reaching 100 stacks, gain an additional 125 Health."
+    }
+   ]
+  },
+  "overseer": {
+   "name": "Overseer",
+   "summary_pl": "Item pasywny (daje sustain); +85 moc magiczna, +7% magiczna kradziez zycia, +8 przebicie odpornosci mag.; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Exalted",
+     "pl": "Wzmacnia twoje ultimate: +15% obrażeń i leczenie za 25% obrażeń zadanych bohaterom.",
+     "en": "Enhance your Ultimate Ability: - Deals 15% more damage. - Heals you for 25% of the damage dealt to Heroes."
+    }
+   ]
+  },
+  "painweaver": {
+   "name": "Painweaver",
+   "summary_pl": "Item pasywny (wzmacnia burst); +10 przebicie pancerza, +55 moc fizyczna, +3 szybkosc ruchu; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Splice",
+     "pl": "Po użyciu umiejętności: +2 przebicia pancerza i +2% szybkości ruchu na 4 s (do 4 kumulacji).",
+     "en": "On Ability Cast: - Gain 2 Physical Penetration for 4s. - Gain 2% Movement Speed for 4s. - Stacks up to 4 times."
+    }
+   ]
+  },
+  "pendant": {
+   "name": "Pendant",
+   "summary_pl": "Item pasywny (uzytkowy); +5 przyspieszenie umiejetnosci.",
+   "effects": []
+  },
+  "penumbra": {
+   "name": "Penumbra",
+   "summary_pl": "Item pasywny (nagradza multi-kille); +20 przyspieszenie umiejetnosci, +50 moc fizyczna, +200 zdrowie, +8 przebicie pancerza; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Essence Reaper",
+     "pl": "Za udział w zabójstwie: skracasz odnowienia (poza ultimate) o 4 s.",
+     "en": "On Takedown: - Reduce Non-Ultimate Cooldowns by 4s."
+    }
+   ]
+  },
+  "plasma-blade": {
+   "name": "Plasma Blade",
+   "summary_pl": "Item pasywny (ofensywny); +35 moc fizyczna, +20% szansa na kryt, +45 moc magiczna, +30% szybkosc ataku; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Vibro Cutter",
+     "pl": "Ataki podstawowe w bohaterów: +4% szansy na kryt na 3 s (do 5 kumulacji).",
+     "en": "On Basic Attacking Heroes: - Gain 4% Critical Strike Chance for 3s. - Stacks up to 5 times."
+    }
+   ]
+  },
+  "polar-treads": {
+   "name": "Polar Treads",
+   "summary_pl": "Item pasywny (daje mobilnosc); +8 przyspieszenie umiejetnosci.",
+   "effects": [
+    {
+     "name": "Celerity",
+     "pl": "Poza walką: +5% szybkości ruchu.",
+     "en": "While out of combat: - Gain 5% Movement Speed."
+    }
+   ]
+  },
+  "potent-staff": {
+   "name": "Potent Staff",
+   "summary_pl": "Item pasywny (ofensywny); +40 moc magiczna.",
+   "effects": []
+  },
+  "prophecy": {
+   "name": "Prophecy",
+   "summary_pl": "Item pasywny; +30% szybkosc ataku, +15 przyspieszenie umiejetnosci, +75 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Magical Strikes",
+     "pl": "Ataki podstawowe zadają 20 (+15%) obrażeń magicznych przy trafieniu.",
+     "en": "On Basic Attacks: - Deal 20 (+15%) Damage On-Hit."
+    }
+   ]
+  },
+  "protection-tonic": {
+   "name": "Protection Tonic",
+   "summary_pl": "Item aktywny (ofensywny); tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Consume",
+     "pl": "+25 pancerza, +25 odporności magicznej i +50% nieustępliwości na 300 s. Efekt znika po śmierci.",
+     "en": "- Gain 25 Physical Armor and 25 Magical Armor for 300s. - Gain 50% Tenacity for 300s. - Effect is lost upon death.",
+     "active": true
+    },
+    {
+     "name": "Restriction",
+     "pl": "Zakup od 13. poziomu.",
+     "en": "- Level 13 required for purchase."
+    }
+   ]
+  },
+  "raiment-of-renewal": {
+   "name": "Raiment of Renewal",
+   "summary_pl": "Item pasywny (daje sustain); +700 zdrowie, +50% regeneracja zdrowia, +80% nieustepliwosc, +15 przyspieszenie umiejetnosci; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Regenerator",
+     "pl": "Poza walką: regenerujesz 3% brakującego zdrowia co sekundę.",
+     "en": "While Out Of Combat: - Regenerate 3% of your Missing Health each second."
+    },
+    {
+     "name": "Synthesis",
+     "pl": "Za każdy poziom: +5% bazowej regeneracji zdrowia.",
+     "en": "For each Level: - Gain 5% additional Base Health Regen."
+    }
+   ]
+  },
+  "rapid-rapier": {
+   "name": "Rapid Rapier",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna.",
+   "effects": [
+    {
+     "name": "Momentum",
+     "pl": "Ruch i trafione ataki generują Momentum. Przy 100: wzmocniony atak podstawowy — 30 dodatkowych obrażeń.",
+     "en": "While moving or landing Basic Attacks: - Generate stacks of Momentum. - At 100 stacks empower your next Basic Attack On-Hit. - Deal 30 Damage."
+    }
+   ]
+  },
+  "rapture": {
+   "name": "Rapture",
+   "summary_pl": "Item pasywny; +300 zdrowie, +7% omniwamp, +30% szybkosc ataku; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Nearsight",
+     "pl": "Wrogowie w 475u: twoje ataki podstawowe zadają im 20 (+3%)(+15%) obrażeń przy trafieniu.",
+     "en": "While within 475u of an Enemy Unit: - Your Basic Attacks deal 20 (+3%)(+15%) Damage On-Hit to them."
+    }
+   ]
+  },
+  "razorclaw": {
+   "name": "Razorclaw",
+   "summary_pl": "Item pasywny (ofensywny); +5% kradziez zycia, +15% szybkosc ataku.",
+   "effects": []
+  },
+  "rebirth": {
+   "name": "Rebirth",
+   "summary_pl": "Item pasywny; +300 zdrowie, +50 moc fizyczna; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Mechanica",
+     "pl": "Po śmierci: po 3 s wskrzeszasz się z 50% bazowego zdrowia i maks. many.",
+     "en": "Upon Dying: - After 3s, Resurrect with 50% Base Health & Max Mana.",
+     "cooldown": "240s"
+    }
+   ]
+  },
+  "redwood-shortbow": {
+   "name": "Redwood Shortbow",
+   "summary_pl": "Item pasywny (ofensywny); +20% szybkosc ataku, +8 przyspieszenie umiejetnosci.",
+   "effects": []
+  },
+  "rejuvenation-robe": {
+   "name": "Rejuvenation Robe",
+   "summary_pl": "Item pasywny (ofensywny); +30 odpornosc magiczna, +80% regeneracja zdrowia.",
+   "effects": []
+  },
+  "resolution": {
+   "name": "Resolution",
+   "summary_pl": "Item pasywny; +350 mana, +20% szybkosc ataku, +40 moc fizyczna, +9 przebicie pancerza; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Darksteel",
+     "pl": "Trafione ataki podstawowe zadają (+2,5%) obrażeń przy trafieniu.",
+     "en": "On Successful Basic Attacks: - Deal (+2.5%) Damage On-Hit."
+    },
+    {
+     "name": "Potent Font",
+     "pl": "Za zabicie dowolnej jednostki: +5 maks. many (liderzy obozów +15), do 400 kumulacji. Przy 400: zyskujesz (+2,5%) mocy fizycznej.",
+     "en": "On Killing any Unit: - Gain 5 Max Mana. - Camp Leaders grant 15. - Stacks up to 400. - At 400, gain (+2.5%) Physical Power."
+    }
+   ]
+  },
+  "robust-arbalest": {
+   "name": "Robust Arbalest",
+   "summary_pl": "Item pasywny (ofensywny); +20% szybkosc ataku, +12% szansa na kryt.",
+   "effects": []
+  },
+  "ruination": {
+   "name": "Ruination",
+   "summary_pl": "Item pasywny; +20% szansa na kryt, +70 moc fizyczna, +10 przyspieszenie umiejetnosci; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Spirit Bleed",
+     "pl": "Trafienia przy ataku nakładają krwawienie wysysające 30 (+8% maks. many celu) many przez 4 s i zadające obrażenia nieuchronne równe 80% wyssanej many. Trafienie umiejętnością odświeża czas trwania.",
+     "en": "Upon successful On-Hit Attack: - Apply a bleed that drains Mana by 30 (+8% Target's Max Mana) over 4s. - Deals True Damage equal to 80% of the Mana Drained. - Damaging the Target with an Ability while Spirit Bleed is active will refresh its duration.",
+     "cooldown": "15s"
+    }
+   ]
+  },
+  "rune-bow": {
+   "name": "Rune Bow",
+   "summary_pl": "Item pasywny (ofensywny); +35 moc magiczna, +15% szybkosc ataku.",
+   "effects": []
+  },
+  "runic-veil": {
+   "name": "Runic Veil",
+   "summary_pl": "Item pasywny (ofensywny); +125 zdrowie, +20 odpornosc magiczna.",
+   "effects": []
+  },
+  "ruthless-broadsword": {
+   "name": "Ruthless Broadsword",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna.",
+   "effects": [
+    {
+     "name": "Corrode",
+     "pl": "Obrażenia w bohatera: obniżają jego pancerz o 4,5% na 3 s (do 6 kumulacji). Przy 6 staje się Skorodowany.",
+     "en": "On damaging a Hero: - Reduce their Physical Armor by 4.5% for 3s. - Stacks up to 6 times. - At 6 stacks they become Eroded."
+    }
+   ]
+  },
+  "sabre": {
+   "name": "Sabre",
+   "summary_pl": "Item pasywny (ofensywny); +15 moc fizyczna.",
+   "effects": []
+  },
+  "sai": {
+   "name": "Sai",
+   "summary_pl": "Item pasywny (ofensywny); +4 przebicie pancerza, +20% szybkosc ataku.",
+   "effects": []
+  },
+  "salvation": {
+   "name": "Salvation",
+   "summary_pl": "Item pasywny (chroni przed burstem); +75% nieustepliwosc, +40 moc fizyczna, +375 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Aegis",
+     "pl": "Po spadku poniżej 30% zdrowia: tarcza (+22%) na 6 s (u dystansowych 50% skuteczności) i +10% omniwampu na 6 s.",
+     "en": "On going below 30% Health: - Gain a (+22%) Shield for 6s. - Reduced to 50% Effectiveness for Ranged Heroes. - Gain 10% Omnivamp for 6s.",
+     "cooldown": "60s"
+    }
+   ]
+  },
+  "scalding-sceptre": {
+   "name": "Scalding Sceptre",
+   "summary_pl": "Item pasywny (ofensywny); +30 moc magiczna.",
+   "effects": [
+    {
+     "name": "Magi",
+     "pl": "Ignorujesz 18% odporności magicznej celu.",
+     "en": "- Ignore 18% of Magical Armor."
+    }
+   ]
+  },
+  "scattershot": {
+   "name": "Scattershot",
+   "summary_pl": "Item pasywny; +50 moc fizyczna, +25% szybkosc ataku, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Scatter",
+     "pl": "Trafienia przy ataku: z celu wylatują 2 pociski szukające najbliższych wrogów — każdy (+30%) obrażeń, efekty on-hit w 50%, mogą trafiać krytycznie i liczyć kradzież życia.",
+     "en": "Upon successful On-Hit Attack: - Summon 2 projectiles from the Target. - These home towards the closest Enemies. - Each deals (+30%) Damage. - Applies On-Hit effects at 50% effectiveness. - Can Critically Strike and apply Lifesteal.",
+     "cooldown": "0.65s"
+    }
+   ]
+  },
+  "scepter": {
+   "name": "Scepter",
+   "summary_pl": "Item pasywny (ofensywny); +30 moc magiczna.",
+   "effects": []
+  },
+  "serrated-blade": {
+   "name": "Serrated Blade",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna.",
+   "effects": [
+    {
+     "name": "Blighted Strikes",
+     "pl": "Zadając obrażenia fizyczne: obniżasz leczenie celu o 35% na 3 s.",
+     "en": "On Dealing Physical Damage: - Reduce the Target's Healing by 35% for 3s."
+    }
+   ]
+  },
+  "shortsword": {
+   "name": "Shortsword",
+   "summary_pl": "Item pasywny (ofensywny); +8 moc fizyczna.",
+   "effects": []
+  },
+  "sky-splitter": {
+   "name": "Sky Splitter",
+   "summary_pl": "Item pasywny (przebija pancernych); +30% szybkosc ataku, +35 moc fizyczna, +8% kradziez zycia; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Rend",
+     "pl": "Trafione ataki podstawowe zadają 5,5% BIEŻĄCEGO zdrowia celu jako obrażenia przy trafieniu (3,5% u dystansowych; min. 12).",
+     "en": "On Successful Basic Attacks: - Deal 5.5% of Target's Current Health as Damage On-Hit. - Reduced to 3.5% for Ranged Heroes. - Minimum of 12 Damage."
+    }
+   ]
+  },
+  "solaris": {
+   "name": "Solaris",
+   "summary_pl": "Item pasywny; +55 moc fizyczna, +15 przyspieszenie umiejetnosci, +20% szansa na kryt, +350 mana; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Solarblade",
+     "pl": "Po użyciu umiejętności: wzmacniasz następny atak podstawowy (4 s) — 45 (+35%) obrażeń przy trafieniu, może trafić krytycznie, leczy cię za 65% zadanych obrażeń.",
+     "en": "On Ability Cast: - Empower your next Basic Attack within 4s. - Deal 45 (+35%) Damage On-Hit. - Can Critically Strike. - Heals you for 65% of damage dealt.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "solstice": {
+   "name": "Solstice",
+   "summary_pl": "Item pasywny (wzmacnia burst); +40 moc fizyczna, +30 pancerz, +30 odpornosc magiczna; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Pendulum",
+     "pl": "Co sekundę +25 kumulacji (maks. 100). Udział w zabójstwie daje od razu maksimum.",
+     "en": "- Gain 25 stacks each second, up to 100 Max. - Takedowns grant you Max stacks."
+    },
+    {
+     "name": "Mornfall",
+     "pl": "Atak podstawowy zużywa wszystkie kumulacje Pendulum: 10 obrażeń zwiększane o (+0–55%) od liczby kumulacji (2× przy maksimum); leczy za 135% obrażeń zadanych bohaterom.",
+     "en": "On Basic Attack: - Consume all Pendulum stacks. - Deal 10 Damage. - Increased by (+0-55%), based on stacks consumed. - Damage is increased by 2x at Max stacks. - Heals for 135% of the damage dealt to Heroes."
+    }
+   ]
+  },
+  "soul-chalice": {
+   "name": "Soul Chalice",
+   "summary_pl": "Item pasywny (ofensywny); +150 mana, +12 moc fizyczna.",
+   "effects": [
+    {
+     "name": "Potent Font",
+     "pl": "Za zabicie dowolnej jednostki: +5 maks. many (liderzy obozów +15), do 400 kumulacji. Przy 400: zyskujesz (+2,5%) mocy fizycznej.",
+     "en": "On Killing any Unit: - Gain 5 Max Mana. - Camp Leaders grant 15. - Stacks up to 400. - At 400, gain (+2.5%) Physical Power."
+    }
+   ]
+  },
+  "soulbinder": {
+   "name": "Soulbinder",
+   "summary_pl": "Item pasywny; +20 przyspieszenie umiejetnosci, +85 moc magiczna, +400 mana; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Arcane Salvo",
+     "pl": "Obrażenia umiejętnościami z daleka (1450u+): +7% obrażeń.",
+     "en": "Damage Heroes from afar with Abilities: - Deal 7% bonus Damage. - Activates at 1450+ Range."
+    },
+    {
+     "name": "Farseer",
+     "pl": "Każde uruchomienie Arcane Salvo trwale daje +1 mocy magicznej.",
+     "en": "Upon triggering Arcane Salvo: - Permanently gain 1 Magical Power.",
+     "cooldown": "8s"
+    }
+   ]
+  },
+  "spear-of-desolation": {
+   "name": "Spear Of Desolation",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +45 moc fizyczna, +12 przebicie pancerza; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Final Hour",
+     "pl": "Po użyciu ultimate: +10% zadawanych obrażeń na 6 s.",
+     "en": "On casting your Ultimate: - Deal 10% increased damage for 6s."
+    },
+    {
+     "name": "Razor's Edge",
+     "pl": "Zyskujesz 25 przyspieszenia ultimate.",
+     "en": "- Gain 25 Ultimate Haste."
+    }
+   ]
+  },
+  "spectra": {
+   "name": "Spectra",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +50% szybkosc ataku; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Radiant Strikes",
+     "pl": "Ataki podstawowe: 20 obrażeń przy trafieniu, skracają odnowienie Prismy o 3 s i nakładają kumulację Prism (2,5 s, do 3). Przy 3 kumulacjach cel wyzwala Prismę.",
+     "en": "On Basic Attacks: - Deal 20 Damage On-Hit. - Reduces the Cooldown of Prisma by 3s. - Applies a stack of Prism to Heroes & Monsters for 2.5s, stacking up to 3 times. - If the Target has 3 Prism stacks on them, trigger Prisma."
+    },
+    {
+     "name": "Prisma",
+     "pl": "Zadaje 30 (+4 na poziom) obrażeń, mnożone 1–2,5× od brakującego zdrowia celu.",
+     "en": "- Deals 30 (+4 per Level) Damage. - Increases from 1x-2.5x based on Target's Missing Health.",
+     "cooldown": "10s"
+    }
+   ]
+  },
+  "spectral-schematics": {
+   "name": "Spectral Schematics",
+   "summary_pl": "Item pasywny (wzmacnia burst); +55 moc magiczna, +300 zdrowie, +20 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Breakthrough",
+     "pl": "Za unieruchomienie wrogiej jednostki: dodatkowe 40 (+5% bieżącego zdrowia celu) obrażeń.",
+     "en": "Upon Immobilzing an Enemy Unit: - Deal 40 (+5% Target's Current Health) additional Damage."
+    }
+   ]
+  },
+  "spell-slasher": {
+   "name": "Spell Slasher",
+   "summary_pl": "Item pasywny (ofensywny); +8 przyspieszenie umiejetnosci.",
+   "effects": [
+    {
+     "name": "Spellblade",
+     "pl": "Po użyciu umiejętności: wzmacniasz następny atak podstawowy (4 s) — 45 obrażeń przy trafieniu.",
+     "en": "On Ability Cast: - Empower your next Basic Attack within 4s. - Deal 45 Damage On-Hit.",
+     "cooldown": "1.5s"
+    }
+   ]
+  },
+  "spellbreaker": {
+   "name": "Spellbreaker",
+   "summary_pl": "Item pasywny (tarcza na umiejetnosc); +75 moc magiczna, +40 odpornosc magiczna, +10 przyspieszenie umiejetnosci; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Veil",
+     "pl": "Dostajesz tarczę antymagiczną blokującą następną umiejętność.",
+     "en": "- Gain a Spell Shield that blocks the next Ability.",
+     "cooldown": "60s"
+    },
+    {
+     "name": "Malefic",
+     "pl": "Gdy Veil jest aktywny: +15% mocy magicznej.",
+     "en": "While Veil is active: - Increase your Magical Power by 15%."
+    }
+   ]
+  },
+  "spiked-birch": {
+   "name": "Spiked Birch",
+   "summary_pl": "Item pasywny (ofensywny); +25 moc magiczna.",
+   "effects": [
+    {
+     "name": "Blighted Spells",
+     "pl": "Zadając obrażenia magiczne: obniżasz leczenie celu o 35% na 3 s.",
+     "en": "On Dealing Magical Damage: - Reduce the Target's Healing by 35% for 3s."
+    }
+   ]
+  },
+  "spirit-beads": {
+   "name": "Spirit Beads",
+   "summary_pl": "Item pasywny (ofensywny); +150 mana.",
+   "effects": []
+  },
+  "spirit-locket": {
+   "name": "Spirit Locket",
+   "summary_pl": "Item pasywny (ofensywny); +80 mana.",
+   "effects": [
+    {
+     "name": "Mana Conductor",
+     "pl": "Im więcej many ci brakuje, tym +0,5–2,5 dodatkowej regeneracji many.",
+     "en": "Based on your Missing Mana: - Gain 0.5-2.5 additional Mana Regen."
+    }
+   ]
+  },
+  "spirit-of-amir": {
+   "name": "Spirit Of Amir",
+   "summary_pl": "Item pasywny (daje sustain); +80 moc magiczna, +200 zdrowie, +10 przyspieszenie umiejetnosci, +7 przebicie odpornosci mag.; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Natural Selection",
+     "pl": "Efekt zależny od miejsca: w dżungli +8% magicznej kradzieży życia, poza nią +8% mocy magicznej.",
+     "en": "Gain Effects, based on your location: - In the Jungle: Gain 8% Magical Lifesteal. - Outside the Jungle: Gain 8% Magical Power."
+    },
+    {
+     "name": "Monster Slayer",
+     "pl": "Umiejętności zadają 12% więcej obrażeń potworom.",
+     "en": "- Abilities deal 12% more damage to Monsters."
+    }
+   ]
+  },
+  "spirit-shiv": {
+   "name": "Spirit Shiv",
+   "summary_pl": "Item pasywny (ofensywny); +200 mana, +15 moc fizyczna.",
+   "effects": []
+  },
+  "stalwart-gauntlets": {
+   "name": "Stalwart Gauntlets",
+   "summary_pl": "Item pasywny (ofensywny); +50% regeneracja zdrowia, +200 zdrowie.",
+   "effects": []
+  },
+  "stamina-tonic": {
+   "name": "Stamina Tonic",
+   "summary_pl": "Item aktywny (ofensywny); tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Consume",
+     "pl": "+12% maks. zdrowia i +15 przyspieszenia umiejętności na 300 s. Efekt znika po śmierci.",
+     "en": "- Gain 12% Max Health and 15 Ability Haste for 300s. - Effect is lost upon death.",
+     "active": true
+    },
+    {
+     "name": "Restriction",
+     "pl": "Zakup od 13. poziomu.",
+     "en": "- Level 13 required for purchase."
+    }
+   ]
+  },
+  "steel-mail": {
+   "name": "Steel Mail",
+   "summary_pl": "Item pasywny (ofensywny); +30 pancerz.",
+   "effects": []
+  },
+  "stone-of-strength": {
+   "name": "Stone Of Strength",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +150 zdrowie.",
+   "effects": []
+  },
+  "stonewall": {
+   "name": "Stonewall",
+   "summary_pl": "Item pasywny (defensywny); +275 zdrowie, +70 pancerz, +100% regeneracja zdrowia; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Bulwark",
+     "pl": "Redukujesz 5 (+5%)% obrażeń fizycznych.",
+     "en": "- Mitigate 5 (+5%)% of Physical Damage."
+    }
+   ]
+  },
+  "storm-breaker": {
+   "name": "Storm Breaker",
+   "summary_pl": "Item pasywny; +40 moc fizyczna, +30% szybkosc ataku; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Electric Momentum",
+     "pl": "Ruch i trafione ataki generują Momentum. Przy 100: wzmocniony atak — piorun skaczący po 7 celach, 70 (+20%) obrażeń, nakłada efekty on-hit.",
+     "en": "While moving or landing Basic Attacks: - Generate stacks of Momentum. - At 100 stacks empower your next Basic Attack On-Hit. - Release a bolt of lightning that chains to 7 Targets. - Deal 70 (+20%) Damage. - Applies On-Hit effects."
+    }
+   ]
+  },
+  "strength-tonic": {
+   "name": "Strength Tonic",
+   "summary_pl": "Item aktywny (ofensywny); tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Consume",
+     "pl": "+30 mocy fizycznej i +10% omniwampu na 300 s. Efekt znika po śmierci.",
+     "en": "- Gain 30 Physical Power and 10% Omnivamp for 300s. - Effect is lost upon death.",
+     "active": true
+    },
+    {
+     "name": "Restriction",
+     "pl": "Zakup od 13. poziomu.",
+     "en": "- Level 13 required for purchase."
+    }
+   ]
+  },
+  "syonic-echo": {
+   "name": "Syonic Echo",
+   "summary_pl": "Item pasywny; +15 przyspieszenie umiejetnosci, +55 moc fizyczna, +15% kradziez zycia; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Duplicity",
+     "pl": "Po użyciu umiejętności: następne 3 ataki podstawowe (3 s) mają +30% całkowitej szybkości ataku.",
+     "en": "On Ability Cast: - Your next 3 Basic Attacks within 3s gain 30% Total Attack Speed."
+    },
+    {
+     "name": "Close Combat",
+     "pl": "Tylko bohaterowie w zwarciu: aktywacja Duplicity resetuje odnowienie ataku podstawowego.",
+     "en": "On Melee Heroes only: - Activating Duplicity resets your Basic Attack Cooldown."
+    }
+   ]
+  },
+  "tainted-bastion": {
+   "name": "Tainted Bastion",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +8 przyspieszenie umiejetnosci, +80% regeneracja zdrowia, +45 odpornosc magiczna, +250 zdrowie; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Blighted Veil",
+     "pl": "Za otrzymanie obrażeń magicznych: obniżasz leczenie źródła o 45% na 3 s.",
+     "en": "On taking Magical Damage: - Reduce the Source's Healing by 45% for 3s."
+    },
+    {
+     "name": "Colossus",
+     "pl": "Redukujesz 3,5% otrzymywanych obrażeń (2× przeciw celom z Blight).",
+     "en": "- Mitigate 3.5% of damage taken. - Doubled against Blighted Targets."
+    }
+   ]
+  },
+  "tainted-blade": {
+   "name": "Tainted Blade",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +40 moc fizyczna, +10 przyspieszenie umiejetnosci, +250 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Blighted Strikes",
+     "pl": "Zadając obrażenia fizyczne: obniżasz leczenie celu o 45% na 3 s.",
+     "en": "On dealing Physical Damage: - Reduce the Target's Healing by 45% for 3s."
+    },
+    {
+     "name": "Hex",
+     "pl": "Obrażenia z umiejętności w cel z Blight: przyjmuje 5% więcej obrażeń przez 3 s.",
+     "en": "On dealing Ability Damage to a Blighted Target: - Cause them to take 5% more damage for 3s."
+    }
+   ]
+  },
+  "tainted-charm": {
+   "name": "Tainted Charm",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +125% regeneracja many, +350 zdrowie, +10 przyspieszenie umiejetnosci, +75% nieustepliwosc; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Blighted Presence",
+     "pl": "Pobliscy wrodzy bohaterowie: leczenie obniżone o 45% i spowolnienie 12%.",
+     "en": "While near Enemy Heroes: - Reduce their Healing by 45%. - Slow them by 12%."
+    }
+   ]
+  },
+  "tainted-guard": {
+   "name": "Tainted Guard",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +250 zdrowie, +8 przyspieszenie umiejetnosci, +55 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Blighted Thorns",
+     "pl": "Gdy trafi cię atak podstawowy: obniżasz leczenie napastnika o 45% na 3 s i nakładasz krwawienie 30 (+30%) obrażeń przez 3 s.",
+     "en": "On being hit by a Basic Attack: - Reduce the Source's Healing by 45% for 3s. - Apply a Bleed dealing 30 (+30%) Damage over 3s."
+    }
+   ]
+  },
+  "tainted-rounds": {
+   "name": "Tainted Rounds",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +35 moc fizyczna, +30% szybkosc ataku, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Blighted Strikes",
+     "pl": "Trafione ataki podstawowe: obniżają leczenie celu o 45% na 3 s i zadają (+10%)(+20%) obrażeń przy trafieniu (do +100% im mniej zdrowia ma cel).",
+     "en": "On Successful Basic Attacks: - Reduce the Target's Healing by 45% for 3s. - Deal (+10%) (+20%) Damage On-Hit. - Increases by up to 100% as the Target's Health decreases."
+    }
+   ]
+  },
+  "tainted-scepter": {
+   "name": "Tainted Scepter",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +75 moc magiczna, +10 przyspieszenie umiejetnosci, +200 zdrowie; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Blighted Spells",
+     "pl": "Zadając obrażenia magiczne: obniżasz leczenie celu o 45% na 4 s.",
+     "en": "On Dealing Magical Damage: - Reduce the Target's Healing by 45% for 4s."
+    },
+    {
+     "name": "Malice",
+     "pl": "Co sekundę kumulacja Malice (do 15; udział w zabójstwie daje od razu 15). Trafienie bohatera umiejętnością zadaje 1,5 (+1%) obrażeń za kumulację.",
+     "en": "Once every second: - Gain a stack of Malice. - Stacks up to 15 times. - Takedowns grant 15 stacks instantly. - Hitting a Hero with Ability Damage will deal 1.5 (+1%) Damage per stack."
+    }
+   ]
+  },
+  "tainted-totem": {
+   "name": "Tainted Totem",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +45 moc magiczna, +10 przyspieszenie umiejetnosci, +200 zdrowie, +125% regeneracja many; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Blighted Touch",
+     "pl": "Zadając obrażenia: obniżasz leczenie celu o 45% na 3 s.",
+     "en": "On dealing damage: - Reduce the Target's Healing by 45% for 3s."
+    },
+    {
+     "name": "Blighted Well",
+     "pl": "Lecząc/otarczowując sojuszników: dostają Blighted Touch na 4 s.",
+     "en": "On Healing and Shielding Allies: - Grant them Blighted Touch for 4s."
+    }
+   ]
+  },
+  "tainted-trident": {
+   "name": "Tainted Trident",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +10 przyspieszenie umiejetnosci, +45 moc fizyczna, +11 przebicie pancerza; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Blighted Strikes",
+     "pl": "Zadając obrażenia fizyczne: obniżasz leczenie celu o 45% na 3 s.",
+     "en": "On dealing Physical Damage: - Reduce the Target's Healing by 45% for 3s."
+    },
+    {
+     "name": "Woundseeker",
+     "pl": "Obrażenia z umiejętności w jednostkę z Blight: +3 (+6%)% dodatkowych obrażeń.",
+     "en": "On dealing Ability Damage to a Blighted Unit: - Deal 3 (+6%)% additional Damage."
+    }
+   ]
+  },
+  "temporal-ripper": {
+   "name": "Temporal Ripper",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna, +8 przyspieszenie umiejetnosci.",
+   "effects": []
+  },
+  "tenacious-drape": {
+   "name": "Tenacious Drape",
+   "summary_pl": "Item pasywny (ofensywny); +250 zdrowie, +85% nieustepliwosc.",
+   "effects": []
+  },
+  "tenacious-gem": {
+   "name": "Tenacious Gem",
+   "summary_pl": "Item pasywny (ofensywny); +90% nieustepliwosc.",
+   "effects": []
+  },
+  "terminus": {
+   "name": "Terminus",
+   "summary_pl": "Item pasywny (daje sustain); +15% kradziez zycia, +60 moc fizyczna, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Anon",
+     "pl": "Nadmiarowe leczenie z kradzieży życia zamienia się w tarczę (maks. +100%); tarcza powoli znika 15 s po wyjściu z walki.",
+     "en": "On Overhealing from Lifesteal: - Convert excess Healing into a Shield. - Max Shield size: (+100%). - The Shield slowly decays 15s after leaving combat."
+    }
+   ]
+  },
+  "the-perforator": {
+   "name": "The Perforator",
+   "summary_pl": "Item pasywny (przebija pancernych); +45 moc fizyczna, +8 przebicie pancerza, +15 przyspieszenie umiejetnosci; tylko klasa Assassin.",
+   "effects": [
+    {
+     "name": "Chilling Spells",
+     "pl": "Obrażenia z umiejętności spowalniają o 10% na 1 s.",
+     "en": "On dealing Ability Damage: - Slows by 10% for 1s."
+    },
+    {
+     "name": "Puncture",
+     "pl": "Ignorujesz 30% pancerza celu.",
+     "en": "- Ignore 30% of Physical Armor."
+    }
+   ]
+  },
+  "timewarp": {
+   "name": "Timewarp",
+   "summary_pl": "Item pasywny; +150% regeneracja many, +25 przyspieszenie umiejetnosci, +75 moc magiczna; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Chime",
+     "pl": "Co 8 s: odejmujesz 1 s od odnowień (poza ultimate).",
+     "en": "Every 8s: - Subtract 1s from Non-Ultimate Cooldowns."
+    }
+   ]
+  },
+  "transference": {
+   "name": "Transference",
+   "summary_pl": "Item pasywny; +12% moc leczenia/tarcz, +35 odpornosc magiczna, +200 zdrowie, +40 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Shield Transference",
+     "pl": "Gdy tarcza wygasa: 50% pozostałej wartości wraca jako zdrowie przez 3 s (25% dla tarcz sojuszników).",
+     "en": "Upon Shields expiring: - 50% of its remaining value is restored as Health over 3s. - Reduced to 25% for Ally Shields."
+    },
+    {
+     "name": "Ionizing Charge",
+     "pl": "Gdy masz tarczę: +8% szybkości ruchu i +10% pancerzy.",
+     "en": "While Shielded: - Gain 8% Movement Speed. - Gain 10% increased Armors."
+    }
+   ]
+  },
+  "truesilver-bracelet": {
+   "name": "Truesilver Bracelet",
+   "summary_pl": "Item pasywny; +35 moc magiczna, +200 zdrowie, +75% regeneracja many, +10% moc leczenia/tarcz; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Reprisal",
+     "pl": "Po użyciu ultimate: tarcza 100 (+18%) na 4 s; póki trzyma — odporność na CC. Zdjęta eksploduje, zadając 40% początkowej wartości jako obrażenia.",
+     "en": "On casting your Ultimate: - Gain a 100 (+18%) Shield for 4s. - While the Shield holds you are CC Immune. - When removed, it explodes dealing Damage equal to 40% of the initial Shield.",
+     "cooldown": "40s"
+    }
+   ]
+  },
+  "tunic": {
+   "name": "Tunic",
+   "summary_pl": "Item pasywny (ofensywny); +10 pancerz.",
+   "effects": []
+  },
+  "tyranny": {
+   "name": "Tyranny",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +300 zdrowie, +40 moc fizyczna; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Oppression",
+     "pl": "Po użyciu ultimate: +30% gasnącej szybkości ruchu przez 4 s i +20 przyspieszenia umiejętności na 8 s. Udział w zabójstwie w tym czasie odnawia efekt.",
+     "en": "On casting your Ultimate: - Gain 30% Decaying Movement Speed over 4s. - Gain 20 Ability Haste for 8s. - Takedowns within this time re-trigger Oppression.",
+     "cooldown": "45s"
+    },
+    {
+     "name": "Tyrant's Edge",
+     "pl": "Zyskujesz 15 przyspieszenia ultimate.",
+     "en": "- Gain 15 Ultimate Haste."
+    }
+   ]
+  },
+  "unbroken-will": {
+   "name": "Unbroken Will",
+   "summary_pl": "Item pasywny; +400 zdrowie, +45 odpornosc magiczna, +75% nieustepliwosc; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Undying",
+     "pl": "Po unieruchomieniu: +25% pancerza i +25% odporności magicznej na 2,5 s.",
+     "en": "On being Immobilized: - Increase your Physical Armor by 25% for 2.5s. - Increase your Magical Armor by 25% for 2.5s."
+    }
+   ]
+  },
+  "vainglory": {
+   "name": "Vainglory",
+   "summary_pl": "Item pasywny (defensywny); +200 zdrowie, +35 odpornosc magiczna, +45 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Pride",
+     "pl": "Zadając lub przyjmując obrażenia od bohaterów: kumulacja Vanity na 4 s (+0,5% pancerzy każda, maks. 10).",
+     "en": "Upon dealing or taking Hero Damage: - Gain a stack of Vanity for 4s. - Each stack grants +0.5% increased Armors. - Max Stacks: 10.",
+     "cooldown": "0.5s"
+    },
+    {
+     "name": "In Vain",
+     "pl": "Przy maksimum Vanity: dodatkowe +10% pancerzy.",
+     "en": "While at Max Vanity stacks: - Gain an additional 10% increased Armors."
+    }
+   ]
+  },
+  "vanguardian": {
+   "name": "Vanguardian",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +35 pancerz, +35 odpornosc magiczna, +80% nieustepliwosc; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Guardian",
+     "pl": "Pobliscy sojuszniczy bohaterowie zyskują 15 pancerza i 12 odporności magicznej.",
+     "en": "Nearby Allied Heroes gain: - 15 Physical Armor. - 12 Magical Armor."
+    }
+   ]
+  },
+  "vanquisher": {
+   "name": "Vanquisher",
+   "summary_pl": "Item pasywny (wzmacnia burst); +12 przebicie pancerza, +50 moc fizyczna, +20% szansa na kryt; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Annihilate",
+     "pl": "Zbicie bohatera poniżej 5% zdrowia: egzekucja.",
+     "en": "On taking a Hero below 5% Health: - Execute them."
+    }
+   ]
+  },
+  "vigorous-amulet": {
+   "name": "Vigorous Amulet",
+   "summary_pl": "Item pasywny (ofensywny); +20 pancerz, +200 zdrowie.",
+   "effects": []
+  },
+  "violet-brooch": {
+   "name": "Violet Brooch",
+   "summary_pl": "Item pasywny (ofensywny); +200 zdrowie, +8 przyspieszenie umiejetnosci.",
+   "effects": []
+  },
+  "viper": {
+   "name": "Viper",
+   "summary_pl": "Item pasywny (kruszy pancerz); +8 przebicie pancerza, +30% szybkosc ataku, +30 moc fizyczna; tylko klasa Sharpshooter.",
+   "effects": [
+    {
+     "name": "Corrode",
+     "pl": "Obrażenia w bohatera: obniżają jego pancerz o 4,5% na 3 s (do 6 kumulacji). Przy 6 staje się Skorodowany.",
+     "en": "On damaging a Hero: - Reduce their Physical Armor by 4.5% for 3s. - Stacks up to 6 times. - At 6 stacks they become Eroded."
+    },
+    {
+     "name": "Diligence",
+     "pl": "Przeciw Skorodowanym bohaterom: +8% obrażeń on-hit i z umiejętności.",
+     "en": "Against Eroded Heroes: - Deal 8% increased On-Hit and Ability damage."
+    }
+   ]
+  },
+  "vitality-beads": {
+   "name": "Vitality Beads",
+   "summary_pl": "Item pasywny (ofensywny); +100 zdrowie.",
+   "effects": []
+  },
+  "void-conduit": {
+   "name": "Void Conduit",
+   "summary_pl": "Item pasywny; +40 odpornosc magiczna, +10 przyspieszenie umiejetnosci, +3 szybkosc ruchu, +250 zdrowie; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Relativity",
+     "pl": "Przy sojuszniczym bohaterze oboje zyskujecie +6% omniwampu i co sekundę +1% regeneracji brakującej many.",
+     "en": "While near an Ally Hero, you both gain: - +6% Omnivamp. - +1% Missing Mana Regen each second."
+    }
+   ]
+  },
+  "void-crystal": {
+   "name": "Void Crystal",
+   "summary_pl": "Item pasywny (ofensywny); +35 moc magiczna.",
+   "effects": [
+    {
+     "name": "Lesser Fiend",
+     "pl": "Obrażenia magiczne w bohatera: +2% zadawanych obrażeń magicznych na 4,5 s (do 4 kumulacji).",
+     "en": "On dealing Magical Damage to a Hero: - Increases your Magical Damage dealt by 2% for 4.5s. - Stacks up to 4 times.",
+     "cooldown": "1s"
+    }
+   ]
+  },
+  "void-helm": {
+   "name": "Void Helm",
+   "summary_pl": "Item pasywny (chroni przed magia); +10 przyspieszenie umiejetnosci, +400 zdrowie, +45 odpornosc magiczna; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Abyssal Gift",
+     "pl": "Leczysz się o 20% mocniej ze wszystkich źródeł.",
+     "en": "- Heal 20% more from all sources."
+    }
+   ]
+  },
+  "volcanica": {
+   "name": "Volcanica",
+   "summary_pl": "Item pasywny; +30 moc fizyczna, +10 przyspieszenie umiejetnosci, +300 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Hellstorm",
+     "pl": "Po użyciu umiejętności: skracasz odnowienia pozostałych podstawowych umiejętności o 0,5 s (1,5 s przy ultimate). Ograniczenie: 40% skuteczności dla bohaterów zmieniających postawy.",
+     "en": "On Ability Cast: - Reduce your other current Basic Ability Cooldowns by 0.5s. - Increased to 1.5s when casting your Ultimate Ability. Restriction: - Hellstorm has 40% effectiveness for Stance Switchers."
+    }
+   ]
+  },
+  "vyzar-carapace": {
+   "name": "Vyzar Carapace",
+   "summary_pl": "Item pasywny; +45 moc fizyczna, +15 przyspieszenie umiejetnosci, +225 zdrowie; tylko klasa Fighter.",
+   "effects": [
+    {
+     "name": "Shell Shock",
+     "pl": "Ataki podstawowe i umiejętności na wrogich bohaterach nakładają Scorn (raz na umiejętność). 3 kumulacje wyzwalają Shell Smash.",
+     "en": "Against Enemy Heroes: - Basic Attacks and Abilities apply a stack of Scorn. - Apply 3 stacks to a Hero to trigger Shell Smash. - Scorn can only be applied once per ability."
+    },
+    {
+     "name": "Shell Smash",
+     "pl": "Zadaje 60–170 obrażeń (rośnie z poziomem) i daje ci tarczę 50 (+12%) na 3 s.",
+     "en": "- Deals 60-170 Damage, based on Level. - Gain a 50 (+12%) Shield for 3s.",
+     "cooldown": "15s"
+    }
+   ]
+  },
+  "wardens-faith": {
+   "name": "Warden's Faith",
+   "summary_pl": "Item pasywny (oslabia krytyki); +300 zdrowie, +70 pancerz; tylko klasa Tank.",
+   "effects": [
+    {
+     "name": "Stalwart",
+     "pl": "Przyjmujesz 20% mniej obrażeń z trafień krytycznych.",
+     "en": "- Take 20% less damage from Critical Strikes."
+    },
+    {
+     "name": "Mocking Presence",
+     "pl": "Pobliscy wrodzy bohaterowie mają moc fizyczną obniżoną o 8%.",
+     "en": "Nearby Enemy Heroes: - Have their Physical Power reduced by 8%."
+    }
+   ]
+  },
+  "warp-stream": {
+   "name": "Warp Stream",
+   "summary_pl": "Item pasywny (daje mobilnosc); +10 przyspieszenie umiejetnosci, +400 zdrowie, +400 mana; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Tele-Blink",
+     "pl": "Zastępuje twój Blink Tele-Blinkiem o krótszym odnowieniu. Po otrzymaniu obrażeń Tele-Blink jest zablokowany na 2,5 s.",
+     "en": "- Replace your Blink with Tele-Blink. - Tele-Blink has a reduced Cooldown. - Upon taking damage, Tele-Blink cannot be used for 2.5s.",
+     "cooldown": "120s"
+    },
+    {
+     "name": "Quantum Edge",
+     "pl": "Zyskujesz 25 przyspieszenia ultimate.",
+     "en": "- Gain 25 Ultimate Haste."
+    }
+   ]
+  },
+  "windcaller": {
+   "name": "Windcaller",
+   "summary_pl": "Item pasywny (daje mobilnosc); +12% moc leczenia/tarcz, +45 moc magiczna, +100% regeneracja many, +3 szybkosc ruchu; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Zephyr",
+     "pl": "Za wyleczenie/otarczowanie sojusznika: oboje zyskujecie +8% szybkości ruchu na 1,5 s (odnowienie per cel).",
+     "en": "On Healing or Shielding an Ally: - You both gain 8% Movement Speed for 1.5s. - Cooldown is per Target.",
+     "cooldown": "8s"
+    }
+   ]
+  },
+  "world-breaker": {
+   "name": "World Breaker",
+   "summary_pl": "Item pasywny; +45 moc magiczna, +80% nieustepliwosc, +350 zdrowie; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Fiend",
+     "pl": "Obrażenia magiczne w bohatera: +2% zadawanych obrażeń magicznych na 4,5 s (do 6 kumulacji).",
+     "en": "On dealing Magical Damage to a Hero: - Increases your Magical Damage dealt by 2% for 4.5s. - Stacks up to 6 times.",
+     "cooldown": "1s"
+    },
+    {
+     "name": "Maya",
+     "pl": "Zyskujesz dodatkowo (+5%) mocy magicznej.",
+     "en": "- Gain (+5%) Magical Power."
+    }
+   ]
+  },
+  "wraith-leggings": {
+   "name": "Wraith Leggings",
+   "summary_pl": "Item pasywny (daje mobilnosc); +100 moc magiczna, +11 przebicie odpornosci mag., +4 szybkosc ruchu; tylko klasa Mage.",
+   "effects": [
+    {
+     "name": "Carnage",
+     "pl": "Przeciw bohaterom poniżej 40% zdrowia: umiejętności zadają 12% dodatkowych obrażeń magicznych.",
+     "en": "Against Heroes below 40% Health: - Abilities deal 12% bonus Magical Damage."
+    }
+   ]
+  },
+  "wraps": {
+   "name": "Wraps",
+   "summary_pl": "Item pasywny (ofensywny); +10 odpornosc magiczna.",
+   "effects": []
+  },
+  "xenia": {
+   "name": "Xenia",
+   "summary_pl": "Item pasywny; +10 przyspieszenie umiejetnosci, +200 zdrowie, +30 pancerz, +25 odpornosc magiczna; tylko klasa Support.",
+   "effects": [
+    {
+     "name": "Xenos Guard",
+     "pl": "Sojuszniczy bohater w 200u dostaje tarczę 50 (+10%)(+5 na poziom) na 4 s (odnowienie per cel).",
+     "en": "When within 200u to an Ally Hero: - Grant them a 50 (+10%)(+5 per Level) Shield for 4s. - Cooldown is per Target.",
+     "cooldown": "10s"
+    },
+    {
+     "name": "",
+     "pl": "Ograniczenie: ponowna tarcza na tego samego bohatera w ciągu 10 s działa w 50%.",
+     "en": "Restriction: - Subsequent applications to the same Hero within 10s are 50% effective."
+    }
+   ]
+  },
+  "zealous-tomahawk": {
+   "name": "Zealous Tomahawk",
+   "summary_pl": "Item pasywny (ofensywny); +20 moc fizyczna.",
+   "effects": [
+    {
+     "name": "Desolate",
+     "pl": "Ignorujesz 18% pancerza celu.",
+     "en": "- Ignore 18% of Physical Armor."
+    }
+   ]
+  }
+ }
+}
