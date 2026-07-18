@@ -1,0 +1,7 @@
+{
+ "entries": [
+  { "hero": "The Fey", "counters": ["gideon"], "countered_by": ["kallari", "wraith"], "note_pl": "Bez mobilnosci." },
+  { "hero": "", "counters": ["x"], "note_pl": "wpis bez bohatera - do pominiecia" },
+  { "hero": "wraith", "counters": [1, "zinx"], "countered_by": null }
+ ]
+}

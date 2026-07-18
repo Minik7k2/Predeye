@@ -9,12 +9,15 @@
 #include "core/hero_context.hpp"
 #include "core/models.hpp"
 #include "core/omeda_client.hpp"
+#include "vision/auto_calibrate.hpp"
 #include "vision/calibration.hpp"
-#include "vision/hero_matcher.hpp"
+#include "vision/draft_reader.hpp"
 #include "vision/icon_matcher.hpp"
 
+#include <map>
 #include <memory>
 #include <opencv2/core.hpp>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
@@ -35,7 +38,7 @@ struct LiveRowView {
     int row = 0;
     Role role = Role::Unknown;
     std::string role_label; // "Offlane"... / "Wiersz N" gdy Unknown
-    std::string hero;       // display_name z portretu ("" gdy nie rozpoznano)
+    std::string hero_name;  // z portretu; "" gdy nierozpoznany/brak matchera
     bool hero_confident = false;
     std::vector<LiveSlotView> slots;
     std::vector<std::string> changes; // "+Item" / "-Item" wzgledem poprzednika
@@ -66,9 +69,12 @@ class VisionSession {
     explicit VisionSession(std::string cache_dir = OmedaClient::default_dir());
 
     void ensure_loaded();  // items + heroes + silnik (sieciowe, cache TTL)
-    void ensure_matcher(); // bazy ikon i portretow (pobiera brakujace); wymaga ensure_loaded
+    void ensure_matcher(); // baza ikon (pobiera brakujace); wymaga ensure_loaded
+    // Baza portretow bohaterow (rozpoznawanie na scoreboardzie i w draftcie).
+    void ensure_hero_matcher();
 
     bool matcher_ready() const { return matcher_ && matcher_->base_size() > 0; }
+    bool hero_matcher_ready() const { return hero_matcher_ && hero_matcher_->base_size() > 0; }
     size_t icon_base_size() const { return matcher_ ? matcher_->base_size() : 0; }
 
     // Lista nazw bohaterow (display_name, posortowana) — do listy wyboru.
@@ -86,23 +92,43 @@ class VisionSession {
 
     // Jeden odczyt klatki -> itemy per gracz (obie druzyny) + profil wroga
     // + counter + diff. Aktualizuje wewnetrzny stan do kolejnego diffa.
+    // Gdy gotowy jest matcher bohaterow: tozsamosc per wiersz + tie-break
+    // niepewnych itemow po typowym buildzie rozpoznanego bohatera.
     LiveResult read(const cv::Mat& frame, const Calibration& calib);
 
+    // Odczyt ekranu draftu (bany/picki). Wymaga skalibrowanych regionow
+    // draftu; buduje matcher bohaterow przy pierwszym uzyciu (sieciowe).
+    DraftRead read_draft_frame(const cv::Mat& frame, const Calibration& calib);
+
+    // Auto-kalibracja siatek itemow na klatce (start: `base` albo
+    // default_for). Buduje matcher ikon przy pierwszym uzyciu (sieciowe).
+    AutoCalibResult auto_calibrate_frame(const cv::Mat& frame);
+    AutoCalibResult auto_calibrate_frame(const cv::Mat& frame, const Calibration& base);
+
+    const HeroDB* hero_db() {
+        ensure_loaded();
+        return heroes_.get();
+    }
+
   private:
-    std::string icon_dir_;
-    std::string portrait_dir_;
+    // Zbior id itemow typowego buildu bohatera (cache per hero_id na sesje);
+    // nullopt w mapie = "sprawdzono, brak buildow" (nie pytaj API ponownie).
+    const std::set<long long>* typical_items(long long hero_id, const std::string& name);
+
+    std::string icon_dir_, hero_icon_dir_;
     OmedaClient api_;
     std::vector<Item> items_;
     ItemIndex index_;
     std::unique_ptr<HeroDB> heroes_;
     std::unique_ptr<BuildEngine> engine_;
     std::unique_ptr<IconMatcher> matcher_;
-    std::unique_ptr<HeroMatcher> hero_matcher_;
+    std::unique_ptr<IconMatcher> hero_matcher_;
     Objective obj_;
     bool has_obj_ = false;
     bool loaded_ = false;
     std::vector<std::set<std::string>> prev_enemy_; // nazwy itemow per wiersz
     std::vector<std::set<std::string>> prev_ally_;
+    std::map<long long, std::optional<std::set<long long>>> typical_cache_;
 };
 
 } // namespace predeye

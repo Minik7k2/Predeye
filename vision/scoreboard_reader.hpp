@@ -35,6 +35,13 @@ struct RowRead {
     std::vector<Item> items;     // rozpoznane, niepuste sloty (do klasyfikacji)
     std::vector<SlotRead> slots; // wszystkie sloty wiersza (z pustymi) — do wydruku
     int uncertain = 0;           // ile rozpoznan ponizej progu pewnosci
+
+    // Tozsamosc bohatera z portretu (0/"" gdy brak siatki portretow albo
+    // matchera bohaterow) — odblokowuje tie-break itemow po typical_build.
+    long long hero_id = 0;
+    std::string hero_name;
+    float hero_cosine = -1.0f;
+    bool hero_confident = false;
 };
 
 // Wynik odczytu calego scoreboardu: obie druzyny.
@@ -55,8 +62,12 @@ Role scoreboard_row_role(int row, int rows);
 // Wytnij rows x cols ROI z obu siatek, odfiltruj puste, dopasuj ikony.
 // ROI wychodzace poza klatke (zla kalibracja) sa traktowane jak puste —
 // funkcja nigdy nie rzuca z powodu zlej geometrii.
+// `hero_matcher`/`heroes` (opcjonalne): dopasowanie portretow z siatek
+// *_hero_grid daje tozsamosc bohatera per wiersz.
 ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& calib,
-                               const IconMatcher& matcher, const ItemIndex& index);
+                               const IconMatcher& matcher, const ItemIndex& index,
+                               const IconMatcher* hero_matcher = nullptr,
+                               const HeroDB* heroes = nullptr);
 
 // Identyfikacja bohatera kazdego wiersza jednego panelu z portretu przy
 // karcie gracza (portrait_rect). ROI poza klatka => hero_id 0 (pomijamy,

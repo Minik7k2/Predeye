@@ -1,0 +1,12 @@
+{
+ "items": {
+  "tainted-scepter": {
+   "name": "Tainted Scepter",
+   "summary_pl": "Item pasywny (ogranicza leczenie wrogow); +75 moc magiczna.",
+   "effects": [
+    { "name": "Blighted Spells", "pl": "Obniza leczenie celu o 45% na 4 s.", "en": "Reduce the Target's Healing by 45% for 4s." },
+    { "name": "Malice", "pl": "", "en": "Gain a stack of Malice every second." }
+   ]
+  }
+ }
+}

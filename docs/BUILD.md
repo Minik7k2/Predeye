@@ -3,55 +3,78 @@
 Projekt buduje dwa pliki wykonywalne:
 
 - `predeye` — narzędzie wiersza poleceń (build/counter/calibrate/fetch-icons/live),
-- `predeye-gui` — graficzna powłoka (Dear ImGui + GLFW): zakładki **Kalibracja**
-  i **Live** (build/counter z ręcznym wpisywaniem składów zostały w CLI).
+- `predeye-gui` — graficzna powłoka (Dear ImGui + GLFW).
   GUI wymaga toru wizyjnego (`PREDEYE_VISION=ON`).
 
-## CLion — uruchomienie „za pierwszym razem"
+**Toolchain: wyłącznie GCC.** Na Windows przez **MSYS2/MinGW-w64 (UCRT64)**,
+na Linuksie systemowy g++. MSVC nie jest wspierane (CMake przerwie konfigurację
+z czytelnym komunikatem).
 
-Repo zawiera `CMakePresets.json`, więc CLion sam wykryje profile. Toolchain
-vcpkg konfiguruje się **automatycznie** (`cmake/AutoVcpkg.cmake`) — nie trzeba
-niczego ustawiać ręcznie.
+## Windows — MSYS2/UCRT64 (zalecana droga)
 
-1. **File → Open** i wskaż katalog repo.
-2. CLion pokaże preset CMake:
-   - **predeye (pełny)** — GUI + CLI + tor wizyjny (OpenCV). Pierwsza
-     konfiguracja jest długa: vcpkg buduje OpenCV ze źródeł.
-3. Poczekaj, aż CMake skończy konfigurację (za pierwszym razem klonuje i
-   bootstrapuje vcpkg do `./.vcpkg`, potem pobiera zależności).
-4. Wybierz cel **predeye-gui** (lub **predeye**) z listy konfiguracji
-   uruchomieniowych u góry i kliknij **Run** (zielona strzałka).
-
-Jeśli masz już własne vcpkg, ustaw zmienną środowiskową `VCPKG_ROOT` — zostanie
-użyta zamiast auto-klonowania. Wbudowana integracja vcpkg w CLion (Settings →
-Build → vcpkg) też zadziała: gdy poda własny `CMAKE_TOOLCHAIN_FILE`,
-`AutoVcpkg.cmake` go uszanuje.
-
-## Wiersz poleceń (Windows/Linux/macOS)
-
-Wymagania: CMake ≥ 3.21, kompilator C++17 (MSVC / GCC / Clang), git.
+1. Zainstaluj [MSYS2](https://www.msys2.org/) (domyślnie `C:\msys64`).
+2. Otwórz konsolę **MSYS2 UCRT64** (nie MSYS ani MINGW64) i doinstaluj toolchain
+   oraz zależności:
 
 ```sh
-# Pełny build (auto-vcpkg — pierwszy raz długi przez OpenCV):
-cmake --preset default
-cmake --build build --config Release
+pacman -S --needed \
+    mingw-w64-ucrt-x86_64-gcc \
+    mingw-w64-ucrt-x86_64-cmake \
+    mingw-w64-ucrt-x86_64-ninja \
+    mingw-w64-ucrt-x86_64-opencv \
+    mingw-w64-ucrt-x86_64-curl \
+    mingw-w64-ucrt-x86_64-nlohmann-json \
+    mingw-w64-ucrt-x86_64-doctest \
+    mingw-w64-ucrt-x86_64-glfw \
+    git
 ```
 
-Pliki: `build/gui/predeye-gui`, `build/app/predeye` (na Windows w podkatalogu
-`Release/`).
-
-### Bez vcpkg (biblioteki systemowe)
-
-Na Linuksie można użyć bibliotek z menedżera pakietów zamiast vcpkg:
+3. Budowanie (w konsoli UCRT64, w katalogu repo):
 
 ```sh
-sudo apt install cmake g++ git libcurl4-openssl-dev nlohmann-json3-dev \
-     doctest-dev libglfw3-dev libgl1-mesa-dev libopencv-dev
-cmake -B build -S . -DPREDEYE_AUTO_VCPKG=OFF
+cmake --preset msys2-ucrt64
 cmake --build build -j
 ```
 
-Dodaj `-DPREDEYE_VISION=OFF`, by pominąć OpenCV/tor wizyjny.
+Pliki: `build/gui/predeye-gui.exe`, `build/app/predeye.exe`. Uruchamiaj je
+z konsoli UCRT64 (albo dodaj `C:\msys64\ucrt64\bin` do PATH — tam są DLL-e
+OpenCV/curl/glfw).
+
+### CLion na Windows
+
+W *Settings → Build, Execution, Deployment → Toolchains* dodaj toolchain
+**MinGW** i wskaż `C:\msys64\ucrt64` jako środowisko (CLion sam znajdzie
+gcc/g++/gdb). Potem otwórz projekt — CLion wykryje presety CMake; wybierz
+**msys2-ucrt64** i cel `predeye-gui`.
+
+## Linux
+
+```sh
+sudo apt install cmake g++ ninja-build git libcurl4-openssl-dev \
+     nlohmann-json3-dev doctest-dev libglfw3-dev libgl1-mesa-dev libopencv-dev
+cmake --preset default
+cmake --build build -j
+```
+
+Dodaj `-DPREDEYE_VISION=OFF`, by pominąć OpenCV/tor wizyjny (buduje się tylko
+rdzeń + CLI build/counter; GUI wymaga wizji).
+
+## Wariant vcpkg (opcjonalny)
+
+Gdy nie chcesz pakietów systemowych, preset `vcpkg` klonuje i bootstrapuje
+vcpkg do `./.vcpkg` i buduje zależności ze źródeł (pierwszy raz bardzo długo —
+OpenCV):
+
+```sh
+cmake --preset vcpkg
+cmake --build build-vcpkg -j
+```
+
+Własne vcpkg: ustaw `VCPKG_ROOT` — zostanie użyte zamiast auto-klonowania.
+Na Windows z MinGW pamiętaj o tripletach:
+`-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic`.
+Nieudany bootstrap vcpkg nie przerywa konfiguracji — CMake spada na biblioteki
+systemowe z ostrzeżeniem.
 
 ## Opcje CMake
 
@@ -60,12 +83,7 @@ Dodaj `-DPREDEYE_VISION=OFF`, by pominąć OpenCV/tor wizyjny.
 | `PREDEYE_BUILD_GUI` | ON | buduje `predeye-gui` (ImGui + GLFW); wymaga `PREDEYE_VISION=ON` |
 | `PREDEYE_BUILD_CLI` | ON | buduje `predeye` (CLI) |
 | `PREDEYE_VISION` | ON | tor wizyjny (OpenCV): capture, matcher, kalibracja |
-| `PREDEYE_AUTO_VCPKG` | ON | auto-klonowanie vcpkg, gdy brak toolchaina |
-
-Przy `PREDEYE_VISION=OFF` GUI jest pomijane (jego zakładki Kalibracja/Live
-wymagają OpenCV); w trybie vcpkg warto wtedy dodatkowo wyłączyć domyślną
-funkcję manifestu (`-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON`), by vcpkg nie
-instalował OpenCV.
+| `PREDEYE_AUTO_VCPKG` | OFF | auto-klonowanie vcpkg, gdy brak toolchaina |
 
 ## Zależności
 
@@ -81,22 +99,6 @@ cmake --build build -j && ctest --test-dir build --output-on-failure
 ```
 
 Testy nie dotykają sieci — chodzą na fixtures w `tests/fixtures/`.
-
-## Toolchain na Windows: MSVC vs MinGW (ważne dla CLion)
-
-Projekt celuje w **MSVC** (CLAUDE.md §7). Domyślny toolchain CLion to jednak
-**MinGW**, a vcpkg na Windows domyślnie instaluje biblioteki dla tripletu
-`x64-windows` (zbudowane MSVC). MinGW nie zlinkuje bibliotek C++ z MSVC — link
-`predeye-gui` kończy się setkami `undefined reference to cv::...` (inne
-dekoracje nazw symboli C++). CMake wykrywa tę sytuację i przerywa konfigurację
-czytelnym komunikatem. Wybierz jedno:
-
-- **Zalecane — MSVC:** w CLion *Settings → Build, Execution, Deployment →
-  Toolchains* dodaj/wybierz **Visual Studio** i ustaw go dla profilu CMake,
-  następnie usuń katalog `cmake-build-*` (vcpkg przekonfiguruje się od zera).
-- **MinGW:** wymuś triplet MinGW w opcjach CMake profilu i usuń katalog build:
-  `-DVCPKG_TARGET_TRIPLET=x64-mingw-dynamic -DVCPKG_HOST_TRIPLET=x64-mingw-dynamic`
-  (vcpkg przebuduje OpenCV/curl/glfw pod MinGW — długo, triplet „community").
 
 ## Uwagi
 

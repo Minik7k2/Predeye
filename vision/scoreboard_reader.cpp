@@ -55,6 +55,25 @@ std::vector<RowRead> read_grid(const cv::Mat& frame_bgr, const GridSpec& g,
     return out;
 }
 
+// Dopasowanie portretu bohatera dla wiersza `r` siatki portretow.
+// Portrety NIE przechodza przez looks_empty — sa jasne i kolorowe;
+// pusty wiersz (gracz nie istnieje) odpadnie progiem pewnosci.
+void match_hero(const cv::Mat& frame_bgr, const GridSpec& hero_grid, int r,
+                const IconMatcher& hero_matcher, const HeroDB& heroes, RowRead& row) {
+    if (!hero_grid.present() || r >= hero_grid.rows)
+        return;
+    const cv::Rect frame_rect(0, 0, frame_bgr.cols, frame_bgr.rows);
+    const cv::Rect rect = hero_grid.slot_rect(r, 0);
+    if ((rect & frame_rect) != rect || rect.area() == 0)
+        return;
+    const MatchResult m = hero_matcher.match(frame_bgr(rect));
+    row.hero_id = m.item_id;
+    row.hero_cosine = m.cosine;
+    row.hero_confident = m.confident();
+    if (const HeroProfile* h = heroes.by_id(m.item_id))
+        row.hero_name = h->name;
+}
+
 } // namespace
 
 Role scoreboard_row_role(int row, int rows) {
@@ -67,12 +86,19 @@ Role scoreboard_row_role(int row, int rows) {
 }
 
 ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& calib,
-                               const IconMatcher& matcher, const ItemIndex& index) {
+                               const IconMatcher& matcher, const ItemIndex& index,
+                               const IconMatcher* hero_matcher, const HeroDB* heroes) {
     ScoreboardRead out;
     out.enemies =
         read_grid(frame_bgr, calib.enemy_item_grid, matcher, index, out.total_items, out.uncertain);
     out.allies =
         read_grid(frame_bgr, calib.ally_item_grid, matcher, index, out.total_items, out.uncertain);
+    if (hero_matcher && heroes && hero_matcher->base_size() > 0) {
+        for (auto& row : out.enemies)
+            match_hero(frame_bgr, calib.enemy_hero_grid, row.row, *hero_matcher, *heroes, row);
+        for (auto& row : out.allies)
+            match_hero(frame_bgr, calib.ally_hero_grid, row.row, *hero_matcher, *heroes, row);
+    }
     return out;
 }
 

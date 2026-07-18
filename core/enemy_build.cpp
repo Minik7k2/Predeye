@@ -26,10 +26,7 @@ EnemyBuildProfile classify_items(const std::vector<Item>& items) {
     return p;
 }
 
-std::optional<EnemyBuildProfile> typical_build_from_json(const nlohmann::json& builds_json,
-                                                         const ItemIndex& index,
-                                                         long long hero_id,
-                                                         const std::string& hero_name) {
+std::optional<nlohmann::json> best_build_record(const nlohmann::json& builds_json) {
     // API zwraca liste; defensywnie obsluz tez obiekt z kluczem "builds".
     const nlohmann::json* arr = &builds_json;
     if (builds_json.is_object() && builds_json.contains("builds"))
@@ -50,6 +47,17 @@ std::optional<EnemyBuildProfile> typical_build_from_json(const nlohmann::json& b
     }
     if (!best)
         return std::nullopt;
+    return *best;
+}
+
+std::optional<EnemyBuildProfile> typical_build_from_json(const nlohmann::json& builds_json,
+                                                         const ItemIndex& index,
+                                                         long long hero_id,
+                                                         const std::string& hero_name) {
+    const auto best_opt = best_build_record(builds_json);
+    if (!best_opt)
+        return std::nullopt;
+    const nlohmann::json* best = &*best_opt;
 
     std::vector<Item> items;
     for (int i = 1; i <= 6; ++i) {

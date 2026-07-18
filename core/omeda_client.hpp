@@ -38,6 +38,12 @@ class OmedaClient {
     nlohmann::json builds(long long hero_id, const std::string& role,
                           const std::string& order = "popular");
 
+    // Meta globalna (/dashboard/hero_statistics.json). TTL 6 h.
+    // Uwaga (§5): winrate w skali 0-100; display_name bywa "Unknown" (mapowac
+    // po hero_id); zawiera smieciowy wiersz-agregat (id spoza /heroes.json).
+    nlohmann::json meta(const std::string& time_frame = "1M",
+                        const std::string& game_mode = "ranked");
+
     // Surowe bajty (ikony webp) — bez cache w kliencie; cache'uje warstwa wyzej.
     // Statyczne assety maja krotsza pauze (~50 ms) niz zapytania API (§6.6).
     std::vector<unsigned char> get_binary(const std::string& path);

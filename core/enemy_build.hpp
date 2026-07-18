@@ -28,6 +28,10 @@ struct EnemyBuildProfile {
 // Wspolna logika klasyfikacji — reuzywana w M4 dla itemow ze scoreboardu.
 EnemyBuildProfile classify_items(const std::vector<Item>& items);
 
+// Surowy rekord najlepszego buildu (max upvotes-downvotes) z JSON-a buildow —
+// zawiera tez crest_id, skill_order i modules (uzywa loadout/shopping advisor).
+std::optional<nlohmann::json> best_build_record(const nlohmann::json& builds_json);
+
 // Najlepszy build (max upvotes-downvotes) z gotowego JSON-a buildow.
 std::optional<EnemyBuildProfile> typical_build_from_json(const nlohmann::json& builds_json,
                                                          const ItemIndex& index,

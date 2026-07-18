@@ -8,6 +8,8 @@ add_library(predeye_vision STATIC
     auto_calibration.cpp
     capture.cpp
     scoreboard_reader.cpp
+    draft_reader.cpp
+    auto_calibrate.cpp
     vision_session.cpp
 )
 if(WIN32)

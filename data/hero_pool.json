@@ -1,0 +1,5 @@
+{
+ "_comment": "Twoja pula bohaterow do sugestii pickow (slug albo display_name) i glowna rola (offlane|jungle|midlane|carry|support).",
+ "role": "midlane",
+ "heroes": ["the-fey", "gideon", "howitzer"]
+}

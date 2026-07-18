@@ -160,6 +160,12 @@ nlohmann::json OmedaClient::builds(long long hero_id, const std::string& role,
     return get(base, 3600);
 }
 
+nlohmann::json OmedaClient::meta(const std::string& time_frame, const std::string& game_mode) {
+    return get("/dashboard/hero_statistics.json?time_frame=" + time_frame +
+                   "&game_mode=" + game_mode,
+               21600);
+}
+
 std::vector<unsigned char> OmedaClient::get_binary(const std::string& path) {
     const std::string body = fetch(std::string(kBaseUrl) + path, 50);
     return std::vector<unsigned char>(body.begin(), body.end());

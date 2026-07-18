@@ -1,0 +1,15 @@
+{
+ "_comment": "Baza eternalsow/perkow (API Omeda.city ich nie ma; tresc wg pred.gg i gry). 'slot': primary | minor (wg UI wyboru eternalsow). 'icon': sciezka wzgledem data/ do wycietej ikony (do rozpoznawania NCC; moze byc pusta poki brak zrzutow). 'recommended_for': dopasowanie po bohaterze i/lub roli (puste pole = dowolny); 'note_pl' to uzasadnienie pokazywane w kreatorze.",
+ "eternals": [
+  {
+   "id": "example-primary",
+   "name": "Przykladowy Eternal (podmien)",
+   "slot": "primary",
+   "description_pl": "Przykladowy wpis - podmien na realne eternalsy z gry/pred.gg. Opis dziala jak w grze.",
+   "icon": "",
+   "recommended_for": [
+    { "hero": "", "role": "midlane", "note_pl": "Przyklad: dobry do poke na midzie." }
+   ]
+  }
+ ]
+}
