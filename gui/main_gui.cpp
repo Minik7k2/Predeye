@@ -251,7 +251,6 @@ struct AppState {
         std::string hero;
         int role = 0;
         char config_path[512] = "calibration.json";
-        char image_path[512] = "";
         std::string applied_hero; // ostatnio ustawiony cel (do wykrycia zmiany)
         int applied_role = -1;
         gui::AsyncTask<LiveResult> read_task;
@@ -496,44 +495,34 @@ void draw_calibrate_tab(AppState& s) {
 }
 
 // Startuje odczyt scoreboardu w tle — wspolna sciezka przycisku i globalnego
-// hotkeya F9. Nic nie robi, gdy odczyt juz trwa albo nie ma kompletu danych
-// (bohater; poza Windows takze sciezka PNG, bo nie ma zrzutu z gry).
+// hotkeya F9. Nic nie robi, gdy odczyt juz trwa albo nie wybrano bohatera.
+// Klatka zawsze z gry (DXGI) — odczyt testowy z PNG zostal w CLI
+// (`predeye live --image`); w GUI zrzutom z pliku sluzy zakladka Kalibracja.
 void start_live_read(AppState& s) {
     auto& lv = s.live;
     if (lv.read_task.running() || lv.hero.empty())
         return;
-#ifndef _WIN32
-    if (std::string(lv.image_path).empty())
-        return;
-#endif
     VisionSession* vs = &s.vision;
     std::string hero = lv.hero;
     Role role = kRoles[static_cast<size_t>(lv.role)].role;
     std::string cfg = lv.config_path;
-    std::string img = lv.image_path;
     // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
     const bool set_obj = (hero != lv.applied_hero || lv.role != lv.applied_role);
     lv.applied_hero = hero;
     lv.applied_role = lv.role;
     lv.read_consumed = false;
-    lv.read_task.start([vs, hero, role, cfg, img, set_obj]() -> LiveResult {
+    lv.read_task.start([vs, hero, role, cfg, set_obj]() -> LiveResult {
         if (set_obj)
             vs->set_objective(hero, role);
         if (!std::filesystem::exists(cfg))
             throw std::runtime_error("brak " + cfg +
                                      " — najpierw skalibruj (zakladka Kalibracja)");
-        const Calibration calib = Calibration::load(cfg);
-        cv::Mat frame;
-        if (!img.empty()) {
-            frame = FileCapture(img).grab();
-        } else {
 #ifdef _WIN32
-            frame = DxgiCapture().grab();
+        return vs->read(DxgiCapture().grab(), Calibration::load(cfg));
 #else
-            throw std::runtime_error("podaj zrzut PNG — zrzut z gry dziala tylko na Windows");
+        throw std::runtime_error("tryb live wymaga zrzutu z gry (DXGI), "
+                                 "dostepnego tylko na Windows");
 #endif
-        }
-        return vs->read(frame, calib);
     });
 }
 
@@ -546,22 +535,19 @@ void draw_live_tab(AppState& s) {
     hero_combo("Bohater##live", lv.hero, s.hero_names);
     role_combo("Rola##live", lv.role);
     ImGui::InputText("Plik kalibracji##live", lv.config_path, sizeof(lv.config_path));
-#ifndef _WIN32
-    ImGui::InputText("Zrzut PNG##live", lv.image_path, sizeof(lv.image_path));
+#ifdef _WIN32
+    ImGui::TextDisabled("W grze: trzymaj TAB i nacisnij F9 — odczyt uruchomi sie sam\n"
+                        "(F9 dziala globalnie, bez klikania w GUI).");
 #else
-    ImGui::InputText("Zrzut PNG (opcjonalnie)##live", lv.image_path, sizeof(lv.image_path));
-    ImGui::TextDisabled("Puste pole PNG = zrzut z gry (DXGI). W grze: trzymaj TAB i nacisnij F9 —\n"
-                        "odczyt uruchomi sie sam (F9 dziala globalnie, bez klikania w GUI).");
+    ImGui::TextDisabled("Tryb live wymaga Windows (zrzut z gry przez DXGI).");
 #endif
     ImGui::Spacing();
 
     const bool busy = lv.read_task.running();
-#ifndef _WIN32
-    // Poza Windows nie ma zrzutu z gry (DXGI) — sciezka PNG jest wymagana.
-    const bool need_png = std::string(lv.image_path).empty();
-    const bool can_read = !lv.hero.empty() && !need_png;
-#else
+#ifdef _WIN32
     const bool can_read = !lv.hero.empty();
+#else
+    const bool can_read = false; // brak zrodla klatek poza Windows
 #endif
     ImGui::BeginDisabled(busy || !can_read);
     if (ImGui::Button("Odczytaj scoreboard", ImVec2(200, 0)))
