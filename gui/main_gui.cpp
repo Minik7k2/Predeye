@@ -256,6 +256,7 @@ struct AppState {
         int applied_role = -1;
         gui::AsyncTask<LiveResult> read_task;
         bool read_consumed = true; // czy wynik odczytu juz odebrano
+        bool f9_down = false;      // do wykrycia zbocza globalnego hotkeya F9
         std::optional<LiveResult> last;
         std::string status;
     } live;
@@ -494,6 +495,48 @@ void draw_calibrate_tab(AppState& s) {
     }
 }
 
+// Startuje odczyt scoreboardu w tle — wspolna sciezka przycisku i globalnego
+// hotkeya F9. Nic nie robi, gdy odczyt juz trwa albo nie ma kompletu danych
+// (bohater; poza Windows takze sciezka PNG, bo nie ma zrzutu z gry).
+void start_live_read(AppState& s) {
+    auto& lv = s.live;
+    if (lv.read_task.running() || lv.hero.empty())
+        return;
+#ifndef _WIN32
+    if (std::string(lv.image_path).empty())
+        return;
+#endif
+    VisionSession* vs = &s.vision;
+    std::string hero = lv.hero;
+    Role role = kRoles[static_cast<size_t>(lv.role)].role;
+    std::string cfg = lv.config_path;
+    std::string img = lv.image_path;
+    // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
+    const bool set_obj = (hero != lv.applied_hero || lv.role != lv.applied_role);
+    lv.applied_hero = hero;
+    lv.applied_role = lv.role;
+    lv.read_consumed = false;
+    lv.read_task.start([vs, hero, role, cfg, img, set_obj]() -> LiveResult {
+        if (set_obj)
+            vs->set_objective(hero, role);
+        if (!std::filesystem::exists(cfg))
+            throw std::runtime_error("brak " + cfg +
+                                     " — najpierw skalibruj (zakladka Kalibracja)");
+        const Calibration calib = Calibration::load(cfg);
+        cv::Mat frame;
+        if (!img.empty()) {
+            frame = FileCapture(img).grab();
+        } else {
+#ifdef _WIN32
+            frame = DxgiCapture().grab();
+#else
+            throw std::runtime_error("podaj zrzut PNG — zrzut z gry dziala tylko na Windows");
+#endif
+        }
+        return vs->read(frame, calib);
+    });
+}
+
 void draw_live_tab(AppState& s) {
     auto& lv = s.live;
     ImGui::TextDisabled("Odczyt itemow obu druzyn ze scoreboardu -> profil wroga -> counter-build. "
@@ -507,7 +550,8 @@ void draw_live_tab(AppState& s) {
     ImGui::InputText("Zrzut PNG##live", lv.image_path, sizeof(lv.image_path));
 #else
     ImGui::InputText("Zrzut PNG (opcjonalnie)##live", lv.image_path, sizeof(lv.image_path));
-    ImGui::TextDisabled("Puste pole PNG = zrzut z gry (DXGI). Przytrzymaj TAB przed odczytem.");
+    ImGui::TextDisabled("Puste pole PNG = zrzut z gry (DXGI). W grze: trzymaj TAB i nacisnij F9 —\n"
+                        "odczyt uruchomi sie sam (F9 dziala globalnie, bez klikania w GUI).");
 #endif
     ImGui::Spacing();
 
@@ -520,37 +564,8 @@ void draw_live_tab(AppState& s) {
     const bool can_read = !lv.hero.empty();
 #endif
     ImGui::BeginDisabled(busy || !can_read);
-    if (ImGui::Button("Odczytaj scoreboard", ImVec2(200, 0))) {
-        VisionSession* vs = &s.vision;
-        std::string hero = lv.hero;
-        Role role = kRoles[static_cast<size_t>(lv.role)].role;
-        std::string cfg = lv.config_path;
-        std::string img = lv.image_path;
-        // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
-        const bool set_obj = (hero != lv.applied_hero || lv.role != lv.applied_role);
-        lv.applied_hero = hero;
-        lv.applied_role = lv.role;
-        lv.read_consumed = false;
-        lv.read_task.start([vs, hero, role, cfg, img, set_obj]() -> LiveResult {
-            if (set_obj)
-                vs->set_objective(hero, role);
-            if (!std::filesystem::exists(cfg))
-                throw std::runtime_error("brak " + cfg +
-                                         " — najpierw skalibruj (zakladka Kalibracja)");
-            const Calibration calib = Calibration::load(cfg);
-            cv::Mat frame;
-            if (!img.empty()) {
-                frame = FileCapture(img).grab();
-            } else {
-#ifdef _WIN32
-                frame = DxgiCapture().grab();
-#else
-                throw std::runtime_error("podaj zrzut PNG — zrzut z gry dziala tylko na Windows");
-#endif
-            }
-            return vs->read(frame, calib);
-        });
-    }
+    if (ImGui::Button("Odczytaj scoreboard", ImVec2(200, 0)))
+        start_live_read(s);
     ImGui::EndDisabled();
     if (busy) {
         ImGui::SameLine();
@@ -589,6 +604,17 @@ void draw_live_tab(AppState& s) {
 }
 
 void draw_main_window(AppState& s) {
+#ifdef _WIN32
+    // Globalny hotkey F9 (spojny z CLI live): odczyt scoreboardu bez klikania.
+    // Scoreboard widac tylko, gdy gracz trzyma TAB z fokusem na grze — GUI nie
+    // dostaje wtedy zadnego wejscia, wiec klawisz czytamy GetAsyncKeyState,
+    // niezaleznie od fokusu i aktywnej zakladki.
+    const bool f9 = (GetAsyncKeyState(VK_F9) & 0x8000) != 0;
+    if (f9 && !s.live.f9_down)
+        start_live_read(s);
+    s.live.f9_down = f9;
+#endif
+
     // Jedno okno wypelniajace obszar aplikacji.
     const ImGuiViewport* vp = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(vp->WorkPos);
