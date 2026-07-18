@@ -13,7 +13,8 @@ set(_test_sources
 if(PREDEYE_VISION)
     list(APPEND _test_sources test_icon_matcher.cpp test_calibration.cpp
                               test_scoreboard_reader.cpp test_draft_reader.cpp
-                              test_auto_calibrate.cpp test_auto_calibration.cpp)
+                              test_auto_calibrate.cpp test_auto_calibration.cpp
+                              test_capture.cpp)
 endif()
 
 add_executable(predeye_tests ${_test_sources})

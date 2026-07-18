@@ -559,7 +559,11 @@ void start_live_read(AppState& s) {
             throw std::runtime_error("brak " + cfg +
                                      " — najpierw skalibruj (zakladka Kalibracja)");
 #ifdef _WIN32
-        return vs->read(DxgiCapture().grab(), Calibration::load(cfg));
+        cv::Mat frame = DxgiCapture().grab();
+        // Kazda klatka odczytu zostaje w captures/ — bledne rozpoznanie da sie
+        // odtworzyc offline i dostroic progi; blad zapisu swiadomie ignorujemy.
+        save_capture_png(frame);
+        return vs->read(frame, Calibration::load(cfg));
 #else
         throw std::runtime_error("tryb live wymaga zrzutu z gry (DXGI), "
                                  "dostepnego tylko na Windows");
@@ -578,7 +582,8 @@ void draw_live_tab(AppState& s) {
     ImGui::InputText("Plik kalibracji##live", lv.config_path, sizeof(lv.config_path));
 #ifdef _WIN32
     ImGui::TextDisabled("W grze: trzymaj TAB i nacisnij F9 — odczyt uruchomi sie sam\n"
-                        "(F9 dziala globalnie, bez klikania w GUI).");
+                        "(F9 dziala globalnie, bez klikania w GUI). Kazda klatka odczytu\n"
+                        "zapisuje sie do captures/ — materia do strojenia rozpoznawania.");
 #else
     ImGui::TextDisabled("Tryb live wymaga Windows (zrzut z gry przez DXGI).");
 #endif

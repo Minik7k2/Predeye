@@ -23,4 +23,11 @@ class FileCapture : public ICapture {
     std::string path_;
 };
 
+// Zapis klatki odczytu live do katalogu (PNG, nazwa z data i godzina).
+// Kazdy odczyt z gry zostaje na dysku: bledne rozpoznanie da sie odtworzyc
+// offline (`live --image`), a klatki to materiał do strojenia progow
+// (looks_empty/cosine) i fixtures regresji. Nigdy nie rzuca — zwraca
+// sciezke zapisanego pliku albo "" przy bledzie (zapis nie moze psuc odczytu).
+std::string save_capture_png(const cv::Mat& frame_bgr, const std::string& dir = "captures");
+
 } // namespace predeye

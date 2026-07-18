@@ -341,7 +341,12 @@ int cmd_live(const std::string& hero_name, const std::string& role_arg,
         if (pressed && !down) {
             down = true;
             try {
-                print_live(session.read(cap.grab(), calib));
+                const cv::Mat frame = cap.grab();
+                // Klatka zostaje na dysku — odtwarzanie bledow i strojenie progow.
+                const std::string saved = save_capture_png(frame);
+                if (!saved.empty())
+                    std::printf("[klatka zapisana: %s]\n", saved.c_str());
+                print_live(session.read(frame, calib));
             } catch (const std::exception& ex) {
                 std::fprintf(stderr, "predeye: odczyt nieudany: %s\n", ex.what());
             }

@@ -21,3 +21,4 @@ compile_commands.json
 # Kalibracja per maszyna uzytkownika + lokalne zrzuty do strojenia
 calibration.json
 tests/fixtures/screens/local/
+captures/
