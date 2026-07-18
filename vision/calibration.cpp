@@ -133,7 +133,7 @@ Calibration Calibration::load(const std::string& path) {
     // Kompatybilnosc ze starszymi plikami: brakujace siatki dostaja wartosci
     // wyprowadzone (orientacyjne) — uzytkownik dostroi podgladem.
     c.ally_item_grid =
-        opt_grid(j, "ally_item_grid", path, mirror_grid(c.enemy_item_grid, c.resolution));
+        opt_grid(j, "ally_item_grid", path, ally_grid_from_enemy(c.enemy_item_grid, c.resolution));
     c.enemy_hero_grid =
         opt_grid(j, "enemy_hero_grid", path, hero_grid_for(c.enemy_item_grid, true));
     c.ally_hero_grid =
@@ -195,7 +195,7 @@ Calibration Calibration::default_for(const cv::Size& resolution) {
     c.enemy_item_grid.dy = static_cast<int>(145 * s);
     c.enemy_item_grid.cols = 6;
     c.enemy_item_grid.rows = 5;
-    c.ally_item_grid = mirror_grid(c.enemy_item_grid, resolution);
+    c.ally_item_grid = ally_grid_from_enemy(c.enemy_item_grid, resolution);
     c.enemy_hero_grid = hero_grid_for(c.enemy_item_grid, true);
     c.ally_hero_grid = hero_grid_for(c.ally_item_grid, false);
     // Draft nieskalibrowany, poki wlasciciel nie dostarczy zrzutu draftu.

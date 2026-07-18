@@ -13,10 +13,9 @@ namespace predeye {
 namespace {
 
 // Widoki wierszy jednej druzyny + diff wzgledem poprzedniego odczytu.
-// `prev` jest podmieniane na biezacy stan (do nastepnego diffa).
-// `heroes` (po wierszach, moze byc krotsze) dopisuje bohatera z portretu.
+// `prev` jest podmieniane na biezacy stan (do nastepnego diffa). Tozsamosc
+// bohatera (z portretu) przychodzi w RowRead.
 std::vector<LiveRowView> make_views(const std::vector<RowRead>& rows,
-                                    const std::vector<HeroRead>& heroes,
                                     std::vector<std::set<std::string>>& prev) {
     std::vector<LiveRowView> views;
     std::vector<std::set<std::string>> next;
@@ -116,9 +115,8 @@ void VisionSession::ensure_matcher() {
     ensure_loaded();
     if (matcher_)
         return;
-    // Konstruktory pobieraja brakujace grafiki; po pierwszym pobraniu offline.
+    // Konstruktor pobiera brakujace grafiki; po pierwszym pobraniu offline.
     matcher_ = std::make_unique<IconMatcher>(items_, api_, icon_dir_);
-    hero_matcher_ = std::make_unique<HeroMatcher>(heroes_->all(), api_, portrait_dir_);
 }
 
 void VisionSession::ensure_hero_matcher() {
@@ -200,16 +198,16 @@ LiveResult VisionSession::read(const cv::Mat& frame, const Calibration& calib) {
     out.total_items = sb.total_items;
     out.uncertain = sb.uncertain;
     out.objective_name = obj_.name;
-    out.enemies = make_views(sb.enemies, enemy_heroes, prev_enemy_);
-    out.allies = make_views(sb.allies, ally_heroes, prev_ally_);
+    out.enemies = make_views(sb.enemies, prev_enemy_);
+    out.allies = make_views(sb.allies, prev_ally_);
 
     // Profil wroga: baza z KLAS rozpoznanych bohaterow (jak `counter` z nazw
     // wpisanych recznie), doostrzona REALNYMI itemami ze scoreboardu.
     // Sojusznicy wyswietlani informacyjnie (kto z kim walczy, co juz maja).
     std::vector<HeroProfile> enemy_profiles;
-    for (const auto& h : enemy_heroes)
-        if (h.confident)
-            if (const HeroProfile* p = heroes_->by_id(h.hero_id))
+    for (const auto& e : sb.enemies)
+        if (e.hero_confident)
+            if (const HeroProfile* p = heroes_->by_id(e.hero_id))
                 enemy_profiles.push_back(*p);
     if (!enemy_profiles.empty())
         out.profile = enemy_from(enemy_profiles);

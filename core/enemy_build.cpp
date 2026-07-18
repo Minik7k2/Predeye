@@ -47,7 +47,9 @@ std::optional<nlohmann::json> best_build_record(const nlohmann::json& builds_jso
     }
     if (!best)
         return std::nullopt;
-    return *best;
+    // Jawna konstrukcja: kopia-inicjalizacja json -> optional<json> jest
+    // niejednoznaczna (konstruktor optional vs operator konwersji jsona).
+    return std::make_optional(*best);
 }
 
 std::optional<EnemyBuildProfile> typical_build_from_json(const nlohmann::json& builds_json,

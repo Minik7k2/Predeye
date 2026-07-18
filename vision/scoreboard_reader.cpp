@@ -102,28 +102,4 @@ ScoreboardRead read_scoreboard(const cv::Mat& frame_bgr, const Calibration& cali
     return out;
 }
 
-std::vector<HeroRead> read_heroes(const cv::Mat& frame_bgr, const GridSpec& grid,
-                                  const cv::Size& resolution, const HeroMatcher& matcher,
-                                  const HeroDB& db) {
-    std::vector<HeroRead> out;
-    const cv::Rect frame_rect(0, 0, frame_bgr.cols, frame_bgr.rows);
-    for (int r = 0; r < grid.rows; ++r) {
-        HeroRead h;
-        h.row = r;
-        const cv::Rect roi = portrait_rect(grid, r, resolution);
-        // Portret uciety przez krawedz klatki bylby znieksztalcona probka —
-        // wymagamy pelnego ROI (zla kalibracja => pomijamy, nie rzucamy).
-        if ((roi & frame_rect) == roi && matcher.base_size() > 0) {
-            const MatchResult m = matcher.match(frame_bgr(roi));
-            h.hero_id = m.item_id;
-            h.cosine = m.cosine;
-            h.confident = m.confident();
-            if (const HeroProfile* p = db.by_id(h.hero_id))
-                h.name = p->name;
-        }
-        out.push_back(std::move(h));
-    }
-    return out;
-}
-
 } // namespace predeye

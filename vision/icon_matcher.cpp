@@ -31,6 +31,20 @@ void save_manifest(const std::string& dir, const std::map<long long, std::string
 
 } // namespace
 
+std::map<long long, std::string> load_image_manifest(const std::string& dir) {
+    std::map<long long, std::string> out;
+    std::ifstream in(manifest_path(dir), std::ios::binary);
+    if (!in)
+        return out;
+    auto j = nlohmann::json::parse(in, nullptr, false);
+    if (j.is_discarded() || !j.is_object())
+        return out;
+    for (const auto& [k, v] : j.items())
+        if (v.is_string())
+            out[std::stoll(k)] = v.get<std::string>();
+    return out;
+}
+
 // Grafiki /assets/*.webp z API to duze obrazy (~420 px) z kanalem alfa,
 // biala winieta w RGB pod przezroczystoscia i marginesami — to NIE sa
 // kafelki renderowane na scoreboardzie (ciemne tlo, art wypelnia slot).
@@ -88,7 +102,7 @@ ensure_image_cache(const std::vector<std::pair<long long, std::string>>& sources
                    OmedaClient& api, const std::string& cache_dir, const char* label) {
     std::error_code ec;
     fs::create_directories(cache_dir, ec);
-    auto manifest = load_manifest(cache_dir);
+    auto manifest = load_image_manifest(cache_dir);
 
     int downloaded = 0, skipped = 0;
     for (const auto& [id, image] : sources) {

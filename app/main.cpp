@@ -178,7 +178,7 @@ int cmd_calibrate(const std::vector<std::string>& args) {
     // 2a) Tryb automatyczny: detekcja siatek wprost z klatki; podglad do
     // potwierdzenia przez uzytkownika zostaje czescia przeplywu.
     if (auto_grid) {
-        const auto det = auto_calibrate(frame);
+        const auto det = detect_grids(frame);
         if (!det)
             throw std::runtime_error(
                 "auto-kalibracja nie znalazla spojnej siatki na klatce — uzyj trybu "

@@ -178,7 +178,7 @@ std::optional<GridSpec> grid_from_panel(Panel& p, const Ranges& rg) {
 
 } // namespace
 
-std::optional<AutoCalibResult> auto_calibrate(const cv::Mat& frame_bgr) {
+std::optional<GridDetection> detect_grids(const cv::Mat& frame_bgr) {
     CV_Assert(!frame_bgr.empty() && frame_bgr.type() == CV_8UC3);
     cv::Mat gray;
     cv::cvtColor(frame_bgr, gray, cv::COLOR_BGR2GRAY);
@@ -225,8 +225,11 @@ std::optional<AutoCalibResult> auto_calibrate(const cv::Mat& frame_bgr) {
     if (!ally && !enemy)
         return std::nullopt;
 
-    AutoCalibResult res;
-    res.calib.resolution = {gray.cols, gray.rows};
+    GridDetection res;
+    // Start z default_for: rozdzielczosc, nieobecny draft i sensowne siatki
+    // portretow — detektor zna tylko siatki itemow, reszta nie moze zostac
+    // domyslnie skonstruowanymi (rows=5!) smieciami w zapisanym JSON-ie.
+    res.calib = Calibration::default_for({gray.cols, gray.rows});
     // Brakujacy panel doliczany ze zmierzonego przesuniecia miedzy panelami.
     if (ally && !enemy) {
         GridSpec e = *ally;
@@ -241,6 +244,9 @@ std::optional<AutoCalibResult> auto_calibrate(const cv::Mat& frame_bgr) {
     }
     res.calib.enemy_item_grid = *enemy;
     res.calib.ally_item_grid = *ally;
+    // Kolumny portretow wyprowadzone z WYKRYTYCH siatek (jak w Calibration::load).
+    res.calib.enemy_hero_grid = hero_grid_for(*enemy, true);
+    res.calib.ally_hero_grid = hero_grid_for(*ally, false);
     res.lines_ally = lines_ally;
     res.lines_enemy = lines_enemy;
     res.rows_ally = ally->rows;

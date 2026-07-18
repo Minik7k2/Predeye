@@ -162,8 +162,8 @@ void draw_team_table(const char* id, const char* title, const std::vector<LiveRo
         ImGui::TableSetColumnIndex(0);
         // Bohater z portretu; "?" gdy dopasowanie ponizej progu pewnosci.
         std::string who = r.role_label;
-        if (!r.hero.empty())
-            who += " " + r.hero + (r.hero_confident ? "" : "?");
+        if (!r.hero_name.empty())
+            who += " " + r.hero_name + (r.hero_confident ? "" : "?");
         ImGui::TextUnformatted(who.c_str());
         ImGui::TableSetColumnIndex(1);
         std::string line;

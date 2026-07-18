@@ -1,4 +1,4 @@
-// Testy auto-kalibracji: syntetyczny scoreboard (mechanika detekcji) oraz
+﻿// Testy auto-kalibracji: syntetyczny scoreboard (mechanika detekcji) oraz
 // realne zrzuty z tests/fixtures/screens (zgodnosc ze zmierzona kalibracja).
 #include "vision/auto_calibration.hpp"
 
@@ -33,12 +33,12 @@ void draw_panel(cv::Mat& img, int origin_x, int origin_y, int rows, int cols, in
 
 } // namespace
 
-TEST_CASE("auto_calibrate: syntetyczny scoreboard — oba panele, crest poza siatka") {
+TEST_CASE("detect_grids: syntetyczny scoreboard — oba panele, crest poza siatka") {
     cv::Mat img(1080, 1920, CV_8UC3, cv::Scalar(15, 15, 15));
     draw_panel(img, 333, 250, 5, 6, 4);  // sojusznicy: 4 itemy w wierszu
     draw_panel(img, 1343, 250, 5, 6, 0); // wrogowie: pusto (same ramki)
 
-    const auto res = auto_calibrate(img);
+    const auto res = detect_grids(img);
     REQUIRE(res.has_value());
     const GridSpec& e = res->calib.enemy_item_grid;
     const GridSpec& a = res->calib.ally_item_grid;
@@ -56,12 +56,12 @@ TEST_CASE("auto_calibrate: syntetyczny scoreboard — oba panele, crest poza sia
     CHECK(res->rows_enemy == 5);
 }
 
-TEST_CASE("auto_calibrate: brak siatki na pustym obrazie") {
+TEST_CASE("detect_grids: brak siatki na pustym obrazie") {
     cv::Mat img(1080, 1920, CV_8UC3, cv::Scalar(40, 40, 40));
-    CHECK_FALSE(auto_calibrate(img).has_value());
+    CHECK_FALSE(detect_grids(img).has_value());
 }
 
-TEST_CASE("auto_calibrate: realne zrzuty 1080p zgodne ze zmierzona kalibracja") {
+TEST_CASE("detect_grids: realne zrzuty 1080p zgodne ze zmierzona kalibracja") {
     const Calibration expected =
         Calibration::load(PREDEYE_FIXTURES_DIR "/screens/calibration_1080p.json");
     for (const char* name : {"/screens/scoreboard_1080p_01.png", "/screens/match1_01.png",
@@ -69,7 +69,7 @@ TEST_CASE("auto_calibrate: realne zrzuty 1080p zgodne ze zmierzona kalibracja") 
         CAPTURE(name);
         const cv::Mat frame = cv::imread(std::string(PREDEYE_FIXTURES_DIR) + name);
         REQUIRE(!frame.empty());
-        const auto res = auto_calibrate(frame);
+        const auto res = detect_grids(frame);
         REQUIRE(res.has_value());
         const GridSpec& e = res->calib.enemy_item_grid;
         const GridSpec& a = res->calib.ally_item_grid;

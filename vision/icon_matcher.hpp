@@ -29,6 +29,22 @@ struct MatchResult {
 // Sygnatura NCC: 32x32 BGR -> CV_32F 1x3072 -> minus srednia -> / norma L2.
 cv::Mat ncc_signature(const cv::Mat& bgr);
 
+// Przygotowanie grafiki API (webp z alfa, biala winieta, marginesy) do
+// postaci kafelka jak na scoreboardzie: kwadratowy bbox po alfie +
+// kompozycja na ciemnym tle kafelka. Obrazy bez alfy wracaja bez zmian.
+// Wspolna sciezka bazy sygnatur i narzedzi (icon_harness) — sondy i baza
+// musza byc przygotowane identycznie.
+cv::Mat tile_from_asset(const cv::Mat& img);
+
+// Manifest katalogu grafik (id -> plik); pusty gdy katalogu/manifestu brak.
+std::map<long long, std::string> load_image_manifest(const std::string& dir);
+
+// Dwustopniowe dopasowanie NCC probki do bazy sygnatur (wiersz = sygnatura
+// jednego id): czyste NCC wylania kandydatow, potem najlepsze wyrownanie
+// probki po przesunieciach +/-2 px. Wspolne dla itemow i bohaterow.
+MatchResult match_signatures(const cv::Mat& signatures, const std::vector<long long>& ids,
+                             const cv::Mat& probe_bgr);
+
 // Zapewnia lokalna baze obrazkow z API: pobiera brakujace (pauza ~50 ms
 // w get_binary), utrzymuje manifest id -> plik. Zwraca manifest.
 // `sources` = pary (id, sciezka "image" z API); `label` tylko do logow.
