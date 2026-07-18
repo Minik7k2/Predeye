@@ -13,6 +13,7 @@
 #include "core/advisor.hpp"
 #include "core/hero_context.hpp"
 #include "gui/async_task.hpp"
+#include "vision/auto_calibration.hpp"
 #include "vision/calibration.hpp"
 #include "vision/capture.hpp"
 #include "vision/vision_session.hpp"
@@ -145,15 +146,18 @@ void draw_build_table(const char* id, const BuildResult& res) {
     ImGui::TextWrapped("%s", res.summary.c_str());
 }
 
-// Tabela jednej druzyny z odczytu live: rola | itemy | zmiana od poprzednika.
-// Ta sama rola w tabeli wrogow i sojusznikow = przeciwnicy w linii (matchup).
-void draw_team_table(const char* id, const char* title, const std::vector<LiveRowView>& rows) {
+// Tabela jednej druzyny z odczytu live: rola | nick | itemy | zmiana od
+// poprzednika. Ta sama rola w tabeli wrogow i sojusznikow = przeciwnicy
+// w linii (matchup). `nicks` = bufory nicków per wiersz (edycja w tabeli).
+void draw_team_table(const char* id, const char* title, const std::vector<LiveRowView>& rows,
+                     char (*nicks)[48]) {
     ImGui::SeparatorText(title);
     const ImGuiTableFlags flags =
         ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp;
-    if (!ImGui::BeginTable(id, 3, flags))
+    if (!ImGui::BeginTable(id, 4, flags))
         return;
     ImGui::TableSetupColumn("Rola", ImGuiTableColumnFlags_WidthStretch, 0.9f);
+    ImGui::TableSetupColumn("Nick", ImGuiTableColumnFlags_WidthStretch, 0.9f);
     ImGui::TableSetupColumn("Itemy", ImGuiTableColumnFlags_WidthStretch, 3.2f);
     ImGui::TableSetupColumn("Zmiana", ImGuiTableColumnFlags_WidthStretch, 1.4f);
     ImGui::TableHeadersRow();
@@ -166,6 +170,13 @@ void draw_team_table(const char* id, const char* title, const std::vector<LiveRo
             who += " " + r.hero_name + (r.hero_confident ? "" : "?");
         ImGui::TextUnformatted(who.c_str());
         ImGui::TableSetColumnIndex(1);
+        if (r.row >= 0 && r.row < 8) {
+            ImGui::PushID(r.row);
+            ImGui::SetNextItemWidth(-1.0f);
+            ImGui::InputTextWithHint("##nick", "nick...", nicks[r.row], sizeof(nicks[r.row]));
+            ImGui::PopID();
+        }
+        ImGui::TableSetColumnIndex(2);
         std::string line;
         for (const auto& s : r.slots) {
             if (s.empty)
@@ -177,7 +188,7 @@ void draw_team_table(const char* id, const char* title, const std::vector<LiveRo
                 line += " (niepewne)";
         }
         ImGui::TextWrapped("%s", line.empty() ? "(pusto)" : line.c_str());
-        ImGui::TableSetColumnIndex(2);
+        ImGui::TableSetColumnIndex(3);
         if (!r.changes.empty()) {
             std::string delta;
             for (const auto& ch : r.changes)
@@ -258,6 +269,12 @@ struct AppState {
         bool f9_down = false;      // do wykrycia zbocza globalnego hotkeya F9
         std::optional<LiveResult> last;
         std::string status;
+        // Nicki graczy per wiersz scoreboardu (wpisywane recznie w tabeli —
+        // nick to dowolny tekst, ktorego nie rozpoznamy ze zrzutu bez OCR/M7).
+        // Wiersze scoreboardu sa stale w obrebie meczu, wiec nick trzyma sie
+        // gracza miedzy odczytami; zmiana celu (nowy mecz) je czysci.
+        char enemy_nicks[8][48] = {};
+        char ally_nicks[8][48] = {};
     } live;
 };
 
@@ -426,6 +443,25 @@ void draw_calibrate_tab(AppState& s) {
             c.calib = Calibration::default_for(c.frame.size());
             c.dirty = true;
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Wykryj automatycznie##calib")) {
+            // detect_grids to szybki skan RLE jasnosci (pojedyncze ms na 1080p)
+            // — nie wymaga watku tla ani bazy ikon.
+            if (const auto det = detect_grids(c.frame)) {
+                c.calib = det->calib;
+                c.dirty = true;
+                c.status = "Auto-detekcja: sojusznicy " + std::to_string(det->rows_ally) +
+                           " wierszy (" + std::to_string(det->lines_ally) +
+                           " linii wzoru), wrogowie " + std::to_string(det->rows_enemy) +
+                           " wierszy (" + std::to_string(det->lines_enemy) + " linii)" +
+                           (det->note.empty() ? "" : "; " + det->note) +
+                           ". Sprawdz podglad i zapisz JSON.";
+            } else {
+                c.status = "Auto-detekcja nie znalazla spojnej siatki na tej klatce — "
+                           "ustaw recznie (suwaki/klik) albo wczytaj ostrzejszy zrzut "
+                           "z widocznym scoreboardem.";
+            }
+        }
     }
 
     if (!c.status.empty())
@@ -506,8 +542,13 @@ void start_live_read(AppState& s) {
     std::string hero = lv.hero;
     Role role = kRoles[static_cast<size_t>(lv.role)].role;
     std::string cfg = lv.config_path;
-    // Ustaw cel tylko przy zmianie (set_objective resetuje diff).
+    // Ustaw cel tylko przy zmianie (set_objective resetuje diff); nowy cel
+    // = nowy mecz, wiec nicki poprzedniego skladu przestaja obowiazywac.
     const bool set_obj = (hero != lv.applied_hero || lv.role != lv.applied_role);
+    if (set_obj) {
+        std::memset(lv.enemy_nicks, 0, sizeof(lv.enemy_nicks));
+        std::memset(lv.ally_nicks, 0, sizeof(lv.ally_nicks));
+    }
     lv.applied_hero = hero;
     lv.applied_role = lv.role;
     lv.read_consumed = false;
@@ -578,8 +619,8 @@ void draw_live_tab(AppState& s) {
     ImGui::Text("%d itemow (%d niepewnych)", r.total_items, r.uncertain);
     ImGui::TextDisabled("Ta sama rola w obu tabelach = przeciwnicy w linii "
                         "(scoreboard sortuje graczy wg rol).");
-    draw_team_table("live_enemies", "Wrogowie", r.enemies);
-    draw_team_table("live_allies", "Moja druzyna", r.allies);
+    draw_team_table("live_enemies", "Wrogowie", r.enemies, lv.enemy_nicks);
+    draw_team_table("live_allies", "Moja druzyna", r.allies, lv.ally_nicks);
 
     ImGui::Text("Profil wroga: %.0f%% obrazen fizycznych%s%s%s", 100.0 * r.profile.physical_ratio,
                 r.profile.has_healing ? ", leczenie" : "", r.profile.has_crit ? ", kryt" : "",
